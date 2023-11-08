@@ -22,11 +22,12 @@ just an indicator. You may safely ignore",
     DEBUG,
 )
 
-
+# Check if TOKEN is set
 if not os.environ.get("TOKEN"):
     logger.critical("TOKEN variable not set. Cannot continue")
     sys.exit(1)
 
+# Initialize the client
 client = interactions.Client(
     token=os.environ.get("TOKEN"),
     activity=interactions.Activity(
@@ -35,16 +36,16 @@ client = interactions.Client(
     debug_scope=DEV_GUILD,
 )
 
-
+# Register a listener for the startup event
 @interactions.listen()
 async def on_startup():
     """Called when the bot starts"""
     logger.info(f"Logged in as {client.user}")
 
-# load built-in extensions
+# Load built-in extensions
 client.load_extension("interactions.ext.jurigged")
 
-# get all python files in "extensions" folder
+# Load all python files in "extensions" folder
 extensions = [
     f"extensions.{f[:-3]}"
     for f in os.listdir("extensions")
@@ -57,4 +58,5 @@ for extension in extensions:
     except interactions.errors.ExtensionLoadException as e:
         logger.exception(f"Failed to load extension {extension}.", exc_info=e)
 
+# Start the client
 client.start()
