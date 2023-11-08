@@ -30,7 +30,7 @@ if not os.environ.get("TOKEN"):
 client = interactions.Client(
     token=os.environ.get("TOKEN"),
     activity=interactions.Activity(
-        name="with interactions", type=interactions.ActivityType.PLAYING
+        name="Webgroup issues", type=interactions.ActivityType.WATCHING
     ),
     debug_scope=DEV_GUILD,
 )
