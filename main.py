@@ -41,6 +41,8 @@ async def on_startup():
     """Called when the bot starts"""
     logger.info(f"Logged in as {client.user}")
 
+# load built-in extensions
+client.load_extension("interactions.ext.jurigged")
 
 # get all python files in "extensions" folder
 extensions = [
