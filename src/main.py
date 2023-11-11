@@ -1,55 +1,52 @@
 """
-Main script to run
-
-This script initializes extensions and starts the bot
+Entrypoint script to load extensions and start the client.
 """
 import os
 import sys
-from interactions import Activity, ActivityType, Client, listen, errors
+from interactions import *
+from loguru import logger
 from config import DEBUG, DEV_GUILD, TOKEN
-import logutil
 
-# Configure logging for this main.py handler
-logger = logutil.init_logger("main.py")
-logger.debug("Debug mode is %s; You can safely ignore this.", DEBUG)
+if __name__ == "__main__":
+    if not TOKEN:
+        logger.critical("TOKEN environment variable not set. Exiting.")
+        sys.exit(1)
 
-# Check if TOKEN is set
-if not TOKEN:
-    logger.critical("TOKEN variable not set. Cannot continue")
-    sys.exit(1)
+    logger.debug("Debug mode is %s; You can safely ignore this.", DEBUG)
 
-# Initialize the client
-client = Client(
-    token=TOKEN,
-    activity=Activity(
-        name="Webgroup issues", type=ActivityType.WATCHING
-    ),
-    debug_scope=DEV_GUILD,
-    auto_defer=True,
-    sync_ext=True,
-)
+    # Initialize the client
+    client = Client(
+        token=TOKEN,
+        activity=Activity(
+            name="Webgroup issues", type=ActivityType.WATCHING
+        ),
+        debug_scope=DEV_GUILD,
+        auto_defer=True,
+        sync_ext=True,
+    )
 
-# Register a listener for the startup event
-@listen()
-async def on_startup():
-    """Called when the bot starts"""
-    logger.info(f"Logged in as {client.user}")
+    # Enable built-in extensions
+    client.load_extension("interactions.ext.jurigged") # Hot reloading
 
-# Load built-in extensions
-client.load_extension("interactions.ext.jurigged")
+    # Load custom extensions
 
-# Load all python files in "extensions" folder
-extensions = [
-    f"extensions.{f[:-3]}"
-    for f in os.listdir("src/extensions")
-    if f.endswith(".py") and not f.startswith("_")
-]
-for extension in extensions:
-    try:
-        client.load_extension(extension)
-        logger.info(f"Loaded extension: {extension}")
-    except errors.ExtensionLoadException as e:
-        logger.exception(f"Failed to load extension: {extension}.", exc_info=e)
+    extensions = [
+        f"extensions.{f[:-3]}"
+        for f in os.listdir("src/extensions")
+        if f.endswith(".py") and not f.startswith("_")
+    ]
 
-# Start the client
-client.start()
+    for extension in extensions:
+        try:
+            client.load_extension(extension)
+            logger.info(f"Loaded extension: {extension}")
+        except errors.ExtensionLoadException as e:
+            logger.exception(f"Failed to load extension: {extension}", exc_info=e)
+
+    # Start the client
+
+    @listen()
+    async def on_startup():
+        logger.info(f"Logged in as {client.user}")
+
+    client.start()
