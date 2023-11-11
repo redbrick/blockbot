@@ -1,18 +1,24 @@
 """
 Entrypoint script to load extensions and start the client.
 """
-import os
 import sys
+import glob
 from interactions import *
 from loguru import logger
+from pathlib import Path
 from config import DEBUG, DEV_GUILD, TOKEN
 
 if __name__ == "__main__":
+    # Configure logging
+    logger.remove()
+    logger.add(sys.stdout, level="DEBUG" if DEBUG else "INFO")
+
+    # Verify bot token is set
     if not TOKEN:
         logger.critical("TOKEN environment variable not set. Exiting.")
         sys.exit(1)
 
-    logger.debug("Debug mode is %s; You can safely ignore this.", DEBUG)
+    logger.debug(f"Debug mode is {DEBUG}; You can safely ignore this.")
 
     # Initialize the client
     client = Client(
@@ -30,11 +36,7 @@ if __name__ == "__main__":
 
     # Load custom extensions
 
-    extensions = [
-        f"extensions.{f[:-3]}"
-        for f in os.listdir("src/extensions")
-        if f.endswith(".py") and not f.startswith("_")
-    ]
+    extensions = [Path(f).stem for f in glob.iglob("extensions/[!_]*.py")]
 
     for extension in extensions:
         try:
@@ -49,4 +51,5 @@ if __name__ == "__main__":
     async def on_startup():
         logger.info(f"Logged in as {client.user}")
 
+    logger.info("Starting client...")
     client.start()
