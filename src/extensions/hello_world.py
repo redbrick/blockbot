@@ -1,61 +1,59 @@
 """
-Example cog for real world use
-
-This is safe to delete
+Example extension with simple commands
 """
-import interactions
+from interactions import *
 
 
-class HelloWorld(interactions.Extension):
-    @interactions.slash_command("hello", description="Say hello!")
-    async def hello(self, ctx: interactions.SlashContext):
+class HelloWorld(Extension):
+    @slash_command("hello", description="Say hello!")
+    async def hello(self, ctx: SlashContext):
         """A simple hello world command"""
         await ctx.send("Hello, world!")
 
-    @interactions.slash_command(
+    @slash_command(
         "base_command", description="A base command, to expand on"
     )
-    async def base_command(self, ctx: interactions.SlashContext):
+    async def base_command(self, ctx: SlashContext):
         ...
 
     @base_command.subcommand(
         "sub_command", sub_cmd_description="A sub command, to expand on"
     )
-    async def sub_command(self, ctx: interactions.SlashContext):
+    async def sub_command(self, ctx: SlashContext):
         """A simple sub command"""
         await ctx.send("Hello, world! This is a sub command")
 
-    @interactions.slash_command("options", description="A command with options")
-    @interactions.slash_option(
+    @slash_command("options", description="A command with options")
+    @slash_option(
         "option_str",
         "A string option",
-        opt_type=interactions.OptionType.STRING,
+        opt_type=OptionType.STRING,
         required=True,
     )
-    @interactions.slash_option(
+    @slash_option(
         "option_int",
         "An integer option",
-        opt_type=interactions.OptionType.INTEGER,
+        opt_type=OptionType.INTEGER,
         required=True,
     )
-    @interactions.slash_option(
+    @slash_option(
         "option_attachment",
         "An attachment option",
-        opt_type=interactions.OptionType.ATTACHMENT,
+        opt_type=OptionType.ATTACHMENT,
         required=True,
     )
     async def options(
         self,
-        ctx: interactions.SlashContext,
+        ctx: SlashContext,
         option_str: str,
         option_int: int,
-        option_attachment: interactions.Attachment,
+        option_attachment: Attachment,
     ):
         """A command with lots of options"""
-        embed = interactions.Embed(
+        embed = Embed(
             "There are a lot of options here",
             description="Maybe too many",
-            color=interactions.BrandColors.BLURPLE,
+            color=BrandColors.BLURPLE,
         )
         embed.set_image(url=option_attachment.url)
         embed.add_field(
@@ -70,18 +68,18 @@ class HelloWorld(interactions.Extension):
         )
         await ctx.send(embed=embed)
 
-    @interactions.slash_command("components", description="A command with components")
-    async def components(self, ctx: interactions.SlashContext):
+    @slash_command("components", description="A command with components")
+    async def components(self, ctx: SlashContext):
         """A command with components"""
         await ctx.send(
             "Here are some components",
-            components=interactions.spread_to_rows(
-                interactions.Button(
+            components=spread_to_rows(
+                Button(
                     label="Click me!",
                     custom_id="click_me",
-                    style=interactions.ButtonStyle.PRIMARY,
+                    style=ButtonStyle.PRIMARY,
                 ),
-                interactions.StringSelectMenu(
+                StringSelectMenu(
                     "Select me!",
                     "No, select me!",
                     "Select me too!",
@@ -93,12 +91,12 @@ class HelloWorld(interactions.Extension):
             ),
         )
 
-    @interactions.component_callback("click_me")
-    async def click_me(self, ctx: interactions.ComponentContext):
+    @component_callback("click_me")
+    async def click_me(self, ctx: ComponentContext):
         """A callback for the click me button"""
         await ctx.send("You clicked me!")
 
-    @interactions.component_callback("select_me")
-    async def select_me(self, ctx: interactions.ComponentContext):
+    @component_callback("select_me")
+    async def select_me(self, ctx: ComponentContext):
         """A callback for the select me menu"""
         await ctx.send(f"You selected {' '.join(ctx.values)}")

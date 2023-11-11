@@ -7,7 +7,7 @@ import os
 import sys
 from interactions import Activity, ActivityType, Client, listen, errors
 from config import DEBUG, DEV_GUILD, TOKEN
-from src import logutil
+import logutil
 
 # Configure logging for this main.py handler
 logger = logutil.init_logger("main.py")
@@ -41,7 +41,7 @@ client.load_extension("interactions.ext.jurigged")
 # Load all python files in "extensions" folder
 extensions = [
     f"extensions.{f[:-3]}"
-    for f in os.listdir("extensions")
+    for f in os.listdir("src/extensions")
     if f.endswith(".py") and not f.startswith("_")
 ]
 for extension in extensions:
