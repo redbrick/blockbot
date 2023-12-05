@@ -35,7 +35,9 @@ if __name__ == "__main__":
 
     # Load custom extensions
 
-    extensions = [Path(f).stem for f in glob.iglob("src/extensions/*.py")]
+    logger.debug("Working directory: " + str(Path.cwd()))
+    extensions = [Path(f).stem for f in glob.iglob("/app/src/extensions/*.py")]
+    logger.debug(f"Found extensions: {extensions}")
 
     for extension in extensions:
         try:
