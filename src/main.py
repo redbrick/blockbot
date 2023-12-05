@@ -35,11 +35,11 @@ if __name__ == "__main__":
 
     # Load custom extensions
 
-    extensions = [Path(f).stem for f in glob.iglob("extensions/[!_]*.py")]
+    extensions = [Path(f).stem for f in glob.iglob("src/extensions/*.py")]
 
     for extension in extensions:
         try:
-            client.load_extension(extension)
+            client.load_extension(f"extensions.{extension}")
             logger.info(f"Loaded extension: {extension}")
         except discord.errors.ExtensionLoadException as e:
             logger.exception(f"Failed to load extension: {extension}", exc_info=e)
