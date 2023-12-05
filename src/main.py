@@ -3,7 +3,7 @@ Entrypoint script to load extensions and start the client.
 """
 import sys
 import glob
-from interactions import *
+import interactions as discord
 from loguru import logger
 from pathlib import Path
 from config import DEBUG, DEV_GUILD, TOKEN
@@ -21,10 +21,10 @@ if __name__ == "__main__":
     logger.debug(f"Debug mode is {DEBUG}; You can safely ignore this.")
 
     # Initialize the client
-    client = Client(
+    client = discord.Client(
         token=TOKEN,
-        activity=Activity(
-            name="Webgroup issues", type=ActivityType.WATCHING
+        activity=discord.Activity(
+            name="Webgroup issues", type=discord.ActivityType.WATCHING
         ),
         debug_scope=DEV_GUILD,
         auto_defer=True,
@@ -42,12 +42,12 @@ if __name__ == "__main__":
         try:
             client.load_extension(extension)
             logger.info(f"Loaded extension: {extension}")
-        except errors.ExtensionLoadException as e:
+        except discord.errors.ExtensionLoadException as e:
             logger.exception(f"Failed to load extension: {extension}", exc_info=e)
 
     # Start the client
 
-    @listen()
+    @discord.listen()
     async def on_startup():
         logger.info(f"Logged in as {client.user}")
 

@@ -1,59 +1,59 @@
 """
 Example extension with simple commands
 """
-from interactions import *
+import interactions as discord
 
 
-class HelloWorld(Extension):
-    @slash_command("hello", description="Say hello!")
-    async def hello(self, ctx: SlashContext):
+class HelloWorld(discord.Extension):
+    @discord.slash_command("hello", description="Say hello!")
+    async def hello(self, ctx: discord.SlashContext):
         """A simple hello world command"""
         await ctx.send("Hello, world!")
 
-    @slash_command(
+    @discord.slash_command(
         "base_command", description="A base command, to expand on"
     )
-    async def base_command(self, ctx: SlashContext):
+    async def base_command(self, ctx: discord.SlashContext):
         ...
 
     @base_command.subcommand(
         "sub_command", sub_cmd_description="A sub command, to expand on"
     )
-    async def sub_command(self, ctx: SlashContext):
+    async def sub_command(self, ctx: discord.SlashContext):
         """A simple sub command"""
         await ctx.send("Hello, world! This is a sub command")
 
-    @slash_command("options", description="A command with options")
-    @slash_option(
+    @discord.slash_command("options", description="A command with options")
+    @discord.slash_option(
         "option_str",
         "A string option",
-        opt_type=OptionType.STRING,
+        opt_type=discord.OptionType.STRING,
         required=True,
     )
-    @slash_option(
+    @discord.slash_option(
         "option_int",
         "An integer option",
-        opt_type=OptionType.INTEGER,
+        opt_type=discord.OptionType.INTEGER,
         required=True,
     )
-    @slash_option(
+    @discord.slash_option(
         "option_attachment",
         "An attachment option",
-        opt_type=OptionType.ATTACHMENT,
+        opt_type=discord.OptionType.ATTACHMENT,
         required=True,
     )
     async def options(
         self,
-        ctx: SlashContext,
+        ctx: discord.SlashContext,
         option_str: str,
         option_int: int,
-        option_attachment: Attachment,
+        option_attachment: discord.Attachment,
     ):
         """A command with lots of options"""
-        embed = Embed(
+        embed = discord.Embed(
             "There are a lot of options here",
             description="Maybe too many",
-            color=BrandColors.BLURPLE,
+            color=discord.BrandColors.BLURPLE,
         )
         embed.set_image(url=option_attachment.url)
         embed.add_field(
@@ -68,18 +68,18 @@ class HelloWorld(Extension):
         )
         await ctx.send(embed=embed)
 
-    @slash_command("components", description="A command with components")
-    async def components(self, ctx: SlashContext):
+    @discord.slash_command("components", description="A command with components")
+    async def components(self, ctx: discord.SlashContext):
         """A command with components"""
         await ctx.send(
             "Here are some components",
-            components=spread_to_rows(
-                Button(
+            components=discord.spread_to_rows(
+                discord.Button(
                     label="Click me!",
                     custom_id="click_me",
-                    style=ButtonStyle.PRIMARY,
+                    style=discord.ButtonStyle.PRIMARY,
                 ),
-                StringSelectMenu(
+                discord.StringSelectMenu(
                     "Select me!",
                     "No, select me!",
                     "Select me too!",
@@ -91,12 +91,12 @@ class HelloWorld(Extension):
             ),
         )
 
-    @component_callback("click_me")
-    async def click_me(self, ctx: ComponentContext):
+    @discord.component_callback("click_me")
+    async def click_me(self, ctx: discord.ComponentContext):
         """A callback for the click me button"""
         await ctx.send("You clicked me!")
 
-    @component_callback("select_me")
-    async def select_me(self, ctx: ComponentContext):
+    @discord.component_callback("select_me")
+    async def select_me(self, ctx: discord.ComponentContext):
         """A callback for the select me menu"""
         await ctx.send(f"You selected {' '.join(ctx.values)}")
