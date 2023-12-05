@@ -6,7 +6,7 @@ import glob
 import interactions as discord
 from loguru import logger
 from pathlib import Path
-from config import DEBUG, DEV_GUILD, TOKEN
+from config import DEBUG, TOKEN
 
 if __name__ == "__main__":
     # Configure logging
@@ -26,7 +26,6 @@ if __name__ == "__main__":
         activity=discord.Activity(
             name="Webgroup issues", type=discord.ActivityType.WATCHING
         ),
-        debug_scope=DEV_GUILD,
         auto_defer=True,
         sync_ext=True,
     )
