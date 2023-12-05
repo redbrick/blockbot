@@ -8,12 +8,9 @@ For help with using the module, check out the [documentation](https://interactio
 
 > `main.py:`
 - A custom, dynamic extension (command) loader. Write an extension in the `extensions/` directory, and it will automatically be loaded when the bot boots.
-- Utilizes the logging library and implements an easy to use custom logger and formatter. All you need to do is call `initLogger("script_name")` in a module, and log configuration is taken care of for you.
-- Alongside the custom logging utility, exception handling is present and proper debug levels exist. You can configure the level to your liking in `config.py`.
 
-> `src/logutil.py:`
-- Functions here exist to aid the user in simplifying `logging` configuration. Here, all log messages go to standard output.
-- A custom formatter also applies based on what level logging you desire, whereas DEBUG produces verbose output and is tailored to aid in debugging, showing which module the message is originating from and, in most cases, which line number. Loggging levels are categorized by color.
+> `extensions/`:
+- This directory is home to the custom extensions (known as cogs in `discord.py`, or command groups) that are loaded when the bot is started. Extensions are classes that encapsulate command logic and can be dynamically loaded/unloaded.
 
 > `config.py:`
 - This module houses the bot configuration. The values are loaded from environment variables, so you can set them in your shell or in a `.env` file. 
@@ -32,8 +29,7 @@ For help with using the module, check out the [documentation](https://interactio
 > - Copy the generated URL at the bottom of the page to invite it to desired servers
 > 4. Make a new file called `.env` inside the repo folder and paste the below code block in the file
 > ```
-> TOKEN="[paste Discord bot token here]"
-> DEV_GUILD=[paste your bot testing server ID here]
+> TOKEN=<paste Discord bot token here>
 > ```
 > 5. Run `pip install -r requirements.txt` to install packages. You'll need Python 3.10 or later
 > 6. Once that's done, run the bot by executing `python3 main.py` in the terminal
