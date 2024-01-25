@@ -21,8 +21,10 @@ if __name__ == "__main__":
     logger.debug(f"Debug mode is {DEBUG}; You can safely ignore this.")
 
     # Initialize the client
+    intents = discord.Intents.DEFAULT | discord.Intents.MESSAGE_CONTENT
     client = discord.Client(
         token=TOKEN,
+        intents=intents,
         activity=discord.Activity(
             name="Webgroup issues", type=discord.ActivityType.WATCHING
         ),
@@ -36,7 +38,7 @@ if __name__ == "__main__":
     # Load custom extensions
 
     logger.debug("Working directory: " + str(Path.cwd()))
-    extensions = [Path(f).stem for f in glob.iglob("/app/src/extensions/*.py")]
+    extensions = [Path(f).stem for f in glob.iglob("./src/extensions/*.py")]
     logger.debug(f"Found extensions: {extensions}")
 
     for extension in extensions:
