@@ -8,6 +8,12 @@ from loguru import logger
 from pathlib import Path
 from config import DEBUG, TOKEN
 
+config = {
+  'channel_ids': {
+    'lobby': 627542044390457350
+  }
+}
+
 if __name__ == "__main__":
     # Configure logging
     logger.remove()
