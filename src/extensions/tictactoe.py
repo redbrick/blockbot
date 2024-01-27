@@ -1,3 +1,4 @@
+import logging
 import asyncio
 import enum
 import random
@@ -13,17 +14,18 @@ class GameState(enum.IntEnum):
 
 
 def remove_id_format(text: str) -> int:
+    """Remove the symbol arround a Discord ID string."""
 
-    # Remove the symbol arround a Discord ID string.
     return int(text.replace("<", "").replace(">", "").replace("@", ""))
 
 
 def render_board(board: list, disable=False) -> list:
-
-    # Generates a visual representation of the game board using Discord components.
-    # :param board: The game board data.
-    # :param disable: Disables the buttons on the game board if True.
-    # :return: A list of rows containing interactive buttons.
+    """
+    Converts the test_board into a visual representation using discord components.
+    :param board: The game test_board
+    :param disable: Disable the buttons on the test_board
+    :return: List[action-rows]
+    """
 
     buttons = []
     for i in range(3):
@@ -49,12 +51,14 @@ def render_board(board: list, disable=False) -> list:
 
 
 def alternate_render_board(board: list, disable=False) -> list:
-
-    # Generates a visual representation of the game board using Discord components.
-    # Specifically designed for 2-player mode due to the current limitation of combining everything into one callback.
-    # :param board: The game board data.
-    # :param disable: Disables the buttons on the game board if True.
-    # :return: A list of rows containing interactive buttons.
+    """
+    Converts the test_board into a visual representation using discord components.
+    This is used for the 2nd player mode since I have not found the way to combine
+    everything into one callback yet.
+    :param board: The game test_board
+    :param disable: Disable the buttons on the test_board
+    :return: List[action-rows]
+    """
 
     buttons = []
     for i in range(3):
@@ -80,11 +84,12 @@ def alternate_render_board(board: list, disable=False) -> list:
 
 
 def board_state(components: list) -> list[list]:
-
-    # Derives the current state of the game from the components of a message.
-    # :param components: The components object from a message.
-    # :return: The state of the game board.
-    # :rtype: list[list]
+    """
+    Extrapolate the current state of the game based on the components of a message
+    :param components: The components object from a message
+    :return: The test_board state
+    :rtype: list[list]
+    """
 
     board = copy.deepcopy(BoardTemplate)
     for i in range(3):
@@ -100,12 +105,12 @@ def board_state(components: list) -> list[list]:
 
 
 def win_state(board: list, player: GameState) -> bool:
-
-    # Checks whether the specified player has won the game.
-    # :param board: The game board data.
-    # :param player: The player to check for victory.
-    # :return: True if the player has won, False otherwise.
-
+    """
+    Determines if the specified player has won
+    :param board: The game test_board
+    :param player: The player to check for
+    :return: bool, have they won
+    """
     win_states = [
         [board[0][0], board[0][1], board[0][2]],
         [board[1][0], board[1][1], board[1][2]],
@@ -122,10 +127,11 @@ def win_state(board: list, player: GameState) -> bool:
 
 
 def get_possible_positions(board: list) -> list[list[int]]:
-
-    # Identifies all possible positions in the current game state.
-    # :param board: The game board data.
-    # :return: A list of possible positions.
+    """
+    Determines all the possible positions in the current game state
+    :param board: The game test_board
+    :return: A list of possible positions
+    """
 
     possible_positions = []
     for i in range(3):
@@ -199,6 +205,11 @@ class TicTacToe(discord.Extension):
 
         if int(ctx.user.id) == int(user.id):
             return await ctx.send("You cannot challenge yourself.")
+
+        if int(user.id) == int(self.client.user.id):
+            return await ctx.send(
+                "To challenge, you must tag a user, not a bot."
+            )
 
         accept_deny = [
             discord.ActionRow(
