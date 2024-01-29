@@ -13,11 +13,11 @@ class getRole(discord.Extension):
     @discord.slash_command("getrole", description="Self-assign a role")
     @roleoption
     async def get_role(self, ctx: discord.SlashContext, role):
-        ctx.author.add_role(role)
+        await ctx.author.add_role(role)
         await ctx.send(f"Done! Gave you {ctx.guild.get_role(role).name}")
     
     @discord.slash_command("rmrole", description="Remove a self-assigned role")
     @roleoption
     async def remove_role(self, ctx: discord.SlashContext, role):
-        ctx.author.remove_role(role)
+        await ctx.author.remove_role(role)
         await ctx.send(f"Done! Removed {ctx.guild.get_role(role).name} from your roles")
