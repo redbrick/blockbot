@@ -15,8 +15,10 @@ jobs:
             image: git.dbyte.xyz/distro/levant:latest
 
         steps:
+            - uses: actions/checkout@v3
+
             - name: Deploy to Nomad
-              run: tools/deploy-prod.sh
+              run: cd $GITHUB_WORKSPACE && tools/deploy-prod.sh
 
     deploy-to-review:
         runs-on: [self-hosted, deployment-runner]
@@ -25,5 +27,7 @@ jobs:
             image: git.dbyte.xyz/distro/levant:latest
 
         steps:
+            - uses: actions/checkout@v3
+
             - name: Deploy to Nomad
-              run: tools/deploy-review.sh
+              run: cd $GITHUB_WORKSPACE && tools/deploy-review.sh
