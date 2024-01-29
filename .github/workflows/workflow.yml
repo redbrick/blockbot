@@ -23,10 +23,8 @@ jobs:
         if: github.ref != 'refs/heads/master'
         timeout-minutes: 60
         steps:
-            - uses: actions/checkout@v4.1.0
-              with:
-                  fetch-depth: 50
-                  lfs: true
+            - uses: actions/checkout@v4
+
             - run: tools/deploy-review.sh
 
     stop_review:
@@ -52,10 +50,8 @@ jobs:
         if: github.ref == 'refs/heads/master'
         timeout-minutes: 60
         steps:
-            - uses: actions/checkout@v4.1.0
-              with:
-                  fetch-depth: 50
-                  lfs: true
+            - uses: actions/checkout@v4
+
             - run: tools/deploy-canary.sh
 
     deploy_prod:
@@ -66,8 +62,6 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         timeout-minutes: 60
         steps:
-            - uses: actions/checkout@v4.1.0
-              with:
-                  fetch-depth: 50
-                  lfs: true
+            - uses: actions/checkout@v4
+
             - run: nomad job promote -address=http://nomad.service.consul:4646 prospector
