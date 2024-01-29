@@ -5,11 +5,11 @@ env:
     IMAGE_NAME: ${{ github.repository }}
 
 on:
-    push:
+    pull_request:
         branches:
             - "*"
 
-    pull_request:
+    push:
         branches:
             - "main"
 
@@ -32,15 +32,14 @@ jobs:
 
             - name: Extract metadata for Docker
               id: meta
-              uses: docker/metadata-action@v4
+              uses: docker/metadata-action@v5
               with:
                   images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
                   tags: |
-                      type=ref,event=branch
-                      type=ref,event=pr
-                      type=ref,event=tag
+                      type=sha,format=long
+                      type=match,pattern=main
                   flavor: |
-                      latest=true
+                      latest=auto
 
             - name: Build and push
               uses: docker/build-push-action@v4
