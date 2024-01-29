@@ -1,0 +1,74 @@
+name: Build and deploy
+
+on:
+    push:
+    pull_request:
+    workflow_dispatch:
+
+concurrency:
+    group: "${{ github.ref }}"
+    cancel-in-progress: true
+
+jobs:
+    build:
+        name: build
+        uses: "./.github/workflows/build.yml"
+
+    deploy_review:
+        needs:
+            - build
+
+        runs-on: [selfhosted-runner, deployment-runner]
+        container:
+            image: git.dbyte.xyz/distro/levant
+        if: github.ref != 'refs/heads/master'
+        timeout-minutes: 60
+        steps:
+            - uses: actions/checkout@v4.1.0
+              with:
+                  fetch-depth: 50
+                  lfs: true
+            - run: tools/deploy-review.sh
+
+    stop_review:
+        needs:
+            - build
+        runs-on: [selfhosted-runner, deployment-runner]
+        container:
+            image: multani/nomad
+        if: github.event_name == 'workflow_dispatch'
+        timeout-minutes: 60
+        steps:
+            - run: echo "null"
+            - run: nomad status -address=http://nomad.service.consul:4646
+            - run: nomad job stop -address=http://nomad.service.consul:4646 -purge blockbot-${GITHUB_SHA}
+
+    deploy_canary:
+        needs:
+            - deploy_review
+            - stop_review
+        runs-on: [selfhosted-runner, deployment-runner]
+        container:
+            image: git.dbyte.xyz/distro/levant
+        if: github.ref == 'refs/heads/master'
+        timeout-minutes: 60
+        steps:
+            - uses: actions/checkout@v4.1.0
+              with:
+                  fetch-depth: 50
+                  lfs: true
+            - run: tools/deploy-canary.sh
+
+    deploy_prod:
+        needs: deploy_canary
+        runs-on: [selfhosted-runner, deployment-runner]
+        container:
+            image: multani/nomad
+        if: github.event_name == 'workflow_dispatch'
+        timeout-minutes: 60
+        steps:
+            - uses: actions/checkout@v4.1.0
+              with:
+                  fetch-depth: 50
+                  lfs: true
+            - run: nomad job promote -address=http://nomad.service.consul:4646 prospector

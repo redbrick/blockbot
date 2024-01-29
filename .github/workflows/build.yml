@@ -1,21 +1,23 @@
-name: Build & Publish Container
+# Environment variables defined in a calling workflow are not accessible to this reusable workflow. Refer to the documentation for further details on this limitation.
+name: src-api-.gitlab-ci
 
 env:
     REGISTRY: ghcr.io
     IMAGE_NAME: ${{ github.repository }}
 
 on:
-    push:
-        branches:
-            - "*"
-
+    workflow_call:
 jobs:
-    build-and-push-image:
+    build:
         runs-on: ubuntu-latest
-        permissions:
-            contents: read
-            packages: write
-
+        container:
+            image: docker:stable
+        timeout-minutes: 60
+        services:
+            docker:dind:
+                image: docker:dind
+        env:
+            DOCKER_TLS_CERTDIR: ""
         steps:
             - uses: actions/checkout@v4
 
@@ -44,33 +46,3 @@ jobs:
                   push: true
                   tags: ${{ steps.meta.outputs.tags }}
                   labels: ${{ steps.meta.outputs.labels }}
-
-    deploy-to-prod:
-        needs: [build-and-push-image]
-        if: contains( github.ref, 'main')
-
-        runs-on: [self-hosted, deployment-runner]
-
-        container:
-            image: git.dbyte.xyz/distro/levant:latest
-
-        steps:
-            - uses: actions/checkout@v3
-
-            - name: Deploy to Nomad
-              run: cd $GITHUB_WORKSPACE && tools/deploy-prod.sh
-
-    deploy-to-review:
-        needs: [build-and-push-image]
-        if: contains( github.ref, 'main') == false
-
-        runs-on: [self-hosted, deployment-runner]
-
-        container:
-            image: git.dbyte.xyz/distro/levant:latest
-
-        steps:
-            - uses: actions/checkout@v3
-
-            - name: Deploy to Nomad
-              run: cd $GITHUB_WORKSPACE && tools/deploy-review.sh
