@@ -29,7 +29,7 @@ jobs:
           -var git_sha="${GITHUB_SHA}" \
           -var environment_slug="${GITHUB_REF_NAME}" \
           -address "http://nomad.service.consul:4646" \
-          tools/templates/blockbot-review.hcl
+          ./.github/deploy/review.hcl
 
   stop_review:
     needs:
@@ -59,4 +59,4 @@ jobs:
           levant deploy \
           -var git_sha="${GITHUB_SHA}" \
           -address "http://nomad.service.consul:4646" \
-          tools/templates/blockbot-prod.hcl
+          ./.github/deploy/production.hcl
