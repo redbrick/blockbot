@@ -40,7 +40,7 @@ jobs:
             - run: nomad status -address=http://nomad.service.consul:4646
             - run: nomad job stop -address=http://nomad.service.consul:4646 -purge blockbot-${GITHUB_SHA}
 
-    deploy_canary:
+    deploy_prod:
         needs:
             - deploy_review
             - stop_review
@@ -52,16 +52,4 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
-            - run: tools/deploy-canary.sh
-
-    deploy_prod:
-        needs: deploy_canary
-        runs-on: [self-hosted, deployment-runner]
-        container:
-            image: multani/nomad
-        if: github.event_name == 'workflow_dispatch'
-        timeout-minutes: 60
-        steps:
-            - uses: actions/checkout@v4
-
-            - run: nomad job promote -address=http://nomad.service.consul:4646 prospector
+            - run: tools/deploy-prod.sh
