@@ -94,11 +94,9 @@ class HelloWorld(discord.Extension):
     @discord.component_callback("click_me")
     async def click_me(self, ctx: discord.ComponentContext):
         """A callback for the click me button"""
-        user = ctx.author
-        await ctx.send(f"{user.mention}, you clicked me!")
+        await ctx.send(f"{ctx.author.mention}, you clicked me!")
 
     @discord.component_callback("select_me")
     async def select_me(self, ctx: discord.ComponentContext):
         """A callback for the select me menu"""
-        user = ctx.author
-        await ctx.send(f"{user.mention}, you selected {' '.join(ctx.values)}")
+        await ctx.send(f"{ctx.author.mention}, you selected {' '.join(ctx.values)}")
