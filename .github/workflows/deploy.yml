@@ -1,0 +1,61 @@
+name: Deploy
+
+on:
+  push:
+  pull_request:
+    types: [closed]
+
+  #concurrency:
+  #  group: '${{ github.ref }}'
+  #  cancel-in-progress: true
+
+jobs:
+  build:
+    name: build
+    uses: './.github/workflows/build.yml'
+    if: github.event_name != 'pull_request'
+
+  deploy_review:
+    needs:
+      - build
+
+    runs-on: [self-hosted, deployment-runner]
+    container:
+      image: git.dbyte.xyz/distro/levant
+    if: github.ref != 'refs/heads/main' && github.event_name == 'push'
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          levant deploy \
+          -var git_sha="${GITHUB_SHA}" \
+          -var environment_slug="${GITHUB_REF_NAME}" \
+          -address "http://nomad.service.consul:4646" \
+          ./.github/deploy/review.hcl
+
+  stop_review:
+    runs-on: [self-hosted, deployment-runner]
+    container:
+      image: multani/nomad
+    if: github.event_name == 'pull_request'
+    timeout-minutes: 60
+    steps:
+      - run: echo "null"
+      - run: nomad status -address=http://nomad.service.consul:4646
+      - run: nomad job stop -address=http://nomad.service.consul:4646 -purge blockbot-${GITHUB_HEAD_REF}
+
+  deploy_prod:
+    needs:
+      - build
+    runs-on: [self-hosted, deployment-runner]
+    container:
+      image: git.dbyte.xyz/distro/levant
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          levant deploy \
+          -var git_sha="${GITHUB_SHA}" \
+          -address "http://nomad.service.consul:4646" \
+          ./.github/deploy/production.hcl
