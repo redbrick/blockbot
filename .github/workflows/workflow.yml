@@ -2,7 +2,6 @@ name: Build and deploy
 
 on:
     push:
-    pull_request:
     workflow_dispatch:
 
 concurrency:
@@ -18,7 +17,7 @@ jobs:
         needs:
             - build
 
-        runs-on: [selfhosted-runner, deployment-runner]
+        runs-on: [self-hosted, deployment-runner]
         container:
             image: git.dbyte.xyz/distro/levant
         if: github.ref != 'refs/heads/master'
@@ -33,7 +32,7 @@ jobs:
     stop_review:
         needs:
             - build
-        runs-on: [selfhosted-runner, deployment-runner]
+        runs-on: [self-hosted, deployment-runner]
         container:
             image: multani/nomad
         if: github.event_name == 'workflow_dispatch'
@@ -47,7 +46,7 @@ jobs:
         needs:
             - deploy_review
             - stop_review
-        runs-on: [selfhosted-runner, deployment-runner]
+        runs-on: [self-hosted, deployment-runner]
         container:
             image: git.dbyte.xyz/distro/levant
         if: github.ref == 'refs/heads/master'
@@ -61,7 +60,7 @@ jobs:
 
     deploy_prod:
         needs: deploy_canary
-        runs-on: [selfhosted-runner, deployment-runner]
+        runs-on: [self-hosted, deployment-runner]
         container:
             image: multani/nomad
         if: github.event_name == 'workflow_dispatch'
