@@ -10,7 +10,7 @@ class getRole(discord.Extension):
         name="role", description='', required=True, opt_type=discord.OptionType.STRING,choices=role_choices
     )
     
-    @discord.slash_command("role", description="Self-assign a role")
+    @discord.slash_command("getrole", description="Self-assign a role")
     @roleoption
     async def gib_role(self, ctx: discord.SlashContext, role):
         ctx.author.add_role(role)
