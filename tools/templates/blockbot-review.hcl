@@ -13,7 +13,7 @@ job "blockbot-[[.environment_slug]]" {
       driver = "docker"
 
       config {
-        image = "ghcr.io/redbrick/blockbot:[[.git_sha]]"
+        image = "ghcr.io/redbrick/blockbot:sha-[[.git_sha]]"
       }
 
       resources {
