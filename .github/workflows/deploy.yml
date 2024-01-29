@@ -1,0 +1,29 @@
+name: Deploy application to Aperture
+
+on:
+    push:
+        branches: ["*"]
+    pull_request:
+        branches: ["*"]
+
+jobs:
+    deploy-to-prod:
+        if: contains( github.ref, 'main')
+        runs-on: [self-hosted, deployment-runner]
+
+        container:
+            image: git.dbyte.xyz/distro/levant:latest
+
+        steps:
+            - name: Deploy to Nomad
+              run: tools/deploy-prod.sh
+
+    deploy-to-review:
+        runs-on: [self-hosted, deployment-runner]
+
+        container:
+            image: git.dbyte.xyz/distro/levant:latest
+
+        steps:
+            - name: Deploy to Nomad
+              run: tools/deploy-review.sh
