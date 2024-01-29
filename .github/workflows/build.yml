@@ -7,7 +7,7 @@ env:
 on:
     push:
         branches:
-            - "main"
+            - "*"
 
     pull_request:
         branches:
@@ -49,3 +49,31 @@ jobs:
                   push: true
                   tags: ${{ steps.meta.outputs.tags }}
                   labels: ${{ steps.meta.outputs.labels }}
+
+    deploy-to-prod:
+        if: contains( github.ref, 'main')
+
+        runs-on: [self-hosted, deployment-runner]
+
+        container:
+            image: git.dbyte.xyz/distro/levant:latest
+
+        steps:
+            - uses: actions/checkout@v3
+
+            - name: Deploy to Nomad
+              run: cd $GITHUB_WORKSPACE && tools/deploy-prod.sh
+
+    deploy-to-review:
+        if: contains( github.ref, 'main') == false
+
+        runs-on: [self-hosted, deployment-runner]
+
+        container:
+            image: git.dbyte.xyz/distro/levant:latest
+
+        steps:
+            - uses: actions/checkout@v3
+
+            - name: Deploy to Nomad
+              run: cd $GITHUB_WORKSPACE && tools/deploy-review.sh
