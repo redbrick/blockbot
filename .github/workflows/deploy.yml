@@ -20,7 +20,7 @@ jobs:
     runs-on: [self-hosted, deployment-runner]
     container:
       image: git.dbyte.xyz/distro/levant
-    if: github.ref != 'refs/heads/master' && github.event_name == 'workflow_dispatch'
+    # if: github.ref != 'refs/heads/master' && github.event_name == 'workflow_dispatch'
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
