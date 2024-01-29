@@ -5,13 +5,9 @@ env:
     IMAGE_NAME: ${{ github.repository }}
 
 on:
-    pull_request:
-        branches:
-            - "*"
-
     push:
         branches:
-            - "main"
+            - "*"
 
 jobs:
     build-and-push-image:
