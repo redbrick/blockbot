@@ -8,16 +8,9 @@ env:
 on:
     workflow_call:
 jobs:
-    build:
+    buildx:
         runs-on: ubuntu-latest
-        container:
-            image: docker:stable
         timeout-minutes: 60
-        services:
-            docker:dind:
-                image: docker:dind
-        env:
-            DOCKER_TLS_CERTDIR: ""
         steps:
             - uses: actions/checkout@v4
 
