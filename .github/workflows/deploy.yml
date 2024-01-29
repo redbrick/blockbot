@@ -2,7 +2,8 @@ name: Deploy
 
 on:
   push:
-  workflow_dispatch:
+  pull_request:
+    types: [closed]
 
 concurrency:
   group: '${{ github.ref }}'
@@ -20,7 +21,7 @@ jobs:
     runs-on: [self-hosted, deployment-runner]
     container:
       image: git.dbyte.xyz/distro/levant
-    if: github.ref != 'refs/heads/master' && github.event_name == 'workflow_dispatch'
+    if: github.ref != 'refs/heads/main' && github.event_name == 'push'
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
@@ -37,21 +38,20 @@ jobs:
     runs-on: [self-hosted, deployment-runner]
     container:
       image: multani/nomad
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'pull_request'
     timeout-minutes: 60
     steps:
       - run: echo "null"
       - run: nomad status -address=http://nomad.service.consul:4646
-      - run: nomad job stop -address=http://nomad.service.consul:4646 -purge blockbot-${GITHUB_SHA}
+      - run: nomad job stop -address=http://nomad.service.consul:4646 -purge blockbot-${GITHUB_REF_NAME}
 
   deploy_prod:
     needs:
-      - deploy_review
-      - stop_review
+      - build
     runs-on: [self-hosted, deployment-runner]
     container:
       image: git.dbyte.xyz/distro/levant
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/main'
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
