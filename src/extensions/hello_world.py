@@ -1,102 +1,83 @@
 """
 Example extension with simple commands
 """
-import interactions as discord
+import arc
+import hikari
+import logging
+
+plugin = arc.GatewayPlugin(name="hello_world")
 
 
-class HelloWorld(discord.Extension):
-    @discord.slash_command("hello", description="Say hello!")
-    async def hello(self, ctx: discord.SlashContext):
-        """A simple hello world command"""
-        await ctx.send("Hello, world!")
+@plugin.include
+@arc.slash_command("hello", "Say hello!")
+async def hello(ctx: arc.GatewayContext) -> None:
+    """A simple hello world command"""
+    logging.info("idk something")
+    await ctx.respond("Hello, world!")
 
-    @discord.slash_command(
-        "base_command", description="A base command, to expand on"
-    )
-    async def base_command(self, ctx: discord.SlashContext):
-        ...
 
-    @base_command.subcommand(
-        "sub_command", sub_cmd_description="A sub command, to expand on"
-    )
-    async def sub_command(self, ctx: discord.SlashContext):
-        """A simple sub command"""
-        await ctx.send("Hello, world! This is a sub command")
+group = plugin.include_slash_group("base_command", "A base command, to expand on")
 
-    @discord.slash_command("options", description="A command with options")
-    @discord.slash_option(
-        "option_str",
-        "A string option",
-        opt_type=discord.OptionType.STRING,
-        required=True,
+
+@group.include
+@arc.slash_subcommand("sub_command", "A sub command, to expand on")
+async def sub_command(ctx: arc.GatewayContext) -> None:
+    """A simple sub command"""
+    await ctx.respond("Hello, world! This is a sub command")
+
+
+@plugin.include
+@arc.slash_command("options", "A command with options")
+async def options(
+    ctx: arc.GatewayContext,
+    option_str: arc.Option[str, arc.StrParams("A string option")],
+    option_int: arc.Option[int, arc.IntParams("An integer option")],
+    option_attachment: arc.Option[hikari.Attachment, arc.AttachmentParams("An attachment option")],
+) -> None:
+    """A command with lots of options"""
+    embed = hikari.Embed(title="There are a lot of options here", description="Maybe too many", colour=0x5865F2)
+    embed.set_image(option_attachment)
+    embed.add_field("String option", option_str, inline=False)
+    embed.add_field("Integer option", str(option_int), inline=False)
+    await ctx.respond(embed=embed)
+
+
+@plugin.include
+@arc.slash_command("components", "A command with components")
+async def components(ctx: arc.GatewayContext) -> None:
+    """A command with components"""
+    builder = ctx.client.rest.build_message_action_row()
+    select_menu = builder.add_text_menu("select_me", placeholder="I wonder what this does", min_values=1, max_values=2)
+    for opt in ("Select me!", "No, select me!", "Select me too!"):
+        select_menu.add_option(opt, opt)
+
+    button = ctx.client.rest.build_message_action_row().add_interactive_button(
+        hikari.ButtonStyle.PRIMARY, "click_me", label="Click me!"
     )
-    @discord.slash_option(
-        "option_int",
-        "An integer option",
-        opt_type=discord.OptionType.INTEGER,
-        required=True,
-    )
-    @discord.slash_option(
-        "option_attachment",
-        "An attachment option",
-        opt_type=discord.OptionType.ATTACHMENT,
-        required=True,
-    )
-    async def options(
-        self,
-        ctx: discord.SlashContext,
-        option_str: str,
-        option_int: int,
-        option_attachment: discord.Attachment,
-    ):
-        """A command with lots of options"""
-        embed = discord.Embed(
-            "There are a lot of options here",
-            description="Maybe too many",
-            color=discord.BrandColors.BLURPLE,
+
+    await ctx.respond("Here are some components", components=[builder, button])
+
+
+@plugin.listen()
+async def on_interaction(event: hikari.InteractionCreateEvent) -> None:
+    interaction = event.interaction
+
+    # Discussions are underway for allowing to listen for a "ComponentInteractionEvent" directly
+    # instead of doing this manual filtering: https://github.com/hikari-py/hikari/issues/1777
+    if not isinstance(interaction, hikari.ComponentInteraction):
+        return
+
+    if interaction.custom_id == "click_me":
+        await interaction.create_initial_response(
+            hikari.ResponseType.MESSAGE_CREATE, f"{interaction.user.mention}, you clicked me!"
         )
-        embed.set_image(url=option_attachment.url)
-        embed.add_field(
-            "String option",
-            option_str,
-            inline=False,
-        )
-        embed.add_field(
-            "Integer option",
-            str(option_int),
-            inline=False,
-        )
-        await ctx.send(embed=embed)
-
-    @discord.slash_command("components", description="A command with components")
-    async def components(self, ctx: discord.SlashContext):
-        """A command with components"""
-        await ctx.send(
-            "Here are some components",
-            components=discord.spread_to_rows(
-                discord.Button(
-                    label="Click me!",
-                    custom_id="click_me",
-                    style=discord.ButtonStyle.PRIMARY,
-                ),
-                discord.StringSelectMenu(
-                    "Select me!",
-                    "No, select me!",
-                    "Select me too!",
-                    placeholder="I wonder what this does",
-                    min_values=1,
-                    max_values=2,
-                    custom_id="select_me",
-                ),
-            ),
+    elif interaction.custom_id == "select_me":
+        await interaction.create_initial_response(
+            hikari.ResponseType.MESSAGE_CREATE,
+            f"{interaction.user.mention}, you selected {' '.join(interaction.values)}",
         )
 
-    @discord.component_callback("click_me")
-    async def click_me(self, ctx: discord.ComponentContext):
-        """A callback for the click me button"""
-        await ctx.send("You clicked me!")
 
-    @discord.component_callback("select_me")
-    async def select_me(self, ctx: discord.ComponentContext):
-        """A callback for the select me menu"""
-        await ctx.send(f"You selected {' '.join(ctx.values)}")
+@arc.loader
+def loader(client: arc.GatewayClient) -> None:
+    client.add_plugin(plugin)
