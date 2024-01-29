@@ -3,7 +3,6 @@ Example extension with simple commands
 """
 import arc
 import hikari
-import logging
 
 plugin = arc.GatewayPlugin(name="hello_world")
 
@@ -12,7 +11,6 @@ plugin = arc.GatewayPlugin(name="hello_world")
 @arc.slash_command("hello", "Say hello!")
 async def hello(ctx: arc.GatewayContext) -> None:
     """A simple hello world command"""
-    logging.info("idk something")
     await ctx.respond("Hello, world!")
 
 
