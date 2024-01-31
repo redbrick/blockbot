@@ -7,10 +7,8 @@ import hikari
 from src.config import DEBUG, TOKEN
 
 if TOKEN is None:
-    logging.critical("TOKEN environment variable not set. Exiting.")
+    print("TOKEN environment variable not set. Exiting.")
     sys.exit(1)
-
-logging.debug(f"Debug mode is {DEBUG}; You can safely ignore this.")
 
 bot = hikari.GatewayBot(
     token=TOKEN,
@@ -18,6 +16,8 @@ bot = hikari.GatewayBot(
     intents=hikari.Intents.ALL_UNPRIVILEGED | hikari.Intents.MESSAGE_CONTENT,
     logs="DEBUG" if DEBUG else "INFO",
 )
+
+logging.info(f"Debug mode is {DEBUG}; You can safely ignore this.")
 
 arc_client = arc.GatewayClient(bot)
 arc_client.load_extensions_from("./src/extensions/")
