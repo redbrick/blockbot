@@ -3,7 +3,7 @@ import arc
 import hikari
 import datetime as dt
 
-upt_plugin = arc.GatewayPlugin("Blockbot Uptime")
+uptime_plugin = arc.GatewayPlugin("Blockbot Uptime")
 
 @uptime_plugin.include
 @arc.slash_command("uptime", "Show formatted uptime of Blockbot")
@@ -12,4 +12,4 @@ async def uptime(ctx):
 
 @arc.loader
 def loader(client):
-    client.add_plugin(upt_plugin)
+    client.add_plugin(uptime_plugin)
