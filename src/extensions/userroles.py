@@ -1,6 +1,8 @@
 import arc
 import hikari
-from src.config import role_choices
+
+from src.config import ROLE_IDS as role_choices
+role_choices = [hikari.CommandChoice(name=a, value=b) for a,b in role_choices] # reformat role_choices into CommandChoice-es; thus ROLE_IDS can just store easy-to-update tuples
 
 plugin = arc.GatewayPlugin("User Roles")
 
