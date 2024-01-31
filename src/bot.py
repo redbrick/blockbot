@@ -19,5 +19,5 @@ bot = hikari.GatewayBot(
 
 logging.info(f"Debug mode is {DEBUG}; You can safely ignore this.")
 
-arc_client = arc.GatewayClient(bot)
+arc_client = arc.GatewayClient(bot, is_dm_enabled=False)
 arc_client.load_extensions_from("./src/extensions/")
