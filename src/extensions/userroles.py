@@ -1,16 +1,10 @@
 import arc
 import hikari
+from src.config import role_choices
 
 plugin = arc.GatewayPlugin("User Roles")
 
 role = plugin.include_slash_group("role", "Get/remove assignable roles.")
-
-role_choices = [
-    hikari.CommandChoice(name="Webgroup", value="1166751688598761583"),
-    hikari.CommandChoice(name="Gamez", value="1089204642241581139"),
-    hikari.CommandChoice(name="Croomer", value="1172696659097047050"),
-]
-
 
 @role.include
 @arc.slash_subcommand("add", "Add an assignable role.")
