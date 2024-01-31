@@ -11,7 +11,7 @@ plugin = arc.GatewayPlugin(name="hello_world")
 @arc.slash_command("hello", "Say hello!")
 async def hello(ctx: arc.GatewayContext) -> None:
     """A simple hello world command"""
-    await ctx.respond("Hello, world!")
+    await ctx.respond("Hello from hikari!")
 
 
 group = plugin.include_slash_group("base_command", "A base command, to expand on")
