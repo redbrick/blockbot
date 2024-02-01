@@ -30,7 +30,7 @@ def build_boost_message(
     message = base_message + multiple_boosts_message + "!"
 
     if (message_type in BOOST_TIERS):
-        count = BOOST_TIERS.index(message_type)
+        count = BOOST_TIERS.index(message_type) + 1
         message += f"\n{guild.name} has reached **Level {count}!**"
 
     return message
