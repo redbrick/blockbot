@@ -1,8 +1,8 @@
 import arc
 import hikari
 
-from src.config import ROLE_IDS as role_choices
-role_choices = [hikari.CommandChoice(name=a, value=b) for a,b in role_choices] # reformat role_choices into CommandChoice-es; thus ROLE_IDS can just store easy-to-update tuples
+from src.config import ROLE_IDS
+ROLE_IDS = [hikari.CommandChoice(name=name, value=value) for name,value in ROLE_IDS] # reformat ROLE_IDS into CommandChoice-es; thus ROLE_IDS can just store easy-to-update tuples
 
 plugin = arc.GatewayPlugin("User Roles")
 
@@ -11,7 +11,7 @@ role = plugin.include_slash_group("role", "Get/remove assignable roles.")
 @role.include
 @arc.slash_subcommand("add", "Add an assignable role.")
 async def add_role(
-    ctx: arc.GatewayContext, role: arc.Option[str, arc.StrParams("The role to add.", choices=role_choices)]
+    ctx: arc.GatewayContext, role: arc.Option[str, arc.StrParams("The role to add.", choices=ROLE_IDS)]
 ) -> None:
     assert ctx.guild_id
     assert ctx.member
@@ -30,7 +30,7 @@ async def add_role(
 @role.include
 @arc.slash_subcommand("remove", "Remove an assignable role.")
 async def remove_role(
-    ctx: arc.GatewayContext, role: arc.Option[str, arc.StrParams("The role to remove.", choices=role_choices)]
+    ctx: arc.GatewayContext, role: arc.Option[str, arc.StrParams("The role to remove.", choices=ROLE_IDS)]
 ) -> None:
     assert ctx.guild_id
     assert ctx.member
