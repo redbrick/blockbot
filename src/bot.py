@@ -19,5 +19,17 @@ bot = hikari.GatewayBot(
 
 logging.info(f"Debug mode is {DEBUG}; You can safely ignore this.")
 
-arc_client = arc.GatewayClient(bot, is_dm_enabled=False)
-arc_client.load_extensions_from("./src/extensions/")
+client = arc.GatewayClient(bot, is_dm_enabled=False)
+client.load_extensions_from("./src/extensions/")
+
+@client.set_error_handler
+async def error_handler(ctx: arc.GatewayContext, exc: Exception) -> None:
+    if DEBUG:
+        message = f"```{exc}```"
+    else:
+        message = "If this persists, create an issue at <https://webgroup-issues.redbrick.dcu.ie/>."
+
+    await ctx.respond(f"❌ Blockbot encountered an unhandled exception. {message}")
+    logging.error(exc)
+
+    raise exc
