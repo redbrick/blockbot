@@ -2,7 +2,7 @@ import arc
 import hikari
 
 from src.config import ROLE_IDS
-ROLE_IDS = [hikari.CommandChoice(name=name, value=value) for name,value in ROLE_IDS] # reformat ROLE_IDS into CommandChoice-es; thus ROLE_IDS can just store easy-to-update tuples
+ROLE_CHOICES = [hikari.CommandChoice(name=name, value=value) for name,value in ROLE_IDS] # ROLE_IDS <- ROLE_CHOICES into CommandChoice-es; thus ROLE_CHOICES can just store easy-to-update tuples
 
 plugin = arc.GatewayPlugin("User Roles")
 
@@ -11,13 +11,13 @@ role = plugin.include_slash_group("role", "Get/remove assignable roles.")
 @role.include
 @arc.slash_subcommand("add", "Add an assignable role.")
 async def add_role(
-    ctx: arc.GatewayContext, role: arc.Option[str, arc.StrParams("The role to add.", choices=ROLE_IDS)]
+    ctx: arc.GatewayContext, role: arc.Option[str, arc.StrParams("The role to add.", choices=ROLE_CHOICES)]
 ) -> None:
     assert ctx.guild_id
     assert ctx.member
 
     role_id = int(role)
-    if role_id not in ctx.member.role_ids:
+    if role_id not in ctx.member.ROLE_CHOICES:
         await ctx.client.rest.add_role_to_member(
             ctx.guild_id, ctx.author, int(role), reason=f"{ctx.author} added role."
         )
@@ -30,13 +30,13 @@ async def add_role(
 @role.include
 @arc.slash_subcommand("remove", "Remove an assignable role.")
 async def remove_role(
-    ctx: arc.GatewayContext, role: arc.Option[str, arc.StrParams("The role to remove.", choices=ROLE_IDS)]
+    ctx: arc.GatewayContext, role: arc.Option[str, arc.StrParams("The role to remove.", choices=ROLE_CHOICES)]
 ) -> None:
     assert ctx.guild_id
     assert ctx.member
 
     role_id = int(role)
-    if role_id in ctx.member.role_ids:
+    if role_id in ctx.member.ROLE_CHOICES:
         await ctx.client.rest.remove_role_from_member(
             ctx.guild_id, ctx.author, int(role), reason=f"{ctx.author} removed role."
         )
