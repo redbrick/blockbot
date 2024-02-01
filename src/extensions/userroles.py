@@ -17,7 +17,7 @@ async def add_role(
     assert ctx.member
 
     role_id = int(role)
-    if role_id not in ctx.member.ROLE_CHOICES:
+    if role_id not in ctx.member.role_ids:
         await ctx.client.rest.add_role_to_member(
             ctx.guild_id, ctx.author, int(role), reason=f"{ctx.author} added role."
         )
@@ -36,7 +36,7 @@ async def remove_role(
     assert ctx.member
 
     role_id = int(role)
-    if role_id in ctx.member.ROLE_CHOICES:
+    if role_id in ctx.member.role_ids:
         await ctx.client.rest.remove_role_from_member(
             ctx.guild_id, ctx.author, int(role), reason=f"{ctx.author} removed role."
         )
