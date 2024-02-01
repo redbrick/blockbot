@@ -1,39 +1,53 @@
 # Blockbot
 
-This Discord bot uses the `interactions.py` module to interface with the Discord API.
+Blockbot is a Discord bot, written in Python, that is maintained by the Redbrick Webgroup. This project uses [`hikari`](https://github.com/hikari-py/hikari/), an opinionated microframework, to interface with the Discord API. [`hikari-arc`](https://github.com/hypergonial/hikari-arc) is the command handler of choice.
 
-For help with using the module, check out the [documentation](https://interactions-py.github.io/interactions.py/Guides/).
+## Resources
 
-## Overview
+- [`hikari` Documentation](https://docs.hikari-py.dev/en/latest/)
+- [`hikari-arc` Documentation](https://arc.hypergonial.com/)
+- [Examples](https://github.com/hypergonial/hikari-arc/tree/main/examples/gateway)
 
-> `main.py:`
-- A custom, dynamic extension (command) loader. Write an extension in the `extensions/` directory, and it will automatically be loaded when the bot boots.
+## File Structure
 
-> `extensions/`:
-- This directory is home to the custom extensions (known as cogs in `discord.py`, or command groups) that are loaded when the bot is started. Extensions are classes that encapsulate command logic and can be dynamically loaded/unloaded.
-
-> `config.py:`
-- This module houses the bot configuration. The values are loaded from environment variables, so you can set them in your shell or in a `.env` file. 
+- `bot.py`
+  - This is the file that contains the bot configuration and instantiation, while also being responsible for loading the bot extensions.
+- `extensions/`
+  - This directory is home to the custom extensions (known as cogs in `discord.py`, or command groups) that are loaded when the bot is started. Extensions are classes that encapsulate command logic and can be dynamically loaded/unloaded. In `hikari-arc`, an intuitive [plugin system](https://arc.hypergonial.com/guides/plugins_extensions/) is used.
+- `config.py`
+  - Configuration secrets and important constants (such as identifiers) are stored here. The secrets are loaded from environment variables, so you can set them in your shell or in a `.env` file.
+- `utils.py`
+  - Simple utility functions are stored here, that can be reused across the codebase.
 
 ## Installation
 
-> 1. Clone this repository. To switch to a different version, `cd` into this cloned repository and run `git checkout [branch name/version here]`
-> 2. It's generally advised to work in a Python virtual environment. Here are steps to create one *(the `discord-py-interactions` library requires Python 3.10.0 or later)*:
-> > - `$` `python3 -m venv env`
-> > - `$` `source env/bin/activate`
-> 3. Create a Discord bot token from [here](https://discord.com/developers/applications/)  
-> **Register it for slash commands:**
-> - Under *OAuth2 > General*, set the Authorization Method to "In-app Authorization"
-> - Tick `bot` and `applications.commands`
-> - Go to *OAuth2 > URL Generator*, tick `bot` and `applications.commands`
-> - Copy the generated URL at the bottom of the page to invite it to desired servers
-> 4. Make a new file called `.env` inside the repo folder and paste the below code block in the file
-> ```
-> TOKEN=<paste Discord bot token here>
-> ```
-> 5. Run `pip install -r requirements.txt` to install packages. You'll need Python 3.10 or later
-> 6. Once that's done, run the bot by executing `python3 main.py` in the terminal
+### Discord Developer Portal
 
-*If you aren't sure how to obtain your server ID, check out [this article](https://www.alphr.com/discord-find-server-id/)*
+As a prerequisite, you need to have a bot application registered on the Discord developer portal.
 
-*If you get errors related to missing token environment variables, run `source .env`*
+1. Create a Discord bot application [here](https://discord.com/developers/applications/). 
+2. When you have a bot application, register it for slash commands:
+3. Go to *"OAuth2 > URL Generator"* on the left sidebar, select the `bot` and `applications.commands` scopes, scroll down & select the bot permissions you need (for development, you can select `Administator`).
+4. Copy and visit the generated URL at the bottom of the page to invite it to the desired server.
+
+#### Bot Token
+
+- Go to the Discord developer portal and under *"Bot"* on the left sidebar, click `Reset Token`. Copy the generated token.
+
+### Source Code
+1. `git clone` and `cd` into this repository.
+2. It's generally advised to work in a Python [virtual environment](https://docs.python.org/3/library/venv.html):
+```sh
+python3 -m venv .venv
+source .venv/bin/activate
+```
+3. Create a new file called `.env` inside the repo folder and paste your bot token into the file as such:
+```
+TOKEN=<Discord bot token here>
+```
+4. Run `pip install -r requirements.txt` to install the required packages.
+5. Once that's done, start the bot by running `python3 -m src`.
+
+## FAQ
+
+- If you get errors related to missing token environment variables, run `source .env`.
