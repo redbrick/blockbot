@@ -4,7 +4,7 @@ import hikari
 from src.config import CHANNEL_IDS
 from src.utils import get_guild
 
-plugin = arc.GatewayPlugin(name='Boosts')
+plugin = arc.GatewayPlugin(name="Boosts")
 
 BOOST_TIERS: list[hikari.MessageType] = [
     hikari.MessageType.USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_1,
@@ -24,14 +24,14 @@ def build_boost_message(
 ) -> str:
     assert message_type in BOOST_MESSAGE_TYPES
 
-    base_message = f'{booster_user.display_name} just boosted the server'
-    multiple_boosts_message = f' **{number_of_boosts}** times' if number_of_boosts else ''
+    base_message = f"{booster_user.display_name} just boosted the server"
+    multiple_boosts_message = f" **{number_of_boosts}** times" if number_of_boosts else ""
 
-    message = base_message + multiple_boosts_message + '!'
+    message = base_message + multiple_boosts_message + "!"
 
     if (message_type in BOOST_TIERS):
         count = BOOST_TIERS.index(message_type)
-        message += f'\n{guild.name} has reached **Level {count}!**'
+        message += f"\n{guild.name} has reached **Level {count}!**"
 
     return message
 
@@ -48,7 +48,7 @@ async def on_message(event: hikari.GuildMessageCreateEvent):
         guild=await get_guild(plugin.client, event)
     )
 
-    await plugin.client.rest.create_message(CHANNEL_IDS['lobby'], content=message)
+    await plugin.client.rest.create_message(CHANNEL_IDS["lobby"], content=message)
 
 
 @arc.loader
