@@ -1,7 +1,6 @@
-"""Entrypoint script to load extensions and start the client."""
-import hikari
+from hikari import Activity, ActivityType
 
 from src.bot import bot
 
 if __name__ == '__main__':
-    bot.run(activity=hikari.Activity(name='Webgroup issues', type=hikari.ActivityType.WATCHING))
+    bot.run(activity=Activity(name='Webgroup issues', type=ActivityType.WATCHING))

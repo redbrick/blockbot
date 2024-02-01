@@ -66,13 +66,13 @@ async def role_error_handler(ctx: arc.GatewayContext, exc: Exception) -> None:
 
     if isinstance(exc, hikari.ForbiddenError):
         return await ctx.respond(
-          f':x: Blockbot is not permitted to self-service the {role_mention(role)} role.',
+          f'❌ Blockbot is not permitted to self-service the {role_mention(role)} role.',
           flags=hikari.MessageFlag.EPHEMERAL
         )
     
     if isinstance(exc, hikari.NotFoundError):
         return await ctx.respond(
-          f":x: Blockbot can't find that role.",
+          f"❌ Blockbot can't find that role.",
           flags=hikari.MessageFlag.EPHEMERAL
         )
 

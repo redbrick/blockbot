@@ -29,5 +29,7 @@ async def error_handler(ctx: arc.GatewayContext, exc: Exception) -> None:
     else:
         message = 'If this persists, create an issue at <https://webgroup-issues.redbrick.dcu.ie/>.'
 
-    await ctx.respond(f':x: Blockbot encountered an unhandled exception. {message}')
+    await ctx.respond(f'❌ Blockbot encountered an unhandled exception. {message}')
     logging.error(exc)
+
+    raise exc
