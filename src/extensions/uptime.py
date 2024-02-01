@@ -6,7 +6,6 @@ start_time = datetime.now()
 
 plugin = arc.GatewayPlugin("Blockbot Uptime")
 
-
 @plugin.include
 @arc.slash_command("uptime", "Show formatted uptime of Blockbot")
 async def uptime(ctx):
