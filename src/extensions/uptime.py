@@ -1,17 +1,19 @@
-import time as t
-
-start_time = t.time()
+from datetime import datetime
 
 import arc
-import hikari
-import datetime as dt
+
+start_time = datetime.now()
 
 plugin = arc.GatewayPlugin("Blockbot Uptime")
+
 
 @plugin.include
 @arc.slash_command("uptime", "Show formatted uptime of Blockbot")
 async def uptime(ctx):
-    await ctx.respond(f"Uptime: **{dt.timedelta(seconds=t.time()-start_time)!s}**")
+    up_time = datetime.now() - start_time
+    h, ms = divmod(up_time.seconds, 3600)
+    m, s = divmod(ms, 60)
+    await ctx.respond(f"Uptime: **{up_time.days} days, {h} hours, {m} minutes, and {s} seconds**.")
 
 @arc.loader
 def loader(client):
