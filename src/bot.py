@@ -22,6 +22,7 @@ logging.info(f"Debug mode is {DEBUG}; You can safely ignore this.")
 client = arc.GatewayClient(bot, is_dm_enabled=False)
 client.load_extensions_from("./src/extensions/")
 
+
 @client.set_error_handler
 async def error_handler(ctx: arc.GatewayContext, exc: Exception) -> None:
     if DEBUG:
