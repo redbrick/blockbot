@@ -1,4 +1,3 @@
-black==24.1.1
 hikari==2.0.0.dev122
 hikari-arc==1.1.0
 ruff==0.2.0
