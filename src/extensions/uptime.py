@@ -17,7 +17,7 @@ async def uptime(ctx):
     format = lambda val, str: f"{val} {str}{'s' if val != 1 else ''}"
     message_parts = [(d, "day"), (h, "hour"), (m, "minute"), (s, "second")]
     formatted_parts = [format(val, str) for val, str in message_parts if val]
-    
+
     await ctx.respond(f"Uptime: **{', '.join(formatted_parts)}**")
 
 @arc.loader

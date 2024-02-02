@@ -2,22 +2,19 @@ import arc
 import hikari
 
 from src.utils import role_mention
+from src.config import ROLE_IDS
 
-plugin = arc.GatewayPlugin(name="User Roles")
+plugin = arc.GatewayPlugin("User Roles")
 
 role = plugin.include_slash_group("role", "Get/remove assignable roles.")
 
-role_choices = [
-    hikari.CommandChoice(name="Webgroup", value="1166751688598761583"),
-    hikari.CommandChoice(name="Gamez", value="1089204642241581139"),
-    hikari.CommandChoice(name="Croomer", value="1172696659097047050"),
-]
+ROLE_CHOICES = [hikari.CommandChoice(name=name, value=value) for name,value in ROLE_IDS] # ROLE_IDS <- ROLE_CHOICES into CommandChoice-es; thus ROLE_CHOICES can just store easy-to-update tuples
 
 @role.include
 @arc.slash_subcommand("add", "Add an assignable role.")
 async def add_role(
     ctx: arc.GatewayContext,
-    role: arc.Option[str, arc.StrParams("The role to add.", choices=role_choices)]
+    role: arc.Option[str, arc.StrParams("The role to add.", choices=ROLE_CHOICES)]
 ) -> None:
     assert ctx.guild_id
     assert ctx.member
@@ -40,7 +37,7 @@ async def add_role(
 @arc.slash_subcommand("remove", "Remove an assignable role.")
 async def remove_role(
     ctx: arc.GatewayContext,
-    role: arc.Option[str, arc.StrParams("The role to remove.", choices=role_choices)]
+    role: arc.Option[str, arc.StrParams("The role to remove.", choices=ROLE_CHOICES)]
 ) -> None:
     assert ctx.guild_id
     assert ctx.member
@@ -69,7 +66,7 @@ async def role_error_handler(ctx: arc.GatewayContext, exc: Exception) -> None:
           f"❌ Blockbot is not permitted to self-service the {role_mention(role)} role.",
           flags=hikari.MessageFlag.EPHEMERAL
         )
-    
+
     if isinstance(exc, hikari.NotFoundError):
         return await ctx.respond(
           f"❌ Blockbot can't find that role.",
