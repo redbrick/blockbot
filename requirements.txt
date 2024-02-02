@@ -1,3 +1,5 @@
 hikari==2.0.0.dev122
 hikari-arc==1.1.0
+ruff==0.2.0
+pre-commit==3.6.0
 python-dotenv==1.0.1

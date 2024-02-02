@@ -6,6 +6,7 @@ start_time = datetime.now()
 
 plugin = arc.GatewayPlugin("Blockbot Uptime")
 
+
 @plugin.include
 @arc.slash_command("uptime", "Show formatted uptime of Blockbot")
 async def uptime(ctx):
@@ -14,11 +15,14 @@ async def uptime(ctx):
     h, ms = divmod(up_time.seconds, 3600)
     m, s = divmod(ms, 60)
 
-    format = lambda val, str: f"{val} {str}{'s' if val != 1 else ''}"
+    def format(val, str):
+        return f"{val} {str}{'s' if val != 1 else ''}"
+
     message_parts = [(d, "day"), (h, "hour"), (m, "minute"), (s, "second")]
     formatted_parts = [format(val, str) for val, str in message_parts if val]
-    
+
     await ctx.respond(f"Uptime: **{', '.join(formatted_parts)}**")
+
 
 @arc.loader
 def loader(client):
