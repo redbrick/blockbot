@@ -27,9 +27,7 @@ def build_boost_message(
     assert message_type in BOOST_MESSAGE_TYPES
 
     base_message = f"{booster_user.display_name} just boosted the server"
-    multiple_boosts_message = (
-        f" **{number_of_boosts}** times" if number_of_boosts else ""
-    )
+    multiple_boosts_message = f" **{number_of_boosts}** times" if number_of_boosts else ""
 
     message = base_message + multiple_boosts_message + "!"
 
