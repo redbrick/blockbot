@@ -1,0 +1,5 @@
+.github/
+.ruff_cache/
+.venv/
+postgres_data/
+__pycache__/
