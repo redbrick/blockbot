@@ -15,8 +15,8 @@ async def uptime(ctx: arc.GatewayContext) -> None:
     h, ms = divmod(up_time.seconds, 3600)
     m, s = divmod(ms, 60)
 
-    def format(val: int, type_: str):
-        return f"{val} {type_}{'s' if val != 1 else ''}"
+    def format(val: int, s: str):
+        return f"{val} {s}{'s' if val != 1 else ''}"
 
     message_parts = [(d, "day"), (h, "hour"), (m, "minute"), (s, "second")]
     formatted_parts = [format(val, str) for val, str in message_parts if val]
