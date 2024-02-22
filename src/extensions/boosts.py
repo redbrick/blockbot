@@ -12,9 +12,7 @@ BOOST_TIERS: list[hikari.MessageType] = [
     hikari.MessageType.USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_3,
 ]
 
-BOOST_MESSAGE_TYPES: list[hikari.MessageType] = BOOST_TIERS + [
-    hikari.MessageType.USER_PREMIUM_GUILD_SUBSCRIPTION,
-]
+BOOST_MESSAGE_TYPES: list[hikari.MessageType] = BOOST_TIERS + [hikari.MessageType.USER_PREMIUM_GUILD_SUBSCRIPTION]
 
 
 def build_boost_message(
@@ -26,9 +24,7 @@ def build_boost_message(
     assert message_type in BOOST_MESSAGE_TYPES
 
     base_message = f"{booster_user.display_name} just boosted the server"
-    multiple_boosts_message = (
-        f" **{number_of_boosts}** times" if number_of_boosts else ""
-    )
+    multiple_boosts_message = f" **{number_of_boosts}** times" if number_of_boosts else ""
 
     message = base_message + multiple_boosts_message + "!"
 
@@ -40,7 +36,7 @@ def build_boost_message(
 
 
 @plugin.listen()
-async def on_message(event: hikari.GuildMessageCreateEvent):
+async def on_message(event: hikari.GuildMessageCreateEvent) -> None:
     if event.message.type not in BOOST_MESSAGE_TYPES:
         return
 
