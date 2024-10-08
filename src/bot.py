@@ -3,6 +3,7 @@ import sys
 
 import arc
 import hikari
+import miru
 
 from src.config import DEBUG, TOKEN
 
@@ -20,7 +21,14 @@ bot = hikari.GatewayBot(
 logging.info(f"Debug mode is {DEBUG}; You can safely ignore this.")
 
 client = arc.GatewayClient(bot, is_dm_enabled=False)
+miru_client = miru.Client.from_arc(client)
+
+client.set_type_dependency(miru.Client, miru_client)
+
 client.load_extensions_from("./src/extensions/")
+
+if DEBUG:
+    client.load_extensions_from("./src/hello_world/")
 
 
 @client.set_error_handler
