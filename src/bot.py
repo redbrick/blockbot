@@ -28,7 +28,7 @@ client.set_type_dependency(miru.Client, miru_client)
 client.load_extensions_from("./src/extensions/")
 
 if DEBUG:
-    client.load_extensions_from("./src/hello_world/")
+    client.load_extensions_from("./src/examples/")
 
 
 @client.set_error_handler
