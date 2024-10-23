@@ -22,6 +22,7 @@ jobs:
     runs-on: [self-hosted, deployment-runner]
     container:
       image: hashicorp/levant
+      options: --user root
     if: github.ref != 'refs/heads/main' && github.event_name == 'push'
     timeout-minutes: 60
     steps:
@@ -51,6 +52,7 @@ jobs:
     runs-on: [self-hosted, deployment-runner]
     container:
       image: hashicorp/levant
+      options: --user root
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     timeout-minutes: 60
     steps:
