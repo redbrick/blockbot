@@ -31,10 +31,16 @@ async def options(
     ctx: arc.GatewayContext,
     option_str: arc.Option[str, arc.StrParams("A string option")],
     option_int: arc.Option[int, arc.IntParams("An integer option")],
-    option_attachment: arc.Option[hikari.Attachment, arc.AttachmentParams("An attachment option")],
+    option_attachment: arc.Option[
+        hikari.Attachment, arc.AttachmentParams("An attachment option")
+    ],
 ) -> None:
     """A command with lots of options"""
-    embed = hikari.Embed(title="There are a lot of options here", description="Maybe too many", colour=0x5865F2)
+    embed = hikari.Embed(
+        title="There are a lot of options here",
+        description="Maybe too many",
+        colour=0x5865F2,
+    )
     embed.set_image(option_attachment)
     embed.add_field("String option", option_str, inline=False)
     embed.add_field("Integer option", str(option_int), inline=False)
@@ -46,7 +52,9 @@ async def options(
 async def components(ctx: arc.GatewayContext) -> None:
     """A command with components"""
     builder = ctx.client.rest.build_message_action_row()
-    select_menu = builder.add_text_menu("select_me", placeholder="I wonder what this does", min_values=1, max_values=2)
+    select_menu = builder.add_text_menu(
+        "select_me", placeholder="I wonder what this does", min_values=1, max_values=2
+    )
     for opt in ("Select me!", "No, select me!", "Select me too!"):
         select_menu.add_option(opt, opt)
 
