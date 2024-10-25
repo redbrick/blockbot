@@ -27,7 +27,6 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
-      - run: whoami
       - run: |
           levant deploy \
           -var git_sha="${GITHUB_SHA}" \
