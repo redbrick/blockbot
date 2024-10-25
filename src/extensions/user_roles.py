@@ -25,11 +25,19 @@ async def add_role(
     assert ctx.member
 
     if int(role) in ctx.member.role_ids:
-        await ctx.respond(f"You already have the {role_mention(role)} role.", flags=hikari.MessageFlag.EPHEMERAL)
+        await ctx.respond(
+            f"You already have the {role_mention(role)} role.",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
         return
 
-    await ctx.client.rest.add_role_to_member(ctx.guild_id, ctx.author, int(role), reason="Self-service role.")
-    await ctx.respond(f"Done! Added {role_mention(role)} to your roles.", flags=hikari.MessageFlag.EPHEMERAL)
+    await ctx.client.rest.add_role_to_member(
+        ctx.guild_id, ctx.author, int(role), reason="Self-service role."
+    )
+    await ctx.respond(
+        f"Done! Added {role_mention(role)} to your roles.",
+        flags=hikari.MessageFlag.EPHEMERAL,
+    )
 
 
 @role.include
@@ -42,13 +50,19 @@ async def remove_role(
     assert ctx.member
 
     if int(role) not in ctx.member.role_ids:
-        await ctx.respond(f"You don't have the {role_mention(role)} role.", flags=hikari.MessageFlag.EPHEMERAL)
+        await ctx.respond(
+            f"You don't have the {role_mention(role)} role.",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
         return
 
     await ctx.client.rest.remove_role_from_member(
         ctx.guild_id, ctx.author, int(role), reason=f"{ctx.author} removed role."
     )
-    await ctx.respond(f"Done! Removed {role_mention(role)} from your roles.", flags=hikari.MessageFlag.EPHEMERAL)
+    await ctx.respond(
+        f"Done! Removed {role_mention(role)} from your roles.",
+        flags=hikari.MessageFlag.EPHEMERAL,
+    )
 
 
 @role.set_error_handler
@@ -64,7 +78,9 @@ async def role_error_handler(ctx: arc.GatewayContext, exc: Exception) -> None:
         return
 
     if isinstance(exc, hikari.NotFoundError):
-        await ctx.respond("❌ Blockbot can't find that role.", flags=hikari.MessageFlag.EPHEMERAL)
+        await ctx.respond(
+            "❌ Blockbot can't find that role.", flags=hikari.MessageFlag.EPHEMERAL
+        )
         return
 
     raise exc
