@@ -11,6 +11,7 @@ role_choices = [
     hikari.CommandChoice(name="Webgroup", value="1166751688598761583"),
     hikari.CommandChoice(name="Gamez", value="1089204642241581139"),
     hikari.CommandChoice(name="Croomer", value="1172696659097047050"),
+    hikari.CommandChoice(name="External Events", value="1299487948206768138"),
 ]
 
 
