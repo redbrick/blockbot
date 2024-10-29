@@ -48,6 +48,7 @@ async def figlet_command(
 
     # generate ASCII art
     ascii_art = figlet.renderText(text)
+    assert len(ascii_art) > 0
 
     # wrap ASCII art in a codeblock
     message = f"```{ascii_art}```"
@@ -62,6 +63,21 @@ async def figlet_command(
     else:
         # send ASCII art in a codeblock
         await ctx.respond(message)
+
+
+@plugin.set_error_handler
+async def figlet_error_handler(ctx: arc.GatewayContext, exc: Exception) -> None:
+    text = ctx.get_option("text", arc.OptionType.STRING)
+    assert text is not None
+
+    if isinstance(exc, AssertionError):
+        await ctx.respond(
+            f"❌ Failed to generate ASCII art for: {text}",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
+        return
+
+    raise exc
 
 
 @arc.loader
