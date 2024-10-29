@@ -48,7 +48,12 @@ async def figlet_command(
 
     # generate ASCII art
     ascii_art = figlet.renderText(text)
-    assert len(ascii_art) > 0
+    if not ascii_art:
+        await ctx.respond(
+            "❌ Failed to generate ASCII art. Please try again.",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
+        return
 
     # wrap ASCII art in a codeblock
     message = f"```{ascii_art}```"
@@ -56,28 +61,13 @@ async def figlet_command(
     # do not exceed Discord's 2000 character limit
     if len(message) > 2000:
         await ctx.respond(
-            "The generated ASCII art is too long to send. Please try a shorter text.",
-            flags=hikari.MessageFlag.EPHEMERAL,
-        )
-
-    else:
-        # send ASCII art in a codeblock
-        await ctx.respond(message)
-
-
-@plugin.set_error_handler
-async def figlet_error_handler(ctx: arc.GatewayContext, exc: Exception) -> None:
-    text = ctx.get_option("text", arc.OptionType.STRING)
-    assert text is not None
-
-    if isinstance(exc, AssertionError):
-        await ctx.respond(
-            f"❌ Failed to generate ASCII art for: {text}",
+            "❌ The generated ASCII art is too long to send. Please try a shorter text.",
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return
 
-    raise exc
+    # send ASCII art in a codeblock
+    await ctx.respond(message)
 
 
 @arc.loader
