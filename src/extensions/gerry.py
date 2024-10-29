@@ -14,7 +14,7 @@ async def gerry_command(
         hikari.User, arc.UserParams("The user to send a gerry to.")
     ] = None,
 ) -> None:
-    """Send a user a random gerry!"""
+    """Send a gerry!"""
     if user is not None:
         description = f"So tell me {user.mention}!"
     else:
@@ -24,7 +24,7 @@ async def gerry_command(
         description=description,
         colour=0x5865F2,
     )
-    embed = embed.set_image(hikari.files.URL(image))
+    embed = embed.set_image(image)
 
     await ctx.respond(embed)
 
