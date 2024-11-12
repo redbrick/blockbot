@@ -30,7 +30,9 @@ class MyModal(miru.Modal, title="Tell us about yourself!"):
 
 @plugin.include
 @arc.slash_command("modal", "A command with a modal response.")
-async def modal_command(ctx: arc.GatewayContext, miru_client: miru.Client = arc.inject()) -> None:
+async def modal_command(
+    ctx: arc.GatewayContext, miru_client: miru.Client = arc.inject()
+) -> None:
     modal = MyModal()
     builder = modal.build_response(miru_client)
 
