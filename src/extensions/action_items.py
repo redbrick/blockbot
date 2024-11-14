@@ -1,12 +1,8 @@
 import arc
 import hikari
-import requests
 import re
 import aiohttp
 from urllib.parse import urlparse
-
-# not used, functionality for times/deadlines to be added later
-from datetime import datetime, timezone
 
 from src.utils import role_mention
 from src.hooks import restrict_to_channels, restrict_to_roles
@@ -15,11 +11,10 @@ from src.config import CHANNEL_IDS, ROLE_IDS, UID_MAPS
 
 action_items = arc.GatewayPlugin(name="Action Items")
 
-
 @action_items.include
-# @arc.with_hook(restrict_to_channels(channel_ids=[CHANNEL_IDS["action-items"]]))
-# @arc.with_hook(restrict_to_roles(role_ids=[ROLE_IDS["committee"]]))
-@arc.slash_command("action_items", "Display the action items from the MD")
+@arc.with_hook(restrict_to_channels(channel_ids=[CHANNEL_IDS["action-items"]]))
+@arc.with_hook(restrict_to_roles(role_ids=[ROLE_IDS["committee"]]))
+@arc.slash_command("action_items", "Display the action items from the MD", is_dm_enabled=False)
 async def get_action_items(
     ctx: arc.GatewayContext,
     url: arc.Option[str, arc.StrParams("URL of the minutes from the MD")],
