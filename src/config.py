@@ -6,7 +6,7 @@ load_dotenv()
 
 TOKEN = os.environ.get("TOKEN")  # required
 DEBUG = os.environ.get("DEBUG", False)
-UID_MAP = os.environ.get("UID_MAP")
+DISCORD_UID_MAP = os.environ.get("DISCORD_UID_MAP")
 
 CHANNEL_IDS: dict[str, int] = {
     "lobby": 627542044390457350,
@@ -15,6 +15,7 @@ CHANNEL_IDS: dict[str, int] = {
     "action-items": 1029132014210793513,
 }
 
+# TODO: query API/LDAP for these
 ROLE_IDS: dict[str, int] = {
     "all": 568762266992902179,
     "everyone": 568762266992902179,
@@ -25,7 +26,7 @@ ROLE_IDS: dict[str, int] = {
     "helpdesk": 1194683307921772594,
 }
 
-UID_MAPS = dict(item.split("=") for item in UID_MAP.split(","))
+UID_MAPS = dict(item.split("=") for item in DISCORD_UID_MAP.split(","))
 
 LDAP_USERNAME = os.environ.get("LDAP_USERNAME")
 LDAP_PASSWORD = os.environ.get("LDAP_PASSWORD")
