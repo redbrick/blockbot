@@ -24,7 +24,6 @@ job "blockbot" {
       template {
         data        = <<EOF
 TOKEN={{ key "blockbot/discord/token" }}
-DEBUG=false
 LDAP_USERNAME={{ key "blockbot/ldap/username" }}
 LDAP_PASSWORD={{ key "blockbot/ldap/password" }}
 DISCORD_UID_MAP={{ key "blockbot/discord/uid_map" }}

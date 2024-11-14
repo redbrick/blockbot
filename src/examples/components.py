@@ -23,10 +23,20 @@ class View(miru.View):
         max_values=3,
         options=[
             miru.SelectOption(label=colour)
-            for colour in ["Red", "Orange", "Yellow", "Green", "Blue", "Indigo", "Violet"]
+            for colour in [
+                "Red",
+                "Orange",
+                "Yellow",
+                "Green",
+                "Blue",
+                "Indigo",
+                "Violet",
+            ]
         ],
     )
-    async def colour_select(self, ctx: miru.ViewContext, select: miru.TextSelect) -> None:
+    async def colour_select(
+        self, ctx: miru.ViewContext, select: miru.TextSelect
+    ) -> None:
         await ctx.respond(f"Your favourite colours are: {', '.join(select.values)}!")
 
     # Defining a custom view check: https://miru.hypergonial.com/guides/checks_timeout/#checks
@@ -35,7 +45,9 @@ class View(miru.View):
         # user who originally ran the command.
         # For every other user they will receive an error message.
         if ctx.user.id != self.user_id:
-            await ctx.respond("You can't press this!", flags=hikari.MessageFlag.EPHEMERAL)
+            await ctx.respond(
+                "You can't press this!", flags=hikari.MessageFlag.EPHEMERAL
+            )
             return False
 
         return True
@@ -44,7 +56,8 @@ class View(miru.View):
     # Editing view items: https://miru.hypergonial.com/guides/editing_items/
     async def on_timeout(self) -> None:
         message = self.message
-        assert message  # Since the view is bound to a message, we can assert it's not None
+        # Since the view is bound to a message, we can assert it's not None
+        assert message  
 
         for item in self.children:
             item.disabled = True
@@ -55,7 +68,9 @@ class View(miru.View):
 
 @plugin.include
 @arc.slash_command("components", "A command with components.")
-async def components_cmd(ctx: arc.GatewayContext, miru_client: miru.Client = arc.inject()) -> None:
+async def components_cmd(
+    ctx: arc.GatewayContext, miru_client: miru.Client = arc.inject()
+) -> None:
     view = View(ctx.user.id)
     response = await ctx.respond("Here are some components...", components=view)
 
