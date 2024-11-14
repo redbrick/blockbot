@@ -10,7 +10,9 @@ async def hello(ctx: arc.GatewayContext) -> None:
     await ctx.respond("Hello from hikari and hikari-arc!")
 
 
-group = plugin.include_slash_group("base_group", "A base command group, with sub groups and sub commands.")
+group = plugin.include_slash_group(
+    "base_group", "A base command group, with sub groups and sub commands."
+)
 
 
 @group.include

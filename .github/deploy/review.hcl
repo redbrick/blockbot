@@ -24,7 +24,7 @@ job "blockbot-[[.environment_slug]]" {
       template {
         data        = <<EOF
 TOKEN={{ key "blockbot-dev/discord/token" }}
-DEBUG=false
+DEBUG=true
 EOF
         destination = "local/.env"
         env         = true
