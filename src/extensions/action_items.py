@@ -88,13 +88,18 @@ async def get_action_items(
 
     # Send title to the action-items channel
     await action_items.client.rest.create_message(
-        CHANNEL_IDS["action-items"], content="# Action Items:"
+        CHANNEL_IDS["action-items"],
+        content="# Action Items:",
     )
 
     # send each bullet point seperately
     for item in formatted_bullet_points:
         await action_items.client.rest.create_message(
-            CHANNEL_IDS["action-items"], content=item
+            CHANNEL_IDS["action-items"],
+            mentions_everyone=False,
+            user_mentions=True,
+            role_mentions=True,
+            content=item,
         )
     # respond with success if it executes successfully
     await ctx.respond("✅ Action Items sent successfully!")
