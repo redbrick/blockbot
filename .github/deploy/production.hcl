@@ -25,6 +25,9 @@ job "blockbot" {
         data        = <<EOF
 TOKEN={{ key "blockbot/discord/token" }}
 DEBUG=false
+LDAP_USERNAME={{ key "blockbot/ldap/username" }}
+LDAP_PASSWORD={{ key "blockbot/ldap/password" }}
+UID_MAP={{ key "blockbot/ldap/uid_map" }}
 EOF
         destination = "local/.env"
         env         = true

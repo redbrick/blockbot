@@ -3,12 +3,13 @@ import hikari
 import requests
 import re
 
+# not used, functionality for times/deadlines to be added later
+from datetime import datetime, timezone
+
 from src.utils import role_mention
 from src.hooks import restrict_to_channels, restrict_to_roles
 from src.config import CHANNEL_IDS, ROLE_IDS, UID_MAPS, LDAP_USERNAME, LDAP_PASSWORD
 
-# not used, functionality for times/deadlines to be added later
-from datetime import datetime, timezone
 
 action_items = arc.GatewayPlugin(name="Action Items")
 
