@@ -29,9 +29,3 @@ UID_MAPS = dict(item.split("=") for item in UID_MAP.split(","))
 
 LDAP_USERNAME = os.environ.get("LDAP_USERNAME")
 LDAP_PASSWORD = os.environ.get("LDAP_PASSWORD")
-
-DB_HOST = os.environ.get("DB_HOST")
-DB_PORT = os.environ.get("DB_PORT")
-DB_NAME = os.environ.get("DB_NAME")
-DB_USER = os.environ.get("DB_USER")
-DB_PASSWORD = os.environ.get("DB_PASSWORD")
