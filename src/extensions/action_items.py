@@ -11,10 +11,13 @@ from src.config import CHANNEL_IDS, ROLE_IDS, UID_MAPS
 
 action_items = arc.GatewayPlugin(name="Action Items")
 
+
 @action_items.include
 @arc.with_hook(restrict_to_channels(channel_ids=[CHANNEL_IDS["action-items"]]))
 @arc.with_hook(restrict_to_roles(role_ids=[ROLE_IDS["committee"]]))
-@arc.slash_command("action_items", "Display the action items from the MD", is_dm_enabled=False)
+@arc.slash_command(
+    "action_items", "Display the action items from the MD", is_dm_enabled=False
+)
 async def get_action_items(
     ctx: arc.GatewayContext,
     url: arc.Option[str, arc.StrParams("URL of the minutes from the MD")],
@@ -44,6 +47,7 @@ async def get_action_items(
 
         content = await response.text()
 
+    # extract the action items section from the minutes
     action_items_section = re.search(
         r"# Action Items:?\n(.*?)(\n# |\n---|$)", content, re.DOTALL
     )
@@ -55,7 +59,10 @@ async def get_action_items(
     # Get the matched content (excluding the "Action Items" heading itself)
     action_items_content = action_items_section.group(1)
 
+    # extract each bullet point without the bullet point itself
     bullet_points = re.findall(r"^\s*[-*]\s+(.+)", action_items_content, re.MULTILINE)
+
+    # format each bullet point separately in a list
     formatted_bullet_points = [
         "- " + re.sub(r"^\[.\]\s+", "", item) for item in bullet_points
     ]
@@ -78,7 +85,7 @@ async def get_action_items(
         content="# Action Items:",
     )
 
-    # send each bullet point seperately
+    # send each bullet point separately
     for item in formatted_bullet_points:
         await action_items.client.rest.create_message(
             CHANNEL_IDS["action-items"],
