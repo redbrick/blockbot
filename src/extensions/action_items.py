@@ -2,29 +2,18 @@ import arc
 import hikari
 import requests
 import re
+import aiohttp
+from urllib.parse import urlparse
 
 # not used, functionality for times/deadlines to be added later
 from datetime import datetime, timezone
 
 from src.utils import role_mention
 from src.hooks import restrict_to_channels, restrict_to_roles
-from src.config import CHANNEL_IDS, ROLE_IDS, UID_MAPS, LDAP_USERNAME, LDAP_PASSWORD
+from src.config import CHANNEL_IDS, ROLE_IDS, UID_MAPS
 
 
 action_items = arc.GatewayPlugin(name="Action Items")
-
-session = requests.Session()
-
-data = {
-    "username": LDAP_USERNAME,
-    "password": LDAP_PASSWORD,
-}
-
-response = session.post("https://md.redbrick.dcu.ie/auth/ldap", data=data)
-if response.ok:
-    print("Login to MD successful!")
-else:
-    print("Login to MD failed!")
 
 
 @action_items.include
@@ -34,6 +23,7 @@ else:
 async def get_action_items(
     ctx: arc.GatewayContext,
     url: arc.Option[str, arc.StrParams("URL of the minutes from the MD")],
+    aiohttp_client: aiohttp.ClientSession = arc.inject(),
 ) -> None:
     """Display the action items from the MD!"""
 
@@ -44,19 +34,20 @@ async def get_action_items(
         )
         return
 
-    url_without_fragment = url.split("#", 1)[0]
+    parsed_url = urlparse(url)
+    request_url = (
+        f"{parsed_url.scheme}://{parsed_url.hostname}{parsed_url.path}/download"
+    )
 
-    clean_url = url_without_fragment.split("?", 1)[0]
+    async with aiohttp_client.get(request_url) as response:
+        if response.status != 200:
+            await ctx.respond(
+                f"❌ Failed to fetch the minutes. Status code: `{response.status}`",
+                flags=hikari.MessageFlag.EPHEMERAL,
+            )
+            return
 
-    request = clean_url + "/download"
-    response = session.get(request)
-    if not response.status_code == 200:
-        await ctx.respond(
-            f"❌ Failed to fetch the minutes. Status code: `{response.status_code}`",
-            flags=hikari.MessageFlag.EPHEMERAL,
-        )
-        return
-    content = response.text
+        content = await response.text()
 
     action_items_section = re.search(
         r"# Action Items:?\n(.*?)(\n# |\n---|$)", content, re.DOTALL
@@ -101,6 +92,7 @@ async def get_action_items(
             role_mentions=True,
             content=item,
         )
+
     # respond with success if it executes successfully
     await ctx.respond("✅ Action Items sent successfully!")
     return

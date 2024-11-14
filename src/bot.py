@@ -3,9 +3,10 @@ import sys
 
 import arc
 import hikari
+import aiohttp
 import miru
 
-from src.config import DEBUG, TOKEN
+from src.config import DEBUG, TOKEN, LDAP_USERNAME, LDAP_PASSWORD
 
 if TOKEN is None:
     print("TOKEN environment variable not set. Exiting.")
@@ -29,6 +30,37 @@ client.load_extensions_from("./src/extensions/")
 
 if DEBUG:
     client.load_extensions_from("./src/examples/")
+
+
+@client.listen(hikari.StartingEvent)
+async def on_start(event: hikari.StartingEvent) -> None:
+    # Create an aiohttp ClientSession to use for web requests
+    aiohttp_client = aiohttp.ClientSession()
+    client.set_type_dependency(aiohttp.ClientSession, aiohttp_client)
+
+    await hedgedoc_login(aiohttp_client)
+
+@client.listen(hikari.StoppedEvent)
+# By default, dependency injection is only enabled for command callbacks, pre/post hooks & error handlers
+# so dependency injection must be enabled manually for this event listener
+@client.inject_dependencies 
+async def on_stop(event: hikari.StoppedEvent, aiohttp_client: aiohttp.ClientSession = arc.inject()) -> None:
+    await aiohttp_client.close()
+
+async def hedgedoc_login(aiohttp_client: aiohttp.ClientSession) -> None:
+    data = {
+        "username": LDAP_USERNAME,
+        "password": LDAP_PASSWORD,
+    }
+
+    response = await aiohttp_client.post(
+        "https://md.redbrick.dcu.ie/auth/ldap", data=data
+    )
+    if response.ok:
+        logging.info("Login to MD successful!")
+    else:
+        # Ideally need a retry system
+        logging.info("Login to MD failed!")
 
 
 @client.set_error_handler
