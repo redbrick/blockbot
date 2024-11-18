@@ -38,11 +38,14 @@ async def on_start(event: hikari.StartingEvent) -> None:
     aiohttp_client = aiohttp.ClientSession()
     client.set_type_dependency(aiohttp.ClientSession, aiohttp_client)
 
+
 @client.listen(hikari.StoppedEvent)
 # By default, dependency injection is only enabled for command callbacks, pre/post hooks & error handlers
 # so dependency injection must be enabled manually for this event listener
-@client.inject_dependencies 
-async def on_stop(event: hikari.StoppedEvent, aiohttp_client: aiohttp.ClientSession = arc.inject()) -> None:
+@client.inject_dependencies
+async def on_stop(
+    event: hikari.StoppedEvent, aiohttp_client: aiohttp.ClientSession = arc.inject()
+) -> None:
     await aiohttp_client.close()
 
 

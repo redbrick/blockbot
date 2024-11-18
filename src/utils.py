@@ -3,6 +3,7 @@ from arc import GatewayClient
 import aiohttp
 from src.config import LDAP_USERNAME, LDAP_PASSWORD
 
+
 async def get_guild(
     client: GatewayClient, event: hikari.GuildMessageCreateEvent
 ) -> hikari.GatewayGuild | hikari.RESTGuild:
@@ -12,12 +13,11 @@ async def get_guild(
 def role_mention(role_id: hikari.Snowflake | int | str) -> str:
     return f"<@&{role_id}>"
 
+
 async def hedgedoc_login(aiohttp_client: aiohttp.ClientSession) -> None:
     data = {
         "username": LDAP_USERNAME,
         "password": LDAP_PASSWORD,
     }
 
-    await aiohttp_client.post(
-        "https://md.redbrick.dcu.ie/auth/ldap", data=data
-    )
+    await aiohttp_client.post("https://md.redbrick.dcu.ie/auth/ldap", data=data)
