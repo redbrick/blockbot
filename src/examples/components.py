@@ -57,7 +57,7 @@ class View(miru.View):
     async def on_timeout(self) -> None:
         message = self.message
         # Since the view is bound to a message, we can assert it's not None
-        assert message  
+        assert message
 
         for item in self.children:
             item.disabled = True

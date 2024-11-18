@@ -3,6 +3,7 @@ import sys
 
 import arc
 import hikari
+import aiohttp
 import miru
 
 from src.config import DEBUG, TOKEN
@@ -29,6 +30,23 @@ client.load_extensions_from("./src/extensions/")
 
 if DEBUG:
     client.load_extensions_from("./src/examples/")
+
+
+@client.listen(hikari.StartingEvent)
+async def on_start(event: hikari.StartingEvent) -> None:
+    # Create an aiohttp ClientSession to use for web requests
+    aiohttp_client = aiohttp.ClientSession()
+    client.set_type_dependency(aiohttp.ClientSession, aiohttp_client)
+
+
+@client.listen(hikari.StoppedEvent)
+# By default, dependency injection is only enabled for command callbacks, pre/post hooks & error handlers
+# so dependency injection must be enabled manually for this event listener
+@client.inject_dependencies
+async def on_stop(
+    event: hikari.StoppedEvent, aiohttp_client: aiohttp.ClientSession = arc.inject()
+) -> None:
+    await aiohttp_client.close()
 
 
 @client.set_error_handler
