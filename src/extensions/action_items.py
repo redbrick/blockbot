@@ -16,7 +16,10 @@ action_items = arc.GatewayPlugin(name="Action Items")
 @arc.with_hook(restrict_to_channels(channel_ids=[CHANNEL_IDS["action-items"]]))
 @arc.with_hook(restrict_to_roles(role_ids=[ROLE_IDS["committee"]]))
 @arc.slash_command(
-    "action_items", "Display the action items from the MD", is_dm_enabled=False
+    "action_items",
+    "Display the action items from the MD",
+    is_dm_enabled=False,
+    autodefer=arc.AutodeferMode.EPHEMERAL,
 )
 async def get_action_items(
     ctx: arc.GatewayContext,
