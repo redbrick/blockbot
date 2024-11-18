@@ -4,7 +4,7 @@ import re
 import aiohttp
 from urllib.parse import urlparse
 
-from src.utils import role_mention
+from src.utils import role_mention, hedgedoc_login
 from src.hooks import restrict_to_channels, restrict_to_roles
 from src.config import CHANNEL_IDS, ROLE_IDS, UID_MAPS
 
@@ -31,6 +31,8 @@ async def get_action_items(
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return
+
+    await hedgedoc_login(aiohttp_client)
 
     parsed_url = urlparse(url)
     request_url = (
