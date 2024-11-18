@@ -16,7 +16,10 @@ action_items = arc.GatewayPlugin(name="Action Items")
 @arc.with_hook(restrict_to_channels(channel_ids=[CHANNEL_IDS["action-items"]]))
 @arc.with_hook(restrict_to_roles(role_ids=[ROLE_IDS["committee"]]))
 @arc.slash_command(
-    "action_items", "Display the action items from the MD", is_dm_enabled=False
+    "action_items",
+    "Display the action items from the MD",
+    is_dm_enabled=False,
+    autodefer=arc.AutodeferMode.EPHEMERAL,
 )
 async def get_action_items(
     ctx: arc.GatewayContext,
@@ -55,7 +58,10 @@ async def get_action_items(
     )
 
     if not action_items_section:
-        await ctx.respond("❌ No `Action Items` section found.")
+        await ctx.respond(
+            "❌ No `Action Items` section found.",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
         return
 
     # Get the matched content (excluding the "Action Items" heading itself)
@@ -98,7 +104,10 @@ async def get_action_items(
         )
 
     # respond with success if it executes successfully
-    await ctx.respond("✅ Action Items sent successfully!")
+    await ctx.respond(
+        "✅ Action Items sent successfully!",
+        flags=hikari.MessageFlag.EPHEMERAL,
+    )
     return
 
 
