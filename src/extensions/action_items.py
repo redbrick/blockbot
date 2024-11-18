@@ -55,7 +55,10 @@ async def get_action_items(
     )
 
     if not action_items_section:
-        await ctx.respond("❌ No `Action Items` section found.")
+        await ctx.respond(
+            "❌ No `Action Items` section found.",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
         return
 
     # Get the matched content (excluding the "Action Items" heading itself)
@@ -98,7 +101,10 @@ async def get_action_items(
         )
 
     # respond with success if it executes successfully
-    await ctx.respond("✅ Action Items sent successfully!")
+    await ctx.respond(
+        "✅ Action Items sent successfully!",
+        flags=hikari.MessageFlag.EPHEMERAL,
+    )
     return
 
 
