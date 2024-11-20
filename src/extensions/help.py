@@ -1,20 +1,27 @@
 import hikari
 import arc
 import itertools
+import collections
 
 plugin = arc.GatewayPlugin(name="Help Command Plugin")
 
 
-def gather_commands(client: arc.GatewayClient):
-    command_list = []
-    for command in itertools.chain(client.walk_commands(hikari.CommandType.SLASH)):
-        command_list.append(
-            {
-                "name": command.name,
-                "description": command.description or "No description provided.",
-            }
-        )
-    return command_list
+def gather_commands() -> dict[str | None, list[str]]:
+    plugin_commands: dict[str | None, list[str]] = collections.defaultdict(list)
+
+    for plugin_, commands in itertools.groupby(
+        plugin.client.walk_commands(hikari.CommandType.SLASH),
+        key=lambda cmd: cmd.plugin,
+    ):
+        for cmd in commands:
+            if not isinstance(cmd, (arc.SlashCommand, arc.SlashSubCommand)):
+                continue
+
+            plugin_commands[plugin_.name if plugin_ else None].append(
+                f"{cmd.make_mention()} - {cmd.description}"
+            )
+
+    return plugin_commands
 
 
 @plugin.include
@@ -22,12 +29,12 @@ def gather_commands(client: arc.GatewayClient):
 async def help_command(ctx: arc.GatewayContext) -> None:
     """Displays a simple list of all bot commands."""
 
-    commands = gather_commands(ctx.client)
+    plugin_commands = gather_commands()
     embed = hikari.Embed(title="Bot Commands", color=0x00FF00)
 
-    for command in commands:
+    for plugin_, commands in plugin_commands.items():
         embed.add_field(
-            name=f"/{command['name']}", value=command["description"], inline=False
+            name=plugin_ or "No plugin", value="\n".join(commands), inline=False
         )
 
     await ctx.respond(embed=embed)
