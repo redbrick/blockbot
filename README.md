@@ -5,4 +5,3 @@ Blockbot is a Discord bot, written in Python, that is maintained by the [Redbric
 ## Documentation
 
 Development documentation is hosted on the [Redbrick docs](https://docs.redbrick.dcu.ie/webgroup/blockbot/).
-

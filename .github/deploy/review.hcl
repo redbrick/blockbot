@@ -24,7 +24,10 @@ job "blockbot-[[.environment_slug]]" {
       template {
         data        = <<EOF
 TOKEN={{ key "blockbot-dev/discord/token" }}
-DEBUG=false
+DEBUG=true
+LDAP_USERNAME={{ key "blockbot-dev/ldap/username" }}
+LDAP_PASSWORD={{ key "blockbot-dev/ldap/password" }}
+DISCORD_UID_MAP={{ key "blockbot-dev/discord/uid_map" }}
 EOF
         destination = "local/.env"
         env         = true
