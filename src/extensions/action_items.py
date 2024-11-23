@@ -13,8 +13,8 @@ action_items = arc.GatewayPlugin(name="Action Items")
 
 
 @action_items.include
-@arc.with_hook(restrict_to_channels(channel_ids=[CHANNEL_IDS["action-items"]]))
-@arc.with_hook(restrict_to_roles(role_ids=[ROLE_IDS["committee"]]))
+# @arc.with_hook(restrict_to_channels(channel_ids=[CHANNEL_IDS["action-items"]]))
+# @arc.with_hook(restrict_to_roles(role_ids=[ROLE_IDS["committee"]]))
 @arc.slash_command(
     "action_items",
     "Display the action items from the MD",
@@ -137,17 +137,22 @@ async def action_item_reaction(event: hikari.ReactionAddEvent) -> None:
     if not message.author.is_bot:
         return
 
-    # extract user mentions from the message content
-    mention_regex = r"<@!?(\d+)>"
+    # extract user and role mentions from the message content
+    mention_regex = r"<@!?(\d+)>|<@&(\d+)>"
     mentions = re.findall(mention_regex, message.content)
 
-    if not mentions:
+    # make a single list of both user and role mentions
+    mentioned_ids = [int(user_id or role_id) for user_id, role_id in mentions]
+
+    if not mentioned_ids:
         return
 
-    mentioned_user_ids = [int(user_id) for user_id in mentions]
+    member = await action_items.client.rest.fetch_member(event.guild_id, event.user_id)
 
-    # only respond to reactions from mentioned user
-    if event.user_id in mentioned_user_ids:
+    is_mentioned_user = event.user_id in mentioned_ids
+    has_mentioned_role = any(role_id in mentioned_ids for role_id in member.role_ids)
+
+    if is_mentioned_user or has_mentioned_role:
         # add strikethrough and checkmark
         updated_content = f"- ✅ ~~{message.content[1:]}~~"
         await action_items.client.rest.edit_message(
