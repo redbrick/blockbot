@@ -34,7 +34,15 @@ def generate_time_choices():
 
 
 @agenda.include
-@arc.with_hook(restrict_to_channels(channel_ids=[CHANNEL_IDS["bots-cmt"]]))
+@arc.with_hook(
+    restrict_to_channels(
+        channel_ids=[
+            CHANNEL_IDS[
+                "bots-cmt", "committee-announcements", "cowboys-and-cowgirls-committee"
+            ]
+        ]
+    )
+)
 @arc.with_hook(restrict_to_roles(role_ids=[ROLE_IDS["committee"]]))
 @arc.slash_subcommand(
     "generate",
@@ -73,6 +81,8 @@ async def gen_agenda(
     TIME = parsed_datetime.strftime("%H:%M")
     full_datetime = parsed_datetime.strftime("%A, %Y-%m-%d %H:%M")
 
+    ROOM = room
+
     if "https://md.redbrick.dcu.ie" not in url:
         await ctx.respond(
             f"❌ `{url}` is not a valid MD URL. Please provide a valid URL.",
@@ -97,7 +107,7 @@ async def gen_agenda(
 
         content = await response.text()
 
-    modified_content = content.format(DATE=DATE, TIME=TIME, ROOM=room)
+    modified_content = content.format(DATE=DATE, TIME=TIME, ROOM=ROOM)
 
     post_url = f"{parsed_url.scheme}://{parsed_url.hostname}/new"
     post_headers = {"Content-Type": "text/markdown"}
@@ -116,7 +126,7 @@ async def gen_agenda(
 
     new_agenda_url = response.url
     announce_text = f"""
-## 📣 Agenda for this week's meeting | {full_datetime} | {room} <:bigRed:634311607039819776>
+## 📣 Agenda for this week's meeting | {full_datetime} | {ROOM} <:bigRed:634311607039819776>
 
 
 [{DATE} Agenda](<{new_agenda_url}>)
@@ -130,7 +140,7 @@ async def gen_agenda(
     """
 
     announce = await plugin.client.rest.create_message(
-        CHANNEL_IDS["bots-cmt"],
+        CHANNEL_IDS["committee-announcements"],
         mentions_everyone=False,
         user_mentions=True,
         role_mentions=True,
