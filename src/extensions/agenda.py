@@ -11,6 +11,8 @@ from src.config import CHANNEL_IDS, ROLE_IDS, UID_MAPS, AGENDA_TEMPLATE_URL
 
 plugin = arc.GatewayPlugin(name="Agenda")
 
+agenda = plugin.include_slash_group("agenda", "Interact with the agenda.")
+
 
 def generate_date_choices():
     """Generate date options for the next 7 days."""
@@ -31,13 +33,12 @@ def generate_time_choices():
     return times
 
 
-@plugin.include
+@agenda.include
 @arc.with_hook(restrict_to_channels(channel_ids=[CHANNEL_IDS["bots-cmt"]]))
 @arc.with_hook(restrict_to_roles(role_ids=[ROLE_IDS["committee"]]))
-@arc.slash_command(
-    "agenda",
+@arc.slash_subcommand(
+    "generate",
     "Generate a new agenda for committee meetings",
-    is_dm_enabled=False,
     autodefer=arc.AutodeferMode.EPHEMERAL,
 )
 async def gen_agenda(
@@ -61,7 +62,7 @@ async def gen_agenda(
     ] = AGENDA_TEMPLATE_URL,
     aiohttp_client: aiohttp.ClientSession = arc.inject(),
 ) -> None:
-    """Create a new agenda for committee meetings"""
+    """Generate a new agenda for committee meetings"""
 
     parsed_date = datetime.datetime.strptime(date, "%Y-%m-%d").date()
     parsed_time = datetime.datetime.strptime(time, "%H:%M").time()
@@ -70,7 +71,7 @@ async def gen_agenda(
 
     DATE = parsed_datetime.strftime("%Y-%m-%d")
     TIME = parsed_datetime.strftime("%H:%M")
-    full_datetime = parsed_datetime.strftime("%Y-%m-%d %A %H:%M")
+    full_datetime = parsed_datetime.strftime("%A, %Y-%m-%d %H:%M")
 
     if "https://md.redbrick.dcu.ie" not in url:
         await ctx.respond(
@@ -150,6 +151,33 @@ async def gen_agenda(
         flags=hikari.MessageFlag.EPHEMERAL,
     )
     return
+
+
+@agenda.include
+@arc.with_hook(restrict_to_roles(role_ids=[ROLE_IDS["committee"]]))
+@arc.slash_subcommand(
+    "template",
+    "View the agenda template",
+)
+async def view_template(
+    ctx: arc.GatewayContext,
+) -> None:
+    """View the agenda template"""
+    url = AGENDA_TEMPLATE_URL
+    image = "https://cdn.redbrick.dcu.ie/hedgedoc-uploads/sonic-the-hedgedoc.png"
+
+    embed = hikari.Embed(
+        title="Agenda Template",
+        url=url,
+        description="Click the link above to view the agenda template.\n\n **NOTE:** Any edits made to this template will affect the generated agenda.",
+        colour=0x5865F2,
+    )
+    embed = embed.set_image(image)
+
+    await ctx.respond(
+        embed,
+        flags=hikari.MessageFlag.EPHEMERAL,
+    )
 
 
 @arc.loader
