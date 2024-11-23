@@ -95,12 +95,18 @@ async def get_action_items(
 
     # send each bullet point separately
     for item in formatted_bullet_points:
-        await action_items.client.rest.create_message(
+        item = await action_items.client.rest.create_message(
             CHANNEL_IDS["action-items"],
             mentions_everyone=False,
             user_mentions=True,
             role_mentions=True,
             content=item,
+        )
+
+        await action_items.client.rest.add_reaction(
+            channel=item.channel_id,
+            message=item.id,
+            emoji="✅",
         )
 
     # respond with success if it executes successfully
@@ -109,6 +115,45 @@ async def get_action_items(
         flags=hikari.MessageFlag.EPHEMERAL,
     )
     return
+
+
+@action_items.listen()
+async def action_item_reaction(event: hikari.ReactionAddEvent) -> None:
+    bot_user = await action_items.client.rest.fetch_my_user()
+    bot_user_id = bot_user.id
+
+    # ignore if not ✅
+    if event.emoji_name != "✅":
+        return
+    # ignore bot reactions
+    if event.user_id == bot_user_id:
+        return
+
+    # fetch the message that was reacted to
+    message = await action_items.client.rest.fetch_message(
+        event.channel_id, event.message_id
+    )
+
+    if not message.author.is_bot:
+        return
+
+    # extract user mentions from the message content
+    mention_regex = r"<@!?(\d+)>"
+    mentions = re.findall(mention_regex, message.content)
+
+    if not mentions:
+        return
+
+    mentioned_user_ids = [int(user_id) for user_id in mentions]
+
+    # only respond to reactions from mentioned user
+    if event.user_id in mentioned_user_ids:
+        # add strikethrough and checkmark
+        updated_content = f"- ✅ ~~{message.content[1:]}~~"
+        await action_items.client.rest.edit_message(
+            event.channel_id, event.message_id, content=updated_content
+        )
+        return
 
 
 @arc.loader
