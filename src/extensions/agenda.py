@@ -136,7 +136,9 @@ async def gen_agenda(
     await plugin.client.rest.add_reaction(
         channel=announce.channel_id,
         message=announce.id,
-        emoji=hikari.CustomEmoji(id=634311607039819776, name="bigRed"),
+        emoji=hikari.CustomEmoji(
+            id=634311607039819776, name="bigRed", is_animated=False
+        ),
     )
 
     # respond with success if it executes successfully
