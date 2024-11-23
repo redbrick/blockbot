@@ -28,6 +28,7 @@ DEBUG=true
 LDAP_USERNAME={{ key "blockbot-dev/ldap/username" }}
 LDAP_PASSWORD={{ key "blockbot-dev/ldap/password" }}
 DISCORD_UID_MAP={{ key "blockbot-dev/discord/uid_map" }}
+AGENDA_TEMPLATE_URL={{ key "blockbot-dev/agenda/template_url" }}
 EOF
         destination = "local/.env"
         env         = true
