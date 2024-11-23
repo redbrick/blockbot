@@ -130,6 +130,9 @@ async def gen_agenda(
 
     announce = await plugin.client.rest.create_message(
         CHANNEL_IDS["bots-cmt"],
+        mentions_everyone=False,
+        user_mentions=True,
+        role_mentions=True,
         content=announce_text,
     )
 
