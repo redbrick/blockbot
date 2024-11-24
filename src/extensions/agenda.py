@@ -37,9 +37,9 @@ def generate_time_choices():
 @arc.with_hook(
     restrict_to_channels(
         channel_ids=[
-            CHANNEL_IDS[
-                "bots-cmt", "committee-announcements", "cowboys-and-cowgirls-committee"
-            ]
+            CHANNEL_IDS["bots-cmt"],
+            CHANNEL_IDS["committee-announcements"],
+            CHANNEL_IDS["cowboys-and-cowgirls-committee"],
         ]
     )
 )
