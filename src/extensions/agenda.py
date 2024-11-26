@@ -77,11 +77,9 @@ async def gen_agenda(
 
     parsed_datetime = datetime.datetime.combine(parsed_date, parsed_time)
 
-    DATE = parsed_datetime.strftime("%Y-%m-%d")
-    TIME = parsed_datetime.strftime("%H:%M")
-    full_datetime = parsed_datetime.strftime("%A, %Y-%m-%d %H:%M")
-
-    ROOM = room
+    formatted_date = parsed_datetime.strftime("%Y-%m-%d")
+    formatted_time = parsed_datetime.strftime("%H:%M")
+    formatted_datetime = parsed_datetime.strftime("%A, %Y-%m-%d %H:%M")
 
     if "https://md.redbrick.dcu.ie" not in url:
         await ctx.respond(
@@ -100,14 +98,17 @@ async def gen_agenda(
     async with aiohttp_client.get(request_url) as response:
         if response.status != 200:
             await ctx.respond(
-                f"❌ Failed to fetch the minutes. Status code: `{response.status}`",
+                f"❌ Failed to fetch the agenda template. Status code: `{
+                    response.status}`",
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
             return
 
         content = await response.text()
 
-    modified_content = content.format(DATE=DATE, TIME=TIME, ROOM=ROOM)
+    modified_content = content.format(
+        DATE=formatted_date, TIME=formatted_time, ROOM=room
+    )
 
     post_url = f"{parsed_url.scheme}://{parsed_url.hostname}/new"
     post_headers = {"Content-Type": "text/markdown"}
@@ -119,17 +120,18 @@ async def gen_agenda(
     ) as response:
         if response.status != 200:
             await ctx.respond(
-                f"❌ Failed to generate the agenda. Status code: `{response.status}`",
+                f"❌ Failed to generate the agenda. Status code: `{
+                    response.status}`",
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
             return
 
     new_agenda_url = response.url
     announce_text = f"""
-## 📣 Agenda for this week's meeting | {full_datetime} | {ROOM} <:bigRed:634311607039819776>
+## 📣 Agenda for this week's meeting | {formatted_datetime} | {room} <:bigRed:634311607039819776>
 
 
-[{DATE} Agenda](<{new_agenda_url}>)
+[{formatted_date} Agenda](<{new_agenda_url}>)
 
 - Please fill in your sections with anything you would like to discuss.
 - Put your Redbrick `username` beside any agenda items you add.
