@@ -13,8 +13,8 @@ action_items = arc.GatewayPlugin(name="Action Items")
 
 
 @action_items.include
-# @arc.with_hook(restrict_to_channels(channel_ids=[CHANNEL_IDS["action-items"]]))
-# @arc.with_hook(restrict_to_roles(role_ids=[ROLE_IDS["committee"]]))
+@arc.with_hook(restrict_to_channels(channel_ids=[CHANNEL_IDS["action-items"]]))
+@arc.with_hook(restrict_to_roles(role_ids=[ROLE_IDS["committee"]]))
 @arc.slash_command(
     "action_items",
     "Display the action items from the MD",
@@ -118,36 +118,44 @@ async def get_action_items(
 
 
 @action_items.listen()
-async def action_item_reaction(event: hikari.ReactionAddEvent) -> None:
-    bot_user = await action_items.client.rest.fetch_my_user()
-    bot_user_id = bot_user.id
-
-    # ignore if not ✅
-    if event.emoji_name != "✅":
-        return
-    # ignore bot reactions
-    if event.user_id == bot_user_id:
+async def action_item_reaction(event: hikari.GuildReactionAddEvent) -> None:
+    bot_user = action_items.client.app.get_me()
+    if not bot_user:  # bot_user will always be available after the bot has started
         return
 
-    # fetch the message that was reacted to
-    message = await action_items.client.rest.fetch_message(
+    # ignore reactions by the bot, reactions that are not ✅
+    # and reactions not created in the #action-items channel
+    if (
+        event.user_id == bot_user.id
+        or event.emoji_name != "✅"
+        or event.channel_id != CHANNEL_IDS["action-items"]
+    ):
+        return
+
+    # retrieve the message that was reacted to
+    message = action_items.client.cache.get_message(
+        event.message_id
+    ) or await action_items.client.rest.fetch_message(
         event.channel_id, event.message_id
     )
 
-    if not message.author.is_bot:
+    # ignore messages not sent by the bot and messages with no content
+    if message.author.id != bot_user.id or not message.content:
         return
 
     # extract user and role mentions from the message content
-    mention_regex = r"<@!?(\d+)>|<@&(\d+)>"
+    mention_regex = r"<@[!&]?(\d+)>"
     mentions = re.findall(mention_regex, message.content)
 
-    # make a single list of both user and role mentions
-    mentioned_ids = [int(user_id or role_id) for user_id, role_id in mentions]
+    # make a list of all mentions
+    mentioned_ids = [int(id_) for id_ in mentions]
 
     if not mentioned_ids:
         return
 
-    member = await action_items.client.rest.fetch_member(event.guild_id, event.user_id)
+    member = action_items.client.cache.get_member(
+        event.guild_id, event.user_id
+    ) or await action_items.client.rest.fetch_member(event.guild_id, event.user_id)
 
     is_mentioned_user = event.user_id in mentioned_ids
     has_mentioned_role = any(role_id in mentioned_ids for role_id in member.role_ids)
@@ -158,7 +166,6 @@ async def action_item_reaction(event: hikari.ReactionAddEvent) -> None:
         await action_items.client.rest.edit_message(
             event.channel_id, event.message_id, content=updated_content
         )
-        return
 
 
 @arc.loader
