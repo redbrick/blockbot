@@ -14,16 +14,16 @@ plugin = arc.GatewayPlugin(name="Agenda")
 agenda = plugin.include_slash_group("agenda", "Interact with the agenda.")
 
 
-def generate_date_choices():
+def generate_date_choices() -> list[str]:
     """Generate date options for the next 7 days."""
     today = datetime.date.today()
     return [(today + datetime.timedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
 
 
-def generate_time_choices():
+def generate_time_choices() -> list[str]:
     """Generate time options for every hour"""
     base_time = datetime.time(0, 0)
-    times = []
+    times: list[str] = []
     for hour in range(24):
         current_time = (
             datetime.datetime.combine(datetime.date.today(), base_time)
@@ -98,8 +98,7 @@ async def gen_agenda(
     async with aiohttp_client.get(request_url) as response:
         if response.status != 200:
             await ctx.respond(
-                f"❌ Failed to fetch the agenda template. Status code: `{
-                    response.status}`",
+                f"❌ Failed to fetch the agenda template. Status code: `{response.status}`",
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
             return
@@ -120,8 +119,7 @@ async def gen_agenda(
     ) as response:
         if response.status != 200:
             await ctx.respond(
-                f"❌ Failed to generate the agenda. Status code: `{
-                    response.status}`",
+                f"❌ Failed to generate the agenda. Status code: `{response.status}`",
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
             return
@@ -135,7 +133,7 @@ async def gen_agenda(
 
 - Please fill in your sections with anything you would like to discuss.
 - Put your Redbrick `username` beside any agenda items you add.
-- If you can't attend the meeting, please DM <@{UID_MAPS["kronos"]}>  with your reason.
+- If you can't attend the meeting, please DM <@{UID_MAPS["kronos"]}> with your reason.
 - React with <:bigRed:634311607039819776> if you can make it.
 
 ||{role_mention(ROLE_IDS["committee"])}||
@@ -152,9 +150,7 @@ async def gen_agenda(
     await plugin.client.rest.add_reaction(
         channel=announce.channel_id,
         message=announce.id,
-        emoji=hikari.CustomEmoji(
-            id=634311607039819776, name="bigRed", is_animated=False
-        ),
+        emoji=hikari.CustomEmoji.parse("<:bigRed:634311607039819776>"),
     )
 
     # respond with success if it executes successfully
