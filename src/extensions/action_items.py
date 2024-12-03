@@ -95,12 +95,18 @@ async def get_action_items(
 
     # send each bullet point separately
     for item in formatted_bullet_points:
-        await action_items.client.rest.create_message(
+        item = await action_items.client.rest.create_message(
             CHANNEL_IDS["action-items"],
             mentions_everyone=False,
             user_mentions=True,
             role_mentions=True,
             content=item,
+        )
+
+        await action_items.client.rest.add_reaction(
+            channel=item.channel_id,
+            message=item.id,
+            emoji="✅",
         )
 
     # respond with success if it executes successfully
@@ -109,6 +115,57 @@ async def get_action_items(
         flags=hikari.MessageFlag.EPHEMERAL,
     )
     return
+
+
+@action_items.listen()
+async def action_item_reaction(event: hikari.GuildReactionAddEvent) -> None:
+    bot_user = action_items.client.app.get_me()
+    if not bot_user:  # bot_user will always be available after the bot has started
+        return
+
+    # ignore reactions by the bot, reactions that are not ✅
+    # and reactions not created in the #action-items channel
+    if (
+        event.user_id == bot_user.id
+        or event.emoji_name != "✅"
+        or event.channel_id != CHANNEL_IDS["action-items"]
+    ):
+        return
+
+    # retrieve the message that was reacted to
+    message = action_items.client.cache.get_message(
+        event.message_id
+    ) or await action_items.client.rest.fetch_message(
+        event.channel_id, event.message_id
+    )
+
+    # ignore messages not sent by the bot and messages with no content
+    if message.author.id != bot_user.id or not message.content:
+        return
+
+    # extract user and role mentions from the message content
+    mention_regex = r"<@[!&]?(\d+)>"
+    mentions = re.findall(mention_regex, message.content)
+
+    # make a list of all mentions
+    mentioned_ids = [int(id_) for id_ in mentions]
+
+    if not mentioned_ids:
+        return
+
+    member = action_items.client.cache.get_member(
+        event.guild_id, event.user_id
+    ) or await action_items.client.rest.fetch_member(event.guild_id, event.user_id)
+
+    is_mentioned_user = event.user_id in mentioned_ids
+    has_mentioned_role = any(role_id in mentioned_ids for role_id in member.role_ids)
+
+    if is_mentioned_user or has_mentioned_role:
+        # add strikethrough and checkmark
+        updated_content = f"- ✅ ~~{message.content[1:]}~~"
+        await action_items.client.rest.edit_message(
+            event.channel_id, event.message_id, content=updated_content
+        )
 
 
 @arc.loader
