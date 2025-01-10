@@ -8,6 +8,11 @@ job "blockbot-[[.environment_slug]]" {
 
   group "blockbot" {
     count = 1
+    network {
+      port "db" {
+        to = 5432
+      }
+    }
 
     task "blockbot-review-[[.git_sha]]" {
       driver = "docker"
@@ -25,11 +30,39 @@ job "blockbot-[[.environment_slug]]" {
         data        = <<EOF
 TOKEN={{ key "blockbot-dev/discord/token" }}
 DEBUG=true
+
 LDAP_USERNAME={{ key "blockbot-dev/ldap/username" }}
 LDAP_PASSWORD={{ key "blockbot-dev/ldap/password" }}
 DISCORD_UID_MAP={{ key "blockbot-dev/discord/uid_map" }}
+
+DB_HOST={{ env "NOMAD_ADDR_db" }} # address and port
+DB_NAME={{ key "blockbot-dev/db/name" }} # database name
+DB_PASSWORD={{ key "blockbot-dev/db/password" }}
+DB_USER={{ key "blockbot-dev/db/user" }}
 EOF
         destination = "local/.env"
+        env         = true
+      }
+    }
+    task "blockbot-dev-db" {
+      driver = "docker"
+
+      config {
+        image = "postgres:17-alpine"
+        ports = ["db"]
+
+        volumes = [
+          "/storage/nomad/blockbot-dev/db:/var/lib/postgresql/data",
+        ]
+      }
+
+      template {
+        data        = <<EOH
+POSTGRES_PASSWORD={{ key "blockbot-dev/db/password" }}
+POSTGRES_USER={{ key "blockbot-dev/db/user" }}
+POSTGRES_NAME={{ key "blockbot-dev/db/name" }}
+EOH
+        destination = "local/db.env"
         env         = true
       }
     }
