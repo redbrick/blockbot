@@ -8,6 +8,11 @@ job "blockbot" {
 
   group "blockbot" {
     count = 1
+    network {
+      port "db" {
+        to = 5432
+      }
+    }
 
     task "blockbot" {
       driver = "docker"
