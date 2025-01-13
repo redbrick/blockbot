@@ -160,9 +160,10 @@ async def action_item_reaction(event: hikari.GuildReactionAddEvent) -> None:
     is_mentioned_user = event.user_id in mentioned_ids
     has_mentioned_role = any(role_id in mentioned_ids for role_id in member.role_ids)
 
-    if is_mentioned_user or has_mentioned_role:
+    # cross out the action item, if it was not crossed out already
+    if (is_mentioned_user or has_mentioned_role) and not message.content.startswith("- ✅ ~~"):
         # add strikethrough and checkmark
-        updated_content = f"- ✅ ~~{message.content[1:]}~~"
+        updated_content = f"- ✅ ~~{message.content[2:]}~~"
         await action_items.client.rest.edit_message(
             event.channel_id, event.message_id, content=updated_content
         )
