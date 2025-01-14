@@ -1,9 +1,8 @@
 import arc
 import hikari
 
-from src.utils import role_mention
-
 from src.config import ASSIGNABLE_ROLES
+from src.utils import role_mention
 
 plugin = arc.GatewayPlugin(name="User Roles")
 
@@ -33,7 +32,10 @@ async def add_role(
         return
 
     await ctx.client.rest.add_role_to_member(
-        ctx.guild_id, ctx.author, int(role), reason="Self-service role."
+        ctx.guild_id,
+        ctx.author,
+        int(role),
+        reason="Self-service role.",
     )
     await ctx.respond(
         f"Done! Added {role_mention(role)} to your roles.",
@@ -59,7 +61,10 @@ async def remove_role(
         return
 
     await ctx.client.rest.remove_role_from_member(
-        ctx.guild_id, ctx.author, int(role), reason=f"{ctx.author} removed role."
+        ctx.guild_id,
+        ctx.author,
+        int(role),
+        reason=f"{ctx.author} removed role.",
     )
     await ctx.respond(
         f"Done! Removed {role_mention(role)} from your roles.",
@@ -81,7 +86,8 @@ async def role_error_handler(ctx: arc.GatewayContext, exc: Exception) -> None:
 
     if isinstance(exc, hikari.NotFoundError):
         await ctx.respond(
-            "❌ Blockbot can't find that role.", flags=hikari.MessageFlag.EPHEMERAL
+            "❌ Blockbot can't find that role.",
+            flags=hikari.MessageFlag.EPHEMERAL,
         )
         return
 

@@ -11,7 +11,8 @@ async def options(
     ctx: arc.GatewayContext,
     str_option: arc.Option[str, arc.StrParams("A string option.", name="string")],
     int_option: arc.Option[
-        int, arc.IntParams("An integer option.", name="integer", min=5, max=150)
+        int,
+        arc.IntParams("An integer option.", name="integer", min=5, max=150),
     ],
     attachment_option: arc.Option[
         hikari.Attachment,

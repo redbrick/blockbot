@@ -12,8 +12,9 @@ BOOST_TIERS: list[hikari.MessageType] = [
     hikari.MessageType.USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_3,
 ]
 
-BOOST_MESSAGE_TYPES: list[hikari.MessageType] = BOOST_TIERS + [
-    hikari.MessageType.USER_PREMIUM_GUILD_SUBSCRIPTION
+BOOST_MESSAGE_TYPES: list[hikari.MessageType] = [
+    *BOOST_TIERS,
+    hikari.MessageType.USER_PREMIUM_GUILD_SUBSCRIPTION,
 ]
 
 

@@ -11,7 +11,8 @@ image = "https://i.redd.it/cu94ebjex3481.jpg"
 async def gerry_command(
     ctx: arc.GatewayContext,
     user: arc.Option[
-        hikari.User, arc.UserParams("The user to send a gerry to.")
+        hikari.User | None,
+        arc.UserParams("The user to send a gerry to."),
     ] = None,
 ) -> None:
     """Send a gerry!"""

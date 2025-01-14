@@ -1,13 +1,13 @@
-import arc
-import hikari
 import re
-import aiohttp
 from urllib.parse import urlparse
 
-from src.utils import role_mention, hedgedoc_login
-from src.hooks import restrict_to_channels, restrict_to_roles
-from src.config import CHANNEL_IDS, ROLE_IDS, UID_MAPS
+import aiohttp
+import arc
+import hikari
 
+from src.config import CHANNEL_IDS, ROLE_IDS, UID_MAPS
+from src.hooks import restrict_to_channels, restrict_to_roles
+from src.utils import hedgedoc_login, role_mention
 
 action_items = arc.GatewayPlugin(name="Action Items")
 
@@ -54,7 +54,9 @@ async def get_action_items(
 
     # extract the action items section from the minutes
     action_items_section = re.search(
-        r"# Action Items:?\n(.*?)(\n# |\n---|$)", content, re.DOTALL
+        r"# Action Items:?\n(.*?)(\n# |\n---|$)",
+        content,
+        re.DOTALL,
     )
 
     if not action_items_section:
@@ -78,13 +80,13 @@ async def get_action_items(
     # Replace user names with user mentions
     for i, item in enumerate(formatted_bullet_points):
         for name, uid in UID_MAPS.items():
-            item = item.replace(f"`{name}`", f"<@{uid}>")
+            item = item.replace(f"`{name}`", f"<@{uid}>")  # noqa: PLW2901
         formatted_bullet_points[i] = item
 
     # Replace role names with role mentions
     for i, item in enumerate(formatted_bullet_points):
         for role, role_id in ROLE_IDS.items():
-            item = item.replace(f"`{role}`", role_mention(role_id))
+            item = item.replace(f"`{role}`", role_mention(role_id))  # noqa: PLW2901
         formatted_bullet_points[i] = item
 
     # Send title to the action-items channel
@@ -95,7 +97,7 @@ async def get_action_items(
 
     # send each bullet point separately
     for item in formatted_bullet_points:
-        item = await action_items.client.rest.create_message(
+        message = await action_items.client.rest.create_message(
             CHANNEL_IDS["action-items"],
             mentions_everyone=False,
             user_mentions=True,
@@ -104,8 +106,8 @@ async def get_action_items(
         )
 
         await action_items.client.rest.add_reaction(
-            channel=item.channel_id,
-            message=item.id,
+            channel=message.channel_id,
+            message=message.id,
             emoji="✅",
         )
 
@@ -136,15 +138,14 @@ async def check_valid_reaction(
 
     assert message.author  # it will always be available
 
-    # ignore messages not sent by the bot and messages with no content
-    if message.author.id != bot_user.id or not message.content:
-        return False
-
-    return True
+    # verify it's a message sent by the bot and has content
+    return message.author.id == bot_user.id and message.content is not None
 
 
 async def validate_user_reaction(
-    user_id: int, message_content: str, guild_id: int
+    user_id: int,
+    message_content: str,
+    guild_id: int,
 ) -> bool:
     # extract user and role mentions from the message content
     mention_regex = r"<@[!&]?(\d+)>"
@@ -153,26 +154,27 @@ async def validate_user_reaction(
     # make a list of all mentions
     mentioned_ids = [int(id_) for id_ in mentions]
 
+    # user is mentioned
     if user_id in mentioned_ids:
         return True
 
     member = action_items.client.cache.get_member(
-        guild_id, user_id
+        guild_id,
+        user_id,
     ) or await action_items.client.rest.fetch_member(guild_id, user_id)
 
-    if any(role_id in mentioned_ids for role_id in member.role_ids):
-        return True
-
-    return False
+    # user's role is mentioned
+    return any(role_id in mentioned_ids for role_id in member.role_ids)
 
 
 @action_items.listen()
 async def reaction_add(event: hikari.GuildReactionAddEvent) -> None:
     # retrieve the message that was reacted to
     message = action_items.client.cache.get_message(
-        event.message_id
+        event.message_id,
     ) or await action_items.client.rest.fetch_message(
-        event.channel_id, event.message_id
+        event.channel_id,
+        event.message_id,
     )
 
     is_valid_reaction = await check_valid_reaction(event, message)
@@ -182,7 +184,9 @@ async def reaction_add(event: hikari.GuildReactionAddEvent) -> None:
     assert message.content  # check_valid_reaction verifies the message content exists
 
     is_valid_reaction = await validate_user_reaction(
-        event.user_id, message.content, event.guild_id
+        event.user_id,
+        message.content,
+        event.guild_id,
     )
     if not is_valid_reaction:
         return
@@ -192,7 +196,9 @@ async def reaction_add(event: hikari.GuildReactionAddEvent) -> None:
         # add strikethrough and checkmark
         updated_content = f"- ✅ ~~{message.content[2:]}~~"
         await action_items.client.rest.edit_message(
-            event.channel_id, event.message_id, content=updated_content
+            event.channel_id,
+            event.message_id,
+            content=updated_content,
         )
 
 
@@ -201,7 +207,8 @@ async def reaction_remove(event: hikari.GuildReactionDeleteEvent) -> None:
     # retrieve the message that was un-reacted to
     # NOTE: cannot use cached message as the reaction count will be outdated
     message = await action_items.client.rest.fetch_message(
-        event.channel_id, event.message_id
+        event.channel_id,
+        event.message_id,
     )
 
     is_valid_reaction = await check_valid_reaction(event, message)
@@ -225,8 +232,8 @@ async def reaction_remove(event: hikari.GuildReactionDeleteEvent) -> None:
             filter(
                 lambda r: r is True,
                 reactions,
-            )
-        )
+            ),
+        ),
     )
 
     assert message.content  # check_valid_reaction verifies the message content exists
@@ -236,7 +243,9 @@ async def reaction_remove(event: hikari.GuildReactionDeleteEvent) -> None:
         # add strikethrough and checkmark
         updated_content = f"- {message.content[6:-2]}"
         await action_items.client.rest.edit_message(
-            event.channel_id, event.message_id, content=updated_content
+            event.channel_id,
+            event.message_id,
+            content=updated_content,
         )
 
 

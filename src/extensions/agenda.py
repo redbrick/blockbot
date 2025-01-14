@@ -1,13 +1,13 @@
+import datetime
+from urllib.parse import urlparse
+
+import aiohttp
 import arc
 import hikari
-import aiohttp
-from urllib.parse import urlparse
-import datetime
 
-from src.utils import role_mention, hedgedoc_login
+from src.config import AGENDA_TEMPLATE_URL, CHANNEL_IDS, ROLE_IDS, UID_MAPS
 from src.hooks import restrict_to_channels, restrict_to_roles
-from src.config import CHANNEL_IDS, ROLE_IDS, UID_MAPS, AGENDA_TEMPLATE_URL
-
+from src.utils import hedgedoc_login, role_mention, utcnow
 
 plugin = arc.GatewayPlugin(name="Agenda")
 
@@ -15,10 +15,10 @@ agenda = plugin.include_slash_group("agenda", "Interact with the agenda.")
 
 
 async def generate_date_choices(
-    data: arc.AutocompleteData[arc.GatewayClient, str],
+    _: arc.AutocompleteData[arc.GatewayClient, str],
 ) -> list[str]:
     """Generate date options for the next 7 days."""
-    today = datetime.date.today()
+    today = utcnow().today()
     return [
         (today + datetime.timedelta(days=i)).strftime("%A %d/%m/%Y") for i in range(7)
     ]
@@ -31,7 +31,7 @@ def generate_time_choices() -> list[str]:
 
     for hour in range(24):
         current_time = (
-            datetime.datetime.combine(datetime.date.today(), base_time)
+            datetime.datetime.combine(utcnow().today(), base_time)
             + datetime.timedelta(hours=hour)
         ).time()
         times.append(current_time.strftime("%H:%M"))
@@ -46,8 +46,8 @@ def generate_time_choices() -> list[str]:
             CHANNEL_IDS["bots-cmt"],
             CHANNEL_IDS["committee-announcements"],
             CHANNEL_IDS["cowboys-and-cowgirls-committee"],
-        ]
-    )
+        ],
+    ),
 )
 @arc.with_hook(restrict_to_roles(role_ids=[ROLE_IDS["committee"]]))
 @arc.slash_subcommand(
@@ -64,7 +64,8 @@ async def gen_agenda(
     time: arc.Option[
         str,
         arc.StrParams(
-            "Enter the time in HH:MM format", choices=generate_time_choices()
+            "Enter the time in HH:MM format",
+            choices=generate_time_choices(),
         ),
     ],
     room: arc.Option[
@@ -72,14 +73,23 @@ async def gen_agenda(
         arc.StrParams("Select a Room"),
     ],
     url: arc.Option[
-        str, arc.StrParams("URL of the agenda template from the MD")
+        str,
+        arc.StrParams("URL of the agenda template from the MD"),
     ] = AGENDA_TEMPLATE_URL,
     aiohttp_client: aiohttp.ClientSession = arc.inject(),
 ) -> None:
     """Generate a new agenda for committee meetings."""
 
-    parsed_date = datetime.datetime.strptime(date, "%A %d/%m/%Y").date()
-    parsed_time = datetime.datetime.strptime(time, "%H:%M").time()
+    parsed_date = (
+        datetime.datetime.strptime(date, "%A %d/%m/%Y")
+        .replace(tzinfo=datetime.timezone.utc)
+        .date()
+    )
+    parsed_time = (
+        datetime.datetime.strptime(time, "%H:%M")
+        .replace(tzinfo=datetime.timezone.utc)
+        .time()
+    )
 
     parsed_datetime = datetime.datetime.combine(parsed_date, parsed_time)
 
@@ -112,7 +122,9 @@ async def gen_agenda(
         content = await response.text()
 
     modified_content = content.format(
-        DATE=formatted_date, TIME=formatted_time, ROOM=room
+        DATE=formatted_date,
+        TIME=formatted_time,
+        ROOM=room,
     )
 
     post_url = f"{parsed_url.scheme}://{parsed_url.hostname}/new"
@@ -185,7 +197,7 @@ async def view_template(
         colour=0x5865F2,
     )
     embed = embed.set_image(
-        "https://cdn.redbrick.dcu.ie/hedgedoc-uploads/sonic-the-hedgedoc.png"
+        "https://cdn.redbrick.dcu.ie/hedgedoc-uploads/sonic-the-hedgedoc.png",
     )
 
     await ctx.respond(
