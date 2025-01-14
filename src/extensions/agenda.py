@@ -71,6 +71,9 @@ async def gen_agenda(
         str,
         arc.StrParams("Select a Room"),
     ],
+    note: arc.Option[
+        str, arc.StrParams("Optional note to be included in the announcement")
+    ] = None,
     url: arc.Option[
         str, arc.StrParams("URL of the agenda template from the MD")
     ] = AGENDA_TEMPLATE_URL,
@@ -144,6 +147,8 @@ async def gen_agenda(
 
 ||{role_mention(ROLE_IDS["committee"])}||
     """
+    if note:
+        announce_text += f"\n## Note:\n{note}"
 
     announce = await plugin.client.rest.create_message(
         CHANNEL_IDS["committee-announcements"],
