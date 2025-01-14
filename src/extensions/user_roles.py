@@ -3,15 +3,15 @@ import hikari
 
 from src.utils import role_mention
 
+from src.config import ASSIGNABLE_ROLES
+
 plugin = arc.GatewayPlugin(name="User Roles")
 
 role = plugin.include_slash_group("role", "Get/remove assignable roles.")
 
 role_choices = [
-    hikari.CommandChoice(name="Webgroup", value="1166751688598761583"),
-    hikari.CommandChoice(name="Gamez", value="1089204642241581139"),
-    hikari.CommandChoice(name="Croomer", value="1172696659097047050"),
-    hikari.CommandChoice(name="External Events", value="1299487948206768138"),
+    hikari.CommandChoice(name=name.title(), value=str(value))
+    for name, value in ASSIGNABLE_ROLES.items()
 ]
 
 
@@ -21,6 +21,7 @@ async def add_role(
     ctx: arc.GatewayContext,
     role: arc.Option[str, arc.StrParams("The role to add.", choices=role_choices)],
 ) -> None:
+    # commands are not available in DMs, so guild_id and member will always be available
     assert ctx.guild_id
     assert ctx.member
 
@@ -46,6 +47,7 @@ async def remove_role(
     ctx: arc.GatewayContext,
     role: arc.Option[str, arc.StrParams("The role to remove.", choices=role_choices)],
 ) -> None:
+    # commands are not available in DMs, so guild_id and member will always be available
     assert ctx.guild_id
     assert ctx.member
 

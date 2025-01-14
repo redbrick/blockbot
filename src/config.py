@@ -1,12 +1,24 @@
 import os
+import sys
 
 from dotenv import load_dotenv
 
 load_dotenv()
 
-TOKEN = os.environ.get("TOKEN")  # required
+
+def get_required_var(var: str) -> str:
+    env = os.environ.get(var)
+
+    if env is None:
+        print(f"{var} environment variable not set. Exiting.")
+        sys.exit(1)
+
+    return env
+
+
+TOKEN = get_required_var("TOKEN")  # required
 DEBUG = os.environ.get("DEBUG", False)
-DISCORD_UID_MAP = os.environ.get("DISCORD_UID_MAP")
+DISCORD_UID_MAP = get_required_var("DISCORD_UID_MAP")
 
 CHANNEL_IDS: dict[str, int] = {
     "lobby": 627542044390457350,
@@ -28,9 +40,16 @@ ROLE_IDS: dict[str, int] = {
     "helpdesk": 1194683307921772594,
 }
 
+ASSIGNABLE_ROLES: dict[str, int] = {
+    "webgroup": 1166751688598761583,
+    "gamez": 1089204642241581139,
+    "croomer": 1172696659097047050,
+    "external events": 1299487948206768138,
+}
+
 UID_MAPS = dict(item.split("=") for item in DISCORD_UID_MAP.split(","))
 
-LDAP_USERNAME = os.environ.get("LDAP_USERNAME")
-LDAP_PASSWORD = os.environ.get("LDAP_PASSWORD")
+LDAP_USERNAME = get_required_var("LDAP_USERNAME")
+LDAP_PASSWORD = get_required_var("LDAP_PASSWORD")
 
-AGENDA_TEMPLATE_URL = os.environ.get("AGENDA_TEMPLATE_URL")
+AGENDA_TEMPLATE_URL = get_required_var("AGENDA_TEMPLATE_URL")

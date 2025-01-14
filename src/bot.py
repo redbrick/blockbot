@@ -1,5 +1,4 @@
 import logging
-import sys
 
 import arc
 import hikari
@@ -7,10 +6,6 @@ import aiohttp
 import miru
 
 from src.config import DEBUG, TOKEN
-
-if TOKEN is None:
-    print("TOKEN environment variable not set. Exiting.")
-    sys.exit(1)
 
 bot = hikari.GatewayBot(
     token=TOKEN,
