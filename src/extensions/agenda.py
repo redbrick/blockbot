@@ -59,18 +59,21 @@ async def gen_agenda(
     ctx: arc.GatewayContext,
     date: arc.Option[
         str,
-        arc.StrParams("Select a date", autocomplete_with=generate_date_choices),
+        arc.StrParams("Select a date.", autocomplete_with=generate_date_choices),
     ],
     time: arc.Option[
         str,
         arc.StrParams(
-            "Enter the time in HH:MM format", choices=generate_time_choices()
+            "Enter the time in HH:MM format.", choices=generate_time_choices()
         ),
     ],
     room: arc.Option[
         str,
-        arc.StrParams("Select a Room"),
+        arc.StrParams("Select a Room."),
     ],
+    note: arc.Option[
+        str | None, arc.StrParams("Optional note to be included in the announcement.")
+    ] = None,
     url: arc.Option[
         str, arc.StrParams("URL of the agenda template from the MD")
     ] = AGENDA_TEMPLATE_URL,
@@ -143,7 +146,9 @@ async def gen_agenda(
 - React with <:bigRed:634311607039819776> if you can make it.
 
 ||{role_mention(ROLE_IDS["committee"])}||
-    """
+"""
+    if note:
+        announce_text += f"## Note:\n{note}"
 
     announce = await plugin.client.rest.create_message(
         CHANNEL_IDS["committee-announcements"],
