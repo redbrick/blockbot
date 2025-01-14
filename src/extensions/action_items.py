@@ -117,11 +117,13 @@ async def get_action_items(
     return
 
 
-@action_items.listen()
-async def action_item_reaction(event: hikari.GuildReactionAddEvent) -> None:
+async def check_valid_reaction(
+    event: hikari.GuildReactionAddEvent | hikari.GuildReactionDeleteEvent,
+    message: hikari.PartialMessage,
+) -> bool:
     bot_user = action_items.client.app.get_me()
     if not bot_user:  # bot_user will always be available after the bot has started
-        return
+        return False
 
     # ignore reactions by the bot, reactions that are not ✅
     # and reactions not created in the #action-items channel
@@ -130,8 +132,42 @@ async def action_item_reaction(event: hikari.GuildReactionAddEvent) -> None:
         or event.emoji_name != "✅"
         or event.channel_id != CHANNEL_IDS["action-items"]
     ):
-        return
+        return False
 
+    assert message.author  # it will always be available
+
+    # ignore messages not sent by the bot and messages with no content
+    if message.author.id != bot_user.id or not message.content:
+        return False
+
+    return True
+
+
+async def validate_user_reaction(
+    user_id: int, message_content: str, guild_id: int
+) -> bool:
+    # extract user and role mentions from the message content
+    mention_regex = r"<@[!&]?(\d+)>"
+    mentions = re.findall(mention_regex, message_content)
+
+    # make a list of all mentions
+    mentioned_ids = [int(id_) for id_ in mentions]
+
+    if user_id in mentioned_ids:
+        return True
+
+    member = action_items.client.cache.get_member(
+        guild_id, user_id
+    ) or await action_items.client.rest.fetch_member(guild_id, user_id)
+
+    if any(role_id in mentioned_ids for role_id in member.role_ids):
+        return True
+
+    return False
+
+
+@action_items.listen()
+async def reaction_add(event: hikari.GuildReactionAddEvent) -> None:
     # retrieve the message that was reacted to
     message = action_items.client.cache.get_message(
         event.message_id
@@ -139,33 +175,66 @@ async def action_item_reaction(event: hikari.GuildReactionAddEvent) -> None:
         event.channel_id, event.message_id
     )
 
-    # ignore messages not sent by the bot and messages with no content
-    if message.author.id != bot_user.id or not message.content:
+    is_valid_reaction = await check_valid_reaction(event, message)
+    if not is_valid_reaction:
         return
 
-    # extract user and role mentions from the message content
-    mention_regex = r"<@[!&]?(\d+)>"
-    mentions = re.findall(mention_regex, message.content)
+    assert message.content  # check_valid_reaction verifies the message content exists
 
-    # make a list of all mentions
-    mentioned_ids = [int(id_) for id_ in mentions]
-
-    if not mentioned_ids:
+    is_valid_reaction = await validate_user_reaction(
+        event.user_id, message.content, event.guild_id
+    )
+    if not is_valid_reaction:
         return
-
-    member = action_items.client.cache.get_member(
-        event.guild_id, event.user_id
-    ) or await action_items.client.rest.fetch_member(event.guild_id, event.user_id)
-
-    is_mentioned_user = event.user_id in mentioned_ids
-    has_mentioned_role = any(role_id in mentioned_ids for role_id in member.role_ids)
 
     # cross out the action item, if it was not crossed out already
-    if (is_mentioned_user or has_mentioned_role) and not message.content.startswith(
-        "- ✅ ~~"
-    ):
+    if not message.content.startswith("- ✅ ~~"):
         # add strikethrough and checkmark
         updated_content = f"- ✅ ~~{message.content[2:]}~~"
+        await action_items.client.rest.edit_message(
+            event.channel_id, event.message_id, content=updated_content
+        )
+
+
+@action_items.listen()
+async def reaction_remove(event: hikari.GuildReactionDeleteEvent) -> None:
+    # retrieve the message that was un-reacted to
+    # NOTE: cannot use cached message as the reaction count will be outdated
+    message = await action_items.client.rest.fetch_message(
+        event.channel_id, event.message_id
+    )
+
+    is_valid_reaction = await check_valid_reaction(event, message)
+    if not is_valid_reaction:
+        return
+
+    assert message.content  # check_valid_reaction verifies the message content exists
+
+    checkmark_reactions = await event.app.rest.fetch_reactions_for_emoji(
+        event.channel_id,
+        event.message_id,
+        "✅",
+    )
+
+    reactions = [
+        await validate_user_reaction(user.id, message.content, event.guild_id)
+        for user in checkmark_reactions
+    ]
+    valid_reaction_count = len(
+        list(
+            filter(
+                lambda r: r is True,
+                reactions,
+            )
+        )
+    )
+
+    assert message.content  # check_valid_reaction verifies the message content exists
+    # remove the strikethrough on the item, provided all mentioned users/roles
+    # are not currently reacted to the message
+    if message.content.startswith("- ✅ ~~") and valid_reaction_count == 0:
+        # add strikethrough and checkmark
+        updated_content = f"- {message.content[6:-2]}"
         await action_items.client.rest.edit_message(
             event.channel_id, event.message_id, content=updated_content
         )
