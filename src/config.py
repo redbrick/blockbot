@@ -25,6 +25,8 @@ CHANNEL_IDS: dict[str, int] = {
     "bot-private": 853071983452225536,
     "bots-cmt": 1162038557922312312,
     "action-items": 1029132014210793513,
+    "cowboys-and-cowgirls-committee": 578712722330353684,
+    "committee-announcements": 763113612340363304,
 }
 
 # TODO: query API/LDAP for these
@@ -49,3 +51,5 @@ UID_MAPS = dict(item.split("=") for item in DISCORD_UID_MAP.split(","))
 
 LDAP_USERNAME = get_required_var("LDAP_USERNAME")
 LDAP_PASSWORD = get_required_var("LDAP_PASSWORD")
+
+AGENDA_TEMPLATE_URL = get_required_var("AGENDA_TEMPLATE_URL")
