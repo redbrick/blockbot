@@ -19,12 +19,13 @@ async def get_max_comics():
 
 
 @xkcd.include
-@arc.slash_command("xkcd", "So tell me Frank!")
+@arc.slash_command("xkcd", "Wisdom from xkcd!")
 async def xkcd_command(
     ctx: arc.GatewayContext,
     num: arc.Option[
         int | None, arc.IntParams("Optionally specify an xkcd number.")
     ] = None,
+    transcript: arc.Option[bool, arc.BoolParams("Show the transcript?")] = False,
     aiohttp_client: aiohttp.ClientSession = arc.inject(),
 ) -> None:
     """Send an xkcd!"""
@@ -54,9 +55,14 @@ async def xkcd_command(
             return
         data = await response.json()
 
+    if transcript:
+        description = data["transcript"]
+    else:
+        description = ""
+
     embed = hikari.Embed(
         title=data["title"],
-        description=data["transcript"],
+        description=description,
         url=page_url,
     )
     embed = embed.set_image(data["img"])
