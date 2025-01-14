@@ -14,22 +14,28 @@ plugin = arc.GatewayPlugin(name="Agenda")
 agenda = plugin.include_slash_group("agenda", "Interact with the agenda.")
 
 
-def generate_date_choices() -> list[str]:
+async def generate_date_choices(
+    data: arc.AutocompleteData[arc.GatewayClient, str],
+) -> list[str]:
     """Generate date options for the next 7 days."""
     today = datetime.date.today()
-    return [(today + datetime.timedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
+    return [
+        (today + datetime.timedelta(days=i)).strftime("%A %d/%m/%Y") for i in range(7)
+    ]
 
 
 def generate_time_choices() -> list[str]:
-    """Generate time options for every hour"""
+    """Generate time options for every hour."""
     base_time = datetime.time(0, 0)
     times: list[str] = []
+
     for hour in range(24):
         current_time = (
             datetime.datetime.combine(datetime.date.today(), base_time)
             + datetime.timedelta(hours=hour)
         ).time()
         times.append(current_time.strftime("%H:%M"))
+
     return times
 
 
@@ -46,14 +52,14 @@ def generate_time_choices() -> list[str]:
 @arc.with_hook(restrict_to_roles(role_ids=[ROLE_IDS["committee"]]))
 @arc.slash_subcommand(
     "generate",
-    "Generate a new agenda for committee meetings",
+    "Generate a new agenda for committee meetings.",
     autodefer=arc.AutodeferMode.EPHEMERAL,
 )
 async def gen_agenda(
     ctx: arc.GatewayContext,
     date: arc.Option[
         str,
-        arc.StrParams("Select a date", choices=generate_date_choices()),
+        arc.StrParams("Select a date", autocomplete_with=generate_date_choices),
     ],
     time: arc.Option[
         str,
@@ -70,9 +76,9 @@ async def gen_agenda(
     ] = AGENDA_TEMPLATE_URL,
     aiohttp_client: aiohttp.ClientSession = arc.inject(),
 ) -> None:
-    """Generate a new agenda for committee meetings"""
+    """Generate a new agenda for committee meetings."""
 
-    parsed_date = datetime.datetime.strptime(date, "%Y-%m-%d").date()
+    parsed_date = datetime.datetime.strptime(date, "%A %d/%m/%Y").date()
     parsed_time = datetime.datetime.strptime(time, "%H:%M").time()
 
     parsed_datetime = datetime.datetime.combine(parsed_date, parsed_time)
@@ -170,17 +176,17 @@ async def gen_agenda(
 async def view_template(
     ctx: arc.GatewayContext,
 ) -> None:
-    """View the agenda template"""
-    url = AGENDA_TEMPLATE_URL
-    image = "https://cdn.redbrick.dcu.ie/hedgedoc-uploads/sonic-the-hedgedoc.png"
+    """View the agenda template."""
 
     embed = hikari.Embed(
         title="Agenda Template",
-        url=url,
-        description="Click the link above to view the agenda template.\n\n **NOTE:** Any edits made to this template will affect the generated agenda.",
+        url=AGENDA_TEMPLATE_URL,
+        description="Click the link above to view the agenda template.\n\n**NOTE:** Any edits made to this template will affect the generated agenda.",
         colour=0x5865F2,
     )
-    embed = embed.set_image(image)
+    embed = embed.set_image(
+        "https://cdn.redbrick.dcu.ie/hedgedoc-uploads/sonic-the-hedgedoc.png"
+    )
 
     await ctx.respond(
         embed,
