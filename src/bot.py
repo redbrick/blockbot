@@ -6,6 +6,7 @@ import hikari
 import miru
 
 from src.config import DEBUG, TOKEN
+from src.database import init_db
 
 bot = hikari.GatewayBot(
     token=TOKEN,
