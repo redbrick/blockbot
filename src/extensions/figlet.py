@@ -1,6 +1,5 @@
 import arc
 import hikari
-
 from pyfiglet import Figlet
 
 plugin = arc.GatewayPlugin(name="figlet")

@@ -9,7 +9,7 @@ fortune_cmd = arc.GatewayPlugin(name="fortune")
 @arc.slash_command("fortune", "Send a user a random Fortune!")
 async def fortune_command(
     ctx: arc.GatewayContext,
-    user: arc.Option[hikari.User, arc.UserParams("A user")] = None,
+    user: arc.Option[hikari.User | None, arc.UserParams("A user")] = None,
 ) -> None:
     """Send a random Fortune!"""
 

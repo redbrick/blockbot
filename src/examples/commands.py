@@ -11,7 +11,8 @@ async def hello(ctx: arc.GatewayContext) -> None:
 
 
 group = plugin.include_slash_group(
-    "base_group", "A base command group, with sub groups and sub commands."
+    "base_group",
+    "A base command group, with sub groups and sub commands.",
 )
 
 

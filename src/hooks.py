@@ -1,10 +1,12 @@
+import typing
+
 import arc
 import hikari
-import typing
 
 
 async def _restrict_to_roles(
-    ctx: arc.GatewayContext, role_ids: typing.Sequence[hikari.Snowflake]
+    ctx: arc.GatewayContext,
+    role_ids: typing.Sequence[int],
 ) -> arc.HookResult:
     assert ctx.member
 
@@ -20,7 +22,7 @@ async def _restrict_to_roles(
 
 # TODO: make response type a TypeVar for reuse (WrappedHookResult)
 def restrict_to_roles(
-    role_ids: typing.Sequence[hikari.Snowflake],
+    role_ids: typing.Sequence[int],
 ) -> typing.Callable[[arc.GatewayContext], typing.Awaitable[arc.HookResult]]:
     """Any command which uses this hook requires that the command be disabled in DMs as a guild role is required for this hook to function."""
 
@@ -31,7 +33,8 @@ def restrict_to_roles(
 
 
 async def _restrict_to_channels(
-    ctx: arc.GatewayContext, channel_ids: typing.Sequence[hikari.Snowflake]
+    ctx: arc.GatewayContext,
+    channel_ids: typing.Sequence[int],
 ) -> arc.HookResult:
     if ctx.channel_id not in channel_ids:
         await ctx.respond(
@@ -44,7 +47,7 @@ async def _restrict_to_channels(
 
 
 def restrict_to_channels(
-    channel_ids: typing.Sequence[hikari.Snowflake],
+    channel_ids: typing.Sequence[int],
 ) -> typing.Callable[[arc.GatewayContext], typing.Awaitable[arc.HookResult]]:
     async def func(ctx: arc.GatewayContext) -> arc.HookResult:
         return await _restrict_to_channels(ctx, channel_ids)

@@ -1,4 +1,4 @@
-aiohttp==3.10.10
+aiohttp==3.11.11
 fortune-python==1.1.1
 hikari==2.1.0
 hikari-arc==1.4.0

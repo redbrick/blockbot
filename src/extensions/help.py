@@ -1,7 +1,8 @@
-import hikari
-import arc
-import itertools
 import collections
+import itertools
+
+import arc
+import hikari
 
 plugin = arc.GatewayPlugin(name="Help Command Plugin")
 
@@ -18,7 +19,7 @@ def gather_commands() -> dict[str | None, list[str]]:
                 continue
 
             plugin_commands[plugin_.name if plugin_ else None].append(
-                f"{cmd.make_mention()} - {cmd.description}"
+                f"{cmd.make_mention()} - {cmd.description}",
             )
 
     return plugin_commands
@@ -34,7 +35,9 @@ async def help_command(ctx: arc.GatewayContext) -> None:
 
     for plugin_, commands in plugin_commands.items():
         embed.add_field(
-            name=plugin_ or "No plugin", value="\n".join(commands), inline=False
+            name=plugin_ or "No plugin",
+            value="\n".join(commands),
+            inline=False,
         )
 
     await ctx.respond(embed=embed)
