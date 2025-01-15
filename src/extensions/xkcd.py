@@ -27,13 +27,14 @@ async def xkcd_command(
                     flags=hikari.MessageFlag.EPHEMERAL,
                 )
                 return
+
             response = await query.json()
             max_comic = response["num"]
+
         num = random.randint(1, max_comic)
 
-    base_url = "https://xkcd.com/"
-    page_url = f"{base_url}{num}/"
-    api_url = f"{page_url}info.0.json"
+    page_url = f"https://xkcd.com/{num}"
+    api_url = f"{page_url}/info.0.json"
 
     async with aiohttp_client.get(api_url) as response:
         if response.status != 200:
@@ -42,11 +43,15 @@ async def xkcd_command(
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
             return
+
         data = await response.json()
+
+    # sometimes transcript is an empty string
+    transcript_text = t if (t := data["transcript"]) else "No transcript available."
 
     embed = hikari.Embed(
         title=data["title"],
-        description=data["transcript"] if transcript else "",
+        description=transcript_text if transcript else None,
         url=page_url,
     )
     embed = embed.set_image(data["img"])
