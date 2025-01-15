@@ -1,8 +1,8 @@
-import arc
-import aiohttp
-import hikari
 import random
 
+import aiohttp
+import arc
+import hikari
 
 xkcd = arc.GatewayPlugin(name="xkcd")
 
