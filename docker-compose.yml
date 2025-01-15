@@ -4,21 +4,20 @@ services:
     restart: unless-stopped
     depends_on:
       - postgres
-    environment:
-      - POSTGRES_DB=blockbot
-      - POSTGRES_USER=root
-      - POSTGRES_PASSWORD=password
+    env_file:
+      - .env
 
   postgres:
-    image: postgres:latest
+    image: postgres:17
     restart: unless-stopped
     ports:
       - 5432:5432
     volumes:
       - ./postgres:/var/lib/postgresql/data
     environment:
-      - POSTGRES_DB=blockbot
-      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
 
 volumes:
   postgres:

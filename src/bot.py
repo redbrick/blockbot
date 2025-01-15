@@ -59,6 +59,5 @@ async def error_handler(ctx: arc.GatewayContext, exc: Exception) -> None:
 
 
 @client.set_startup_hook
-async def startup_hook(client: arc.GatewayClient) -> None:
-    init_db()
-    pass
+async def startup_hook(_: arc.GatewayClient) -> None:
+    await init_db()

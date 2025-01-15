@@ -1,9 +1,9 @@
 aiohttp==3.11.11
+asyncpg==0.30.0
 fortune-python==1.1.1
 hikari==2.1.0
 hikari-arc==1.4.0
 hikari-miru==4.2.0
 pyfiglet==1.0.2
 python-dotenv==1.0.1
-asyncpg==0.30.0
-sqlalchemy==2.0.36
+sqlalchemy==2.0.37
