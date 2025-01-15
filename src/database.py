@@ -11,11 +11,14 @@ engine = create_async_engine(
 Base = declarative_base()
 Session = async_sessionmaker(bind=engine)
 
+
 async def init_db() -> None:
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
+
 # TODO: add reprs?
+
 
 class StarboardSettings(Base):
     __tablename__ = "starboard_settings"
@@ -23,7 +26,7 @@ class StarboardSettings(Base):
     guild = Column(BigInteger, nullable=False, primary_key=True)
     channel = Column(BigInteger, nullable=True)
     threshold = Column(SmallInteger, nullable=False, default=3)
-  
+
 
 class Starboard(Base):
     __tablename__ = "starboard"

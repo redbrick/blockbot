@@ -67,7 +67,10 @@ async def remove_role(
         int(role),
         reason=f"{ctx.author} removed role.",
     )
-    await ctx.respond(f"Done! Removed {role_mention(role)} from your roles.", flags=hikari.MessageFlag.EPHEMERAL)
+    await ctx.respond(
+        f"Done! Removed {role_mention(role)} from your roles.",
+        flags=hikari.MessageFlag.EPHEMERAL,
+    )
 
 
 @role.set_error_handler
