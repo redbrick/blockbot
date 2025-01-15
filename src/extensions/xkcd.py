@@ -1,21 +1,10 @@
 import arc
-import hikari
 import aiohttp
+import hikari
 import random
 
+
 xkcd = arc.GatewayPlugin(name="xkcd")
-
-
-async def get_max_comics():
-    """
-    Get the latest xkcd comic number.
-    """
-    request_url = "https://xkcd.com/info.0.json"
-    async with aiohttp.ClientSession().get(request_url) as query:
-        if query.status != 200:
-            return
-        response = await query.json()
-        return response["num"]
 
 
 @xkcd.include
@@ -49,20 +38,15 @@ async def xkcd_command(
     async with aiohttp_client.get(api_url) as response:
         if response.status != 200:
             await ctx.respond(
-                f"❌ Failed to query xkcd API. Status code: `{query.status}`",
+                f"❌ Failed to query xkcd API. Status code: `{response.status}`",
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
             return
         data = await response.json()
 
-    if transcript:
-        description = data["transcript"]
-    else:
-        description = ""
-
     embed = hikari.Embed(
         title=data["title"],
-        description=description,
+        description=data["transcript"] if transcript else "",
         url=page_url,
     )
     embed = embed.set_image(data["img"])
