@@ -1,12 +1,11 @@
 import datetime
+from urllib.parse import urlparse
 
 import aiohttp
 import hikari
 from arc import GatewayClient
-from urllib.parse import urlparse
 
 from src.config import LDAP_PASSWORD, LDAP_USERNAME
-
 
 
 async def get_guild(
@@ -28,7 +27,7 @@ async def hedgedoc_login(aiohttp_client: aiohttp.ClientSession) -> None:
 
     await aiohttp_client.post("https://md.redbrick.dcu.ie/auth/ldap", data=data)
 
-    
+
 async def get_md_content(
     url: str, aiohttp_client: aiohttp.ClientSession
 ) -> str | tuple[str, urlparse]:
@@ -65,7 +64,7 @@ async def post_new_md_content(
             raise Exception(
                 f"Failed to generate the agenda. Status code: `{response.status}`"
             )
-            return
+            return None
 
     return await response.url
 

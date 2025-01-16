@@ -1,7 +1,5 @@
 import re
 
-from urllib.parse import urlparse
-
 import aiohttp
 import arc
 import hikari
