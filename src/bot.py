@@ -1,11 +1,12 @@
 import logging
 
+import aiohttp
 import arc
 import hikari
-import aiohttp
 import miru
 
 from src.config import DEBUG, TOKEN
+from src.database import init_db
 
 bot = hikari.GatewayBot(
     token=TOKEN,
@@ -28,7 +29,7 @@ if DEBUG:
 
 
 @client.listen(hikari.StartingEvent)
-async def on_start(event: hikari.StartingEvent) -> None:
+async def on_start(_: hikari.StartingEvent) -> None:
     # Create an aiohttp ClientSession to use for web requests
     aiohttp_client = aiohttp.ClientSession()
     client.set_type_dependency(aiohttp.ClientSession, aiohttp_client)
@@ -39,7 +40,8 @@ async def on_start(event: hikari.StartingEvent) -> None:
 # so dependency injection must be enabled manually for this event listener
 @client.inject_dependencies
 async def on_stop(
-    event: hikari.StoppedEvent, aiohttp_client: aiohttp.ClientSession = arc.inject()
+    _: hikari.StoppedEvent,
+    aiohttp_client: aiohttp.ClientSession = arc.inject(),
 ) -> None:
     await aiohttp_client.close()
 
@@ -55,3 +57,8 @@ async def error_handler(ctx: arc.GatewayContext, exc: Exception) -> None:
     logging.error(exc)
 
     raise exc
+
+
+@client.set_startup_hook
+async def startup_hook(_: arc.GatewayClient) -> None:
+    await init_db()

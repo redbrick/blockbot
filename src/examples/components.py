@@ -12,7 +12,7 @@ class View(miru.View):
         super().__init__(timeout=60)
 
     @miru.button("Click me!", custom_id="click_me")
-    async def click_button(self, ctx: miru.ViewContext, button: miru.Button) -> None:
+    async def click_button(self, ctx: miru.ViewContext, _: miru.Button) -> None:
         await ctx.respond(f"{ctx.user.mention}, you clicked me!")
 
     # Defining select menus: https://miru.hypergonial.com/guides/selects/
@@ -35,7 +35,9 @@ class View(miru.View):
         ],
     )
     async def colour_select(
-        self, ctx: miru.ViewContext, select: miru.TextSelect
+        self,
+        ctx: miru.ViewContext,
+        select: miru.TextSelect,
     ) -> None:
         await ctx.respond(f"Your favourite colours are: {', '.join(select.values)}!")
 
@@ -46,7 +48,8 @@ class View(miru.View):
         # For every other user they will receive an error message.
         if ctx.user.id != self.user_id:
             await ctx.respond(
-                "You can't press this!", flags=hikari.MessageFlag.EPHEMERAL
+                "You can't press this!",
+                flags=hikari.MessageFlag.EPHEMERAL,
             )
             return False
 
@@ -69,7 +72,8 @@ class View(miru.View):
 @plugin.include
 @arc.slash_command("components", "A command with components.")
 async def components_cmd(
-    ctx: arc.GatewayContext, miru_client: miru.Client = arc.inject()
+    ctx: arc.GatewayContext,
+    miru_client: miru.Client = arc.inject(),
 ) -> None:
     view = View(ctx.user.id)
     response = await ctx.respond("Here are some components...", components=view)

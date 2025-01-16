@@ -18,7 +18,13 @@ def get_required_var(var: str) -> str:
 
 TOKEN = get_required_var("TOKEN")  # required
 DEBUG = os.environ.get("DEBUG", False)
+
 DISCORD_UID_MAP = get_required_var("DISCORD_UID_MAP")
+
+DB_HOST = os.environ.get("DB_HOST")
+DB_NAME = os.environ.get("DB_NAME")
+DB_USER = os.environ.get("DB_USER")
+DB_PASSWORD = os.environ.get("DB_PASSWORD")
 
 CHANNEL_IDS: dict[str, int] = {
     "lobby": 627542044390457350,

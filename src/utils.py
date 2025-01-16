@@ -1,12 +1,17 @@
+import datetime
+
+import aiohttp
 import hikari
 from arc import GatewayClient
-import aiohttp
-from src.config import LDAP_USERNAME, LDAP_PASSWORD
 from urllib.parse import urlparse
+
+from src.config import LDAP_PASSWORD, LDAP_USERNAME
+
 
 
 async def get_guild(
-    client: GatewayClient, event: hikari.GuildMessageCreateEvent
+    client: GatewayClient,
+    event: hikari.GuildMessageCreateEvent,
 ) -> hikari.GatewayGuild | hikari.RESTGuild:
     return event.get_guild() or await client.rest.fetch_guild(event.guild_id)
 
@@ -23,7 +28,7 @@ async def hedgedoc_login(aiohttp_client: aiohttp.ClientSession) -> None:
 
     await aiohttp_client.post("https://md.redbrick.dcu.ie/auth/ldap", data=data)
 
-
+    
 async def get_md_content(
     url: str, aiohttp_client: aiohttp.ClientSession
 ) -> str | tuple[str, urlparse]:
@@ -63,3 +68,7 @@ async def post_new_md_content(
             return
 
     return await response.url
+
+def utcnow() -> datetime.datetime:
+    return datetime.datetime.now(datetime.timezone.utc)
+
