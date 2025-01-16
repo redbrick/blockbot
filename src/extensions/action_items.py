@@ -2,9 +2,8 @@ import arc
 import hikari
 import re
 import aiohttp
-from urllib.parse import urlparse
 
-from src.utils import role_mention, hedgedoc_login
+from src.utils import role_mention, get_md_content
 from src.hooks import restrict_to_channels, restrict_to_roles
 from src.config import CHANNEL_IDS, ROLE_IDS, UID_MAPS
 
@@ -28,29 +27,14 @@ async def get_action_items(
 ) -> None:
     """Display the action items from the MD!"""
 
-    if "https://md.redbrick.dcu.ie" not in url:
+    try:
+        content = await get_md_content(url, aiohttp_client)
+    except Exception as e:
         await ctx.respond(
-            f"❌ `{url}` is not a valid MD URL. Please provide a valid URL.",
+            f"❌ {e}",
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return
-
-    await hedgedoc_login(aiohttp_client)
-
-    parsed_url = urlparse(url)
-    request_url = (
-        f"{parsed_url.scheme}://{parsed_url.hostname}{parsed_url.path}/download"
-    )
-
-    async with aiohttp_client.get(request_url) as response:
-        if response.status != 200:
-            await ctx.respond(
-                f"❌ Failed to fetch the minutes. Status code: `{response.status}`",
-                flags=hikari.MessageFlag.EPHEMERAL,
-            )
-            return
-
-        content = await response.text()
 
     # extract the action items section from the minutes
     action_items_section = re.search(

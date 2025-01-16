@@ -1,10 +1,9 @@
 import arc
 import hikari
 import aiohttp
-from urllib.parse import urlparse
 import datetime
 
-from src.utils import role_mention, hedgedoc_login
+from src.utils import role_mention, get_md_content, post_new_md_content
 from src.hooks import restrict_to_channels, restrict_to_roles
 from src.config import CHANNEL_IDS, ROLE_IDS, UID_MAPS, AGENDA_TEMPLATE_URL
 
@@ -90,50 +89,28 @@ async def gen_agenda(
     formatted_time = parsed_datetime.strftime("%H:%M")
     formatted_datetime = parsed_datetime.strftime("%A, %Y-%m-%d %H:%M")
 
-    if "https://md.redbrick.dcu.ie" not in url:
+    try:
+        content = await get_md_content(url, aiohttp_client)
+    except Exception as e:
         await ctx.respond(
-            f"❌ `{url}` is not a valid MD URL. Please provide a valid URL.",
+            f"❌ {e}",
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return
-
-    await hedgedoc_login(aiohttp_client)
-
-    parsed_url = urlparse(url)
-    request_url = (
-        f"{parsed_url.scheme}://{parsed_url.hostname}{parsed_url.path}/download"
-    )
-
-    async with aiohttp_client.get(request_url) as response:
-        if response.status != 200:
-            await ctx.respond(
-                f"❌ Failed to fetch the agenda template. Status code: `{response.status}`",
-                flags=hikari.MessageFlag.EPHEMERAL,
-            )
-            return
-
-        content = await response.text()
 
     modified_content = content.format(
         DATE=formatted_date, TIME=formatted_time, ROOM=room
     )
 
-    post_url = f"{parsed_url.scheme}://{parsed_url.hostname}/new"
-    post_headers = {"Content-Type": "text/markdown"}
+    try:
+        new_agenda_url = await post_new_md_content(modified_content, aiohttp_client)
+    except Exception as e:
+        await ctx.respond(
+            f"❌ {e}",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
+        return
 
-    async with aiohttp_client.post(
-        url=post_url,
-        headers=post_headers,
-        data=modified_content,
-    ) as response:
-        if response.status != 200:
-            await ctx.respond(
-                f"❌ Failed to generate the agenda. Status code: `{response.status}`",
-                flags=hikari.MessageFlag.EPHEMERAL,
-            )
-            return
-
-    new_agenda_url = response.url
     announce_text = f"""
 ## 📣 Agenda for this week's meeting | {formatted_datetime} | {room} <:bigRed:634311607039819776>
 
