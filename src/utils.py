@@ -28,9 +28,7 @@ async def hedgedoc_login(aiohttp_client: aiohttp.ClientSession) -> None:
     await aiohttp_client.post("https://md.redbrick.dcu.ie/auth/ldap", data=data)
 
 
-async def get_md_content(
-    url: str, aiohttp_client: aiohttp.ClientSession
-) -> str | tuple[str, urlparse]:
+async def get_md_content(url: str, aiohttp_client: aiohttp.ClientSession) -> str:
     """
     Get the content of a note at a HedgeDoc URL.
     """
@@ -51,7 +49,7 @@ async def get_md_content(
 
 async def post_new_md_content(
     content: str, aiohttp_client: aiohttp.ClientSession
-) -> str:
+) -> str | None:
     post_url = "https://md.redbrick.dcu.ie/new"
     post_headers = {"Content-Type": "text/markdown"}
 
@@ -66,8 +64,8 @@ async def post_new_md_content(
             )
             return None
 
-    return await response.url
+    return str(response.url)
+
 
 def utcnow() -> datetime.datetime:
     return datetime.datetime.now(datetime.timezone.utc)
-
