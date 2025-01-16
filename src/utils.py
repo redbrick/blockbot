@@ -40,10 +40,7 @@ async def get_md_content(url: str, aiohttp_client: aiohttp.ClientSession) -> str
         f"{parsed_url.scheme}://{parsed_url.hostname}{parsed_url.path}/download"
     )
     async with aiohttp_client.get(request_url) as response:
-        if response.status != 200:
-            raise Exception(
-                f"Failed to fetch the minutes. Status code: `{response.status}`"
-            )
+        response.raise_for_status()
         return await response.text()
 
 
@@ -58,11 +55,7 @@ async def post_new_md_content(
         headers=post_headers,
         data=content,
     ) as response:
-        if response.status != 200:
-            raise Exception(
-                f"Failed to generate the agenda. Status code: `{response.status}`"
-            )
-            return None
+        response.raise_for_status()
 
     return str(response.url)
 

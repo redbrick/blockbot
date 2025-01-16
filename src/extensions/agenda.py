@@ -101,9 +101,15 @@ async def gen_agenda(
 
     try:
         content = await get_md_content(url, aiohttp_client)
-    except Exception as e:
+    except aiohttp.ClientResponseError as e:
         await ctx.respond(
-            f"❌ {e}",
+            f"❌ **Error**: {e}",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
+        return
+    except ValueError as e:
+        await ctx.respond(
+            f"❌ **Error**: {e}",
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return
@@ -116,9 +122,9 @@ async def gen_agenda(
 
     try:
         new_agenda_url = await post_new_md_content(modified_content, aiohttp_client)
-    except Exception as e:
+    except aiohttp.ClientResponseError as e:
         await ctx.respond(
-            f"❌ {e}",
+            f"❌ **Error**: {e}",
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return

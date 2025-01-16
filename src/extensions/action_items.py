@@ -29,9 +29,15 @@ async def get_action_items(
 
     try:
         content = await get_md_content(url, aiohttp_client)
-    except Exception as e:
+    except aiohttp.ClientResponseError as e:
         await ctx.respond(
-            f"❌ {e}",
+            f"❌ **Error**: {e}",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
+        return
+    except ValueError as e:
+        await ctx.respond(
+            f"❌ **Error**: {e}",
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return
