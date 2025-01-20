@@ -103,13 +103,13 @@ async def gen_agenda(
         content = await get_md_content(url, aiohttp_client)
     except aiohttp.ClientResponseError as e:
         await ctx.respond(
-            f"❌ **Error**: {e}",
+            f"❌ Failed to fetch the agenda template. Status code: `{e.status}`",
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return
     except ValueError as e:
         await ctx.respond(
-            f"❌ **Error**: {e}",
+            f"❌ {e}",
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return
@@ -124,7 +124,7 @@ async def gen_agenda(
         new_agenda_url = await post_new_md_content(modified_content, aiohttp_client)
     except aiohttp.ClientResponseError as e:
         await ctx.respond(
-            f"❌ **Error**: {e}",
+            f"❌ Failed to generate the agenda. Status code: `{e.status}`",
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return

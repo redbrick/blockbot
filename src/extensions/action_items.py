@@ -31,13 +31,13 @@ async def get_action_items(
         content = await get_md_content(url, aiohttp_client)
     except aiohttp.ClientResponseError as e:
         await ctx.respond(
-            f"❌ **Error**: {e}",
+            f"❌ Failed to fetch the minutes. Status code: `{e.status}`",
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return
     except ValueError as e:
         await ctx.respond(
-            f"❌ **Error**: {e}",
+            f"❌ {e}",
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return
