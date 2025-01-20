@@ -7,7 +7,9 @@ import arc
 import hikari
 from sqlalchemy import insert, select, update
 
+from src.config import ROLE_IDS
 from src.database import Session, Starboard, StarboardSettings
+from src.hooks import restrict_to_roles
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +26,7 @@ class StarboardSettingsError(enum.IntEnum):
 async def on_reaction(
     event: hikari.GuildReactionAddEvent,
 ) -> None:
-    logger.info("Received guild reaction add event")
+    logger.debug("Received guild reaction add event")
 
     if event.emoji_name != "⭐":
         return
@@ -40,21 +42,14 @@ async def on_reaction(
         result = await session.execute(stmt)
         settings = result.scalars().first()
 
-    # TODO: remove temporary logging and merge into one if statement
-    if not settings:
-        logger.info("Received star but no guild starboard set")
+    if (
+        not settings
+        or star_count < settings.threshold
+        or not settings.channel_id
+        or settings.error is not None
+        or event.channel_id == settings.channel_id
+    ):
         return
-    if star_count < settings.threshold:
-        logger.info("Not enough stars to post to starboard")
-        return
-    if not settings.channel_id:
-        logger.info("No starboard channel set")
-        return
-    if settings.error is not None:
-        logger.info("Error with starboard channel")
-        return
-
-    # TODO: consider ignoring stars reacted to a starboard message
 
     # get starred message
     async with Session() as session:
@@ -80,11 +75,25 @@ async def on_reaction(
     if images:
         embed.set_image(images[0])
 
-    embeds = [embed, *message.embeds]
+    embeds = [embed, *message.embeds[:1]]
+
+    await create_starboard_message(event, settings, starboard, embeds, star_count)
+
+
+async def create_starboard_message(
+    event: hikari.GuildReactionAddEvent,
+    settings: StarboardSettings,
+    starboard: Starboard | None,
+    embeds: list[hikari.Embed],
+    star_count: int,
+) -> None:
+    assert settings.channel_id  # already verified to exist
 
     try:
         if not starboard:
-            logger.info("Creating message")
+            # starboard message does not exist, create it
+            logger.debug("Creating message")
+
             message = await plugin.client.rest.create_message(
                 settings.channel_id,
                 embeds=embeds,
@@ -102,15 +111,20 @@ async def on_reaction(
                 )
                 await session.commit()
         else:
+            # starboard message should exist
             try:
-                logger.info("Editing message")
+                # attempt to edit it
+                logger.debug("Editing message")
+
                 await plugin.client.rest.edit_message(
                     starboard.starboard_channel_id,
                     starboard.starboard_message_id,
                     embeds=embeds,
                 )
             except hikari.NotFoundError:
-                logger.info("Starboard message does not exist, creating new")
+                # the message does not exist, create a new one
+                logger.debug("Starboard message does not exist, creating new")
+
                 message = await plugin.client.rest.create_message(
                     settings.channel_id,
                     embeds=embeds,
@@ -130,7 +144,8 @@ async def on_reaction(
                     await session.commit()
 
     except hikari.ForbiddenError:
-        logger.info("Can't access starboard channel")
+        # bot cannot access the starboard channel
+        logger.debug("Can't access starboard channel")
 
         async with Session() as session:
             stmt = (
@@ -141,7 +156,8 @@ async def on_reaction(
             await session.execute(stmt)
             await session.commit()
     except hikari.NotFoundError:
-        logger.info("Can't find starboard channel")
+        # the starboard channel does not exist
+        logger.debug("Can't find starboard channel")
 
         async with Session() as session:
             stmt = (
@@ -153,8 +169,8 @@ async def on_reaction(
             await session.commit()
 
 
-# TODO: add permission hook
 @plugin.include
+@arc.with_hook(restrict_to_roles(role_ids=[ROLE_IDS["committee"]]))
 @arc.slash_command(
     "starboard",
     "Edit or view starboard settings.",
@@ -190,15 +206,18 @@ async def starboard_settings(
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
         else:
-            # TODO: `channel` and `threshold` can be None
             embed = hikari.Embed(
                 title="Starboard Settings",
                 description=(
                     f"**Channel:** <#{settings.channel_id}>\n"
                     f"**Threshold:** {settings.threshold}\n"
-                    + (f"**Error:** {settings.error}" if settings.error else "")
                 ),
             )
+            if settings.error is not None:
+                error = StarboardSettingsError(settings.error)
+                assert embed.description
+                embed.description += f"**Error:** {error.name.replace("_", " ").title()}"
+
             await ctx.respond(embed)
 
         return
@@ -216,9 +235,9 @@ async def starboard_settings(
 
     # TODO: simplify logic
     if channel and threshold:
-        stmt = stmt.values(channel_id=channel.id, threshold=threshold)
+        stmt = stmt.values(channel_id=channel.id, threshold=threshold, error=None)
     elif channel:
-        stmt = stmt.values(channel_id=channel.id)
+        stmt = stmt.values(channel_id=channel.id, error=None)
     elif threshold:
         stmt = stmt.values(threshold=threshold)
 
