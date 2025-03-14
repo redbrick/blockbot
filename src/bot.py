@@ -5,7 +5,7 @@ import arc
 import hikari
 import miru
 
-from src.config import DEBUG, TOKEN
+from src.config import DEBUG, TOKEN, DB_HOST
 from src.database import init_db
 
 bot = hikari.GatewayBot(
@@ -59,6 +59,7 @@ async def error_handler(ctx: arc.GatewayContext, exc: Exception) -> None:
     raise exc
 
 
-@client.set_startup_hook
+@client.add_startup_hook
 async def startup_hook(_: arc.GatewayClient) -> None:
+    logging.info(f"DB_HOST: {DB_HOST}")
     await init_db()
