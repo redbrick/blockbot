@@ -19,6 +19,10 @@ def role_mention(role_id: hikari.Snowflake | int | str) -> str:
     return f"<@&{role_id}>"
 
 
+def channel_mention(channel_id: hikari.Snowflake | int | str) -> str:
+    return f"<#{channel_id}>"
+
+
 async def hedgedoc_login(aiohttp_client: aiohttp.ClientSession) -> None:
     data = {
         "username": LDAP_USERNAME,
