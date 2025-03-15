@@ -33,6 +33,9 @@ CHANNEL_IDS: dict[str, int] = {
     "action-items": 1029132014210793513,
     "cowboys-and-cowgirls-committee": 578712722330353684,
     "committee-announcements": 763113612340363304,
+    "instructions": 892521597276139603,
+    "rules": 578713759263096842,
+    "waiting-room": 627548568613552138,
 }
 
 # TODO: query API/LDAP for these
