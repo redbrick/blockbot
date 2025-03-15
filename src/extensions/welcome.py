@@ -17,19 +17,20 @@ async def on_message(event: hikari.GuildMessageCreateEvent) -> None:
     message = f"""
 # Welcome to {guild_name}!
 
-Have a read of the {channel_mention(CHANNEL_IDS["rules"])} and {channel_mention(CHANNEL_IDS["instructions"])} to get started.
-
-Please verify your account by typing `/verify` in this channel.
-Or, if you don't have a {guild_name} account yet, please type `/register` to create a new account.
+- Have a read of the {channel_mention(CHANNEL_IDS["rules"])} and {channel_mention(CHANNEL_IDS["instructions"])} to get started.
+- If you don't have a {guild_name} account yet, please type `/register` to create a new account.
+- Once you have a {guild_name} account, verify your account by typing `/verify` in this channel.
 
 ### *Stuck?* Check out {channel_mention(CHANNEL_IDS["instructions"])} or ask for help in this channel.
 """
+    embed = hikari.Embed(description=message)
+    embed.set_thumbnail(event.member.avatar_url)
 
     await plugin.client.rest.create_message(
         CHANNEL_IDS["waiting-room"],
         user_mentions=True,
         content=f"{event.member.mention}",
-        embed=hikari.Embed(description=message),
+        embed=embed,
     )
 
 
