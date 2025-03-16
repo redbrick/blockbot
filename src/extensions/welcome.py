@@ -8,23 +8,23 @@ plugin = arc.GatewayPlugin(name="Welcome")
 
 
 @plugin.listen()
-async def on_message(event: hikari.GuildMessageCreateEvent) -> None:
-    if event.message.type != hikari.MessageType.GUILD_MEMBER_JOIN:
-        return
+async def on_member_join(event: hikari.MemberCreateEvent) -> None:
+    guild = await get_guild(plugin.client, event)
 
-    assert event.member is not None
-    guild_name = await get_guild(plugin.client, event)
+    # TODO: use built-in arc command finder once it's released
+    register = plugin.client._slash_commands["register"]  # pyright: ignore[reportPrivateUsage]
+    assert isinstance(register, arc.SlashCommand) 
+
     message = f"""
-# Welcome to {guild_name}!
+# Welcome to {guild.name}!
 
 - Have a read of the {channel_mention(CHANNEL_IDS["rules"])} and {channel_mention(CHANNEL_IDS["instructions"])} to get started.
-- If you don't have a {guild_name} account yet, please type `/register` to create a new account.
-- Once you have a {guild_name} account, verify your account by typing `/verify` in this channel.
+- If you don't have a {guild.name} account yet, please type {register.make_mention()} to create a new account.
 
 ### *Stuck?* Check out {channel_mention(CHANNEL_IDS["instructions"])} or ask for help in this channel.
 """
     embed = hikari.Embed(description=message)
-    embed.set_thumbnail(event.member.avatar_url)
+    embed.set_thumbnail(event.member.display_avatar_url)
 
     await plugin.client.rest.create_message(
         CHANNEL_IDS["waiting-room"],

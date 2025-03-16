@@ -17,7 +17,7 @@ def get_required_var(var: str) -> str:
 
 
 TOKEN = get_required_var("TOKEN")  # required
-DEBUG = os.environ.get("DEBUG", False)
+DEBUG = os.environ.get("DEBUG") or False
 
 DISCORD_UID_MAP = get_required_var("DISCORD_UID_MAP")
 
