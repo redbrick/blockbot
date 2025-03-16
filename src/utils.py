@@ -2,15 +2,16 @@ import datetime
 from urllib.parse import urlparse
 
 import aiohttp
+import arc
 import hikari
-from arc import GatewayClient
 
 from src.config import LDAP_PASSWORD, LDAP_USERNAME
 
 
+# TODO: change `event` to be a Protocol which must have the `guild_id` and `get_guild` attributes
 async def get_guild(
-    client: GatewayClient,
-    event: hikari.GuildMessageCreateEvent,
+    client: arc.GatewayClient,
+    event: hikari.GuildMessageCreateEvent | hikari.MemberCreateEvent,
 ) -> hikari.GatewayGuild | hikari.RESTGuild:
     return event.get_guild() or await client.rest.fetch_guild(event.guild_id)
 

@@ -17,7 +17,7 @@ def get_required_var(var: str) -> str:
 
 
 TOKEN = get_required_var("TOKEN")  # required
-DEBUG = os.environ.get("DEBUG", False)
+DEBUG = os.environ.get("DEBUG") or False
 
 DISCORD_UID_MAP = get_required_var("DISCORD_UID_MAP")
 
@@ -33,6 +33,9 @@ CHANNEL_IDS: dict[str, int] = {
     "action-items": 1029132014210793513,
     "cowboys-and-cowgirls-committee": 578712722330353684,
     "committee-announcements": 763113612340363304,
+    "instructions": 892521597276139603,
+    "rules": 578713759263096842,
+    "waiting-room": 627548568613552138,
 }
 
 # TODO: query API/LDAP for these
