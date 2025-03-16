@@ -22,6 +22,7 @@ DEBUG = os.environ.get("DEBUG") or False
 
 DISCORD_UID_MAP = get_required_var("DISCORD_UID_MAP")
 
+DB_ENABLED = os.environ.get("DB_ENABLED", "").strip().lower() != "false"
 DB_HOST = os.environ.get("DB_HOST")
 DB_NAME = os.environ.get("DB_NAME")
 DB_USER = os.environ.get("DB_USER")
