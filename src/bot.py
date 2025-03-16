@@ -11,7 +11,9 @@ from src.database import init_db
 bot = hikari.GatewayBot(
     token=TOKEN,
     banner=None,
-    intents=hikari.Intents.ALL_UNPRIVILEGED | hikari.Intents.MESSAGE_CONTENT | hikari.Intents.GUILD_MEMBERS,
+    intents=hikari.Intents.ALL_UNPRIVILEGED
+    | hikari.Intents.MESSAGE_CONTENT
+    | hikari.Intents.GUILD_MEMBERS,
     logs="DEBUG" if DEBUG else "INFO",
 )
 

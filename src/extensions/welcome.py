@@ -13,7 +13,7 @@ async def on_member_join(event: hikari.MemberCreateEvent) -> None:
 
     # TODO: use built-in arc command finder once it's released
     register = plugin.client._slash_commands["register"]  # pyright: ignore[reportPrivateUsage]
-    assert isinstance(register, arc.SlashCommand) 
+    assert isinstance(register, arc.SlashCommand)
 
     message = f"""
 # Welcome to {guild.name}!
