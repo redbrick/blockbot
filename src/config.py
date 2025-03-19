@@ -41,7 +41,12 @@ CHANNEL_IDS: dict[str, int] = {
 # TODO: query API/LDAP for these
 ROLE_IDS: dict[str, int] = {
     "all": 568762266992902179,
+    "brickie": 627549740170608660,
+    "croomer": 1172696659097047050,
     "everyone": 568762266992902179,
+    "external events": 1299487948206768138,
+    "gamez": 1089204642241581139,
+    "webgroup": 1166751688598761583,
     "committee": 568762266992902179,
     "cmt": 568762266992902179,
     "events": 807389174009167902,
@@ -50,10 +55,9 @@ ROLE_IDS: dict[str, int] = {
 }
 
 ASSIGNABLE_ROLES: dict[str, int] = {
-    "webgroup": 1166751688598761583,
-    "gamez": 1089204642241581139,
-    "croomer": 1172696659097047050,
-    "external events": 1299487948206768138,
+    role: role_id
+    for role, role_id in ROLE_IDS.items()
+    if role in {"webgroup", "gamez", "croomer", "external events"}
 }
 
 UID_MAPS = dict(item.split("=") for item in DISCORD_UID_MAP.split(","))
