@@ -29,12 +29,7 @@ async def verify_command(
 ) -> None:
     """Verify a Discord member against a Redbrick account."""
 
-    if ctx.guild_id is None:
-        await ctx.respond(
-            "This command can only be used in a guild.",
-            flags=hikari.MessageFlag.EPHEMERAL,
-        )
-        return
+    assert ctx.guild_id is not None
 
     await ctx.client.rest.add_role_to_member(
         ctx.guild_id,
@@ -49,10 +44,9 @@ async def verify_command(
     welcome_embed = hikari.Embed(
         description=f"""
         ## Welcome to Redbrick, {user.mention}!
-        *Now tell us, have ya ever?*
         """,
     )
-    welcome_embed.set_thumbnail(user.avatar_url)
+    welcome_embed.set_thumbnail(user.display_avatar_url)
 
     await plugin.client.rest.create_message(
         CHANNEL_IDS["lobby"],
@@ -67,7 +61,6 @@ async def verify_command(
 
     await ctx.respond(
         embed=admin_embed,
-        user_mentions=True,
     )
 
 
