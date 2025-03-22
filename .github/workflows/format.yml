@@ -3,9 +3,9 @@ name: Format & Type Check
 on: [push, pull_request]
 
 jobs:
-  setup:
+  formatting:
     runs-on: ubuntu-latest
-    name: "Set up Python and uv"
+    name: "Check code style"
     steps:
       - uses: actions/checkout@v4
 
@@ -20,13 +20,6 @@ jobs:
         with:
           python-version-file: "pyproject.toml"
 
-  formatting:
-    runs-on: ubuntu-latest
-    needs: setup
-    name: "Check code style"
-    steps:
-      - uses: actions/checkout@v4
-
       - name: Run ruff via nox
         run: |
           uv sync --dev
@@ -34,10 +27,20 @@ jobs:
 
   pyright:
     runs-on: ubuntu-latest
-    needs: setup
     name: "Type checking"
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          # this should be the same as in pyproject.toml
+          version: "0.6.9"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: "pyproject.toml"
 
       - name: Run pyright via nox
         run: |
