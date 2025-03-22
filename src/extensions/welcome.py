@@ -11,8 +11,7 @@ plugin = arc.GatewayPlugin(name="Welcome")
 async def on_member_join(event: hikari.MemberCreateEvent) -> None:
     guild = await get_guild(plugin.client, event)
 
-    # TODO: use built-in arc command finder once it's released
-    register = plugin.client._slash_commands["register"]  # pyright: ignore[reportPrivateUsage]
+    register = plugin.client.find_command(hikari.CommandType.SLASH, "register")
     assert isinstance(register, arc.SlashCommand)
 
     message = f"""

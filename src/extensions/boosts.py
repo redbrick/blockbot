@@ -19,7 +19,7 @@ BOOST_MESSAGE_TYPES: list[hikari.MessageType] = [
 
 
 def build_boost_message(
-    message_type: hikari.MessageType | int,
+    message_type: hikari.MessageType,
     number_of_boosts: str | None,
     booster_user: hikari.Member,
     guild: hikari.Guild,
@@ -42,12 +42,15 @@ def build_boost_message(
 
 @plugin.listen()
 async def on_message(event: hikari.GuildMessageCreateEvent) -> None:
-    if event.message.type not in BOOST_MESSAGE_TYPES:
+    message_type = event.message.type
+    if message_type not in BOOST_MESSAGE_TYPES:
         return
 
+    assert isinstance(message_type, hikari.MessageType)
     assert event.member is not None
+
     message = build_boost_message(
-        event.message.type,
+        message_type,
         number_of_boosts=event.content,
         booster_user=event.member,
         guild=await get_guild(plugin.client, event),

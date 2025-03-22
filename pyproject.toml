@@ -1,5 +1,40 @@
+[project]
+name = "blockbot"
+version = "0.1.0"
+description = "Discord bot maintained by the Redbrick webgroup"
+readme = "README.md"
+requires-python = ">=3.13"
+license = { text = "MIT" }
+authors = [{ name = "JedHazaymeh", email = "magma@redbrick.dcu.ie" }, { name = "nova", email = "nova@redbrick.dcu.ie"}]
+maintainers = [{ name = "nova", email = "nova@redbrick.dcu.ie"}, { name = "wizzdom", email = "wizzdom@redbrick.dcu.ie"}]
+dependencies = [
+    "aiohttp>=3.11.14",
+    "asyncpg>=0.30.0",
+    "fortune-python>=1.1.1",
+    "hikari>=2.2.0",
+    "hikari-arc>=2.0.0",
+    "hikari-miru>=4.2.0",
+    "pyfiglet>=1.0.2",
+    "python-dotenv>=1.0.1",
+    "sqlalchemy>=2.0.39",
+]
+
+[project.urls]
+Documentation = "https://docs.redbrick.dcu.ie/webgroup/blockbot/"
+Repository = "https://github.com/redbrick/blockbot"
+
+[dependency-groups]
+dev = [
+    "nox>=2025.2.9",
+    "pre-commit>=4.2.0",
+    "pyright>=1.1.397",
+    "ruff>=0.11.2",
+    "uv>=0.6.9",  # this should be the same as in the github workflows
+]
+
 [tool.ruff]
-target-version = "py312"
+include = [".src/*.py", "noxfile.py"]
+target-version = "py313"
 
 [tool.ruff.format]
 docstring-code-format = true
@@ -39,3 +74,10 @@ ignore = [
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
+
+[tool.uv]
+required-version = "~=0.6"
+
+[tool.pyright]
+pythonVersion = "3.13"
+typeCheckingMode = "strict"
