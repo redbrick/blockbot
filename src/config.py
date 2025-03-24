@@ -162,3 +162,7 @@ LDAP_PASSWORD = get_env_var("LDAP_PASSWORD", required_features=[Feature.LDAP])
 AGENDA_TEMPLATE_URL = get_env_var(
     "AGENDA_TEMPLATE_URL", required_features=[Feature.LDAP]
 )
+
+RCON_HOST = os.environ.get("RCON_HOST")
+RCON_PORT = os.environ.get("RCON_PORT")
+RCON_PASSWORD = os.environ.get("RCON_PASSWORD")
