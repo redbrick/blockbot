@@ -4,14 +4,22 @@ from urllib.parse import urlparse
 import aiohttp
 import arc
 import hikari
+import typing
 
 from src.config import LDAP_PASSWORD, LDAP_USERNAME
 
 
-# TODO: change `event` to be a Protocol which must have the `guild_id` and `get_guild` attributes
+class EventWithGuildAttributes(typing.Protocol):
+    @property
+    def guild_id(self) -> hikari.Snowflake:
+        ...
+
+    def get_guild(self) -> hikari.GatewayGuild | None:
+        ...
+
 async def get_guild(
     client: arc.GatewayClient,
-    event: hikari.GuildMessageCreateEvent | hikari.MemberCreateEvent,
+    event: EventWithGuildAttributes,
 ) -> hikari.GatewayGuild | hikari.RESTGuild:
     return event.get_guild() or await client.rest.fetch_guild(event.guild_id)
 

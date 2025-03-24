@@ -3,7 +3,7 @@ import hikari
 
 gerry = arc.GatewayPlugin(name="gerry")
 
-image = "https://i.redd.it/cu94ebjex3481.jpg"
+image = "https://cdn.redbrick.dcu.ie/blockbot/gerry.jpg"
 
 
 @gerry.include
@@ -20,10 +20,11 @@ async def gerry_command(
         description = f"So tell me {user.mention}!"
     else:
         description = "So tell me Frank!"
+
     embed = hikari.Embed(
         title="Gerry",
         description=description,
-        colour=0x5865F2,
+        colour=0xffc753,  # the yellow of gerry's jacket
     )
     embed = embed.set_image(image)
 

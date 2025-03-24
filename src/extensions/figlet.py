@@ -1,6 +1,6 @@
 import arc
 import hikari
-from pyfiglet import Figlet
+from pyfiglet import Figlet  # pyright: ignore[reportMissingTypeStubs]
 
 plugin = arc.GatewayPlugin(name="figlet")
 
@@ -46,7 +46,7 @@ async def figlet_command(
     figlet = Figlet(font=font)
 
     # generate ASCII art
-    ascii_art = figlet.renderText(text)
+    ascii_art = figlet.renderText(text)  # pyright: ignore[reportUnknownMemberType]
     if not ascii_art:
         await ctx.respond(
             "❌ Failed to generate ASCII art. Please try again.",

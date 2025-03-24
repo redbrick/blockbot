@@ -5,10 +5,6 @@ on:
   pull_request:
     types: [closed]
 
-  #concurrency:
-  #  group: '${{ github.ref }}'
-  #  cancel-in-progress: true
-
 jobs:
   build:
     name: build
@@ -41,7 +37,6 @@ jobs:
     if: github.event_name == 'pull_request'
     timeout-minutes: 60
     steps:
-      - run: echo "null"
       - run: nomad status -address=http://nomad.service.consul:4646
       - run: nomad job stop -address=http://nomad.service.consul:4646 -purge blockbot-${GITHUB_HEAD_REF}
 

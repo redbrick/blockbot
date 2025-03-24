@@ -19,7 +19,7 @@ bot = hikari.GatewayBot(
 
 logging.info(f"Debug mode is {DEBUG}; You can safely ignore this.")
 
-client = arc.GatewayClient(bot, is_dm_enabled=False)
+client = arc.GatewayClient(bot, invocation_contexts=[hikari.ApplicationContextType.GUILD])
 miru_client = miru.Client.from_arc(client)
 
 client.set_type_dependency(miru.Client, miru_client)
@@ -61,6 +61,6 @@ async def error_handler(ctx: arc.GatewayContext, exc: Exception) -> None:
     raise exc
 
 
-@client.set_startup_hook
+@client.add_startup_hook
 async def startup_hook(_: arc.GatewayClient) -> None:
     await init_db()

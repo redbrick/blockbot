@@ -1,6 +1,6 @@
 import arc
 import hikari
-from fortune import fortune
+from fortune import fortune  # pyright: ignore[reportMissingTypeStubs]
 
 fortune_cmd = arc.GatewayPlugin(name="fortune")
 
@@ -14,7 +14,7 @@ async def fortune_command(
     """Send a random Fortune!"""
 
     # generate fortune
-    fortune_message = fortune()
+    fortune_message = fortune()  # pyright: ignore[reportUnknownVariableType]
     if not fortune_message:
         await ctx.respond(
             "❌ Failed to generate fortune. Please try again.",
@@ -37,7 +37,7 @@ async def fortune_command(
         return
 
     # send fortune in a codeblock
-    await ctx.respond(message)
+    await ctx.respond(message, user_mentions=True)
 
 
 @arc.loader

@@ -17,7 +17,6 @@ action_items = arc.GatewayPlugin(name="Action Items")
 @arc.slash_command(
     "action_items",
     "Display the action items from the MD",
-    is_dm_enabled=False,
     autodefer=arc.AutodeferMode.EPHEMERAL,
 )
 async def get_action_items(
