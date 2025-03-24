@@ -115,6 +115,7 @@ dependencies = [
     { name = "hikari-miru" },
     { name = "pyfiglet" },
     { name = "python-dotenv" },
+    { name = "rcon" },
     { name = "sqlalchemy" },
 ]
 
@@ -139,6 +140,7 @@ requires-dist = [
     { name = "hikari-miru", specifier = ">=4.2.0" },
     { name = "pyfiglet", specifier = ">=1.0.2" },
     { name = "python-dotenv", specifier = ">=1.0.1" },
+    { name = "rcon", specifier = ">=2.4.9" },
     { name = "sqlalchemy", specifier = ">=2.0.39" },
 ]
 
@@ -516,6 +518,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/fe/0f/25911a9f080464c59fab9027482f822b86bf0608957a5fcc6eaac85aa515/PyYAML-6.0.2-cp313-cp313-musllinux_1_1_x86_64.whl", hash = "sha256:68ccc6023a3400877818152ad9a1033e3db8625d899c72eacb5a668902e4d652", size = 751597 },
     { url = "https://files.pythonhosted.org/packages/14/0d/e2c3b43bbce3cf6bd97c840b46088a3031085179e596d4929729d8d68270/PyYAML-6.0.2-cp313-cp313-win32.whl", hash = "sha256:bc2fa7c6b47d6bc618dd7fb02ef6fdedb1090ec036abab80d4681424b84c1183", size = 140527 },
     { url = "https://files.pythonhosted.org/packages/fa/de/02b54f42487e3d3c6efb3f89428677074ca7bf43aae402517bc7cca949f3/PyYAML-6.0.2-cp313-cp313-win_amd64.whl", hash = "sha256:8388ee1976c416731879ac16da0aff3f63b286ffdd57cdeb95f3f2e085687563", size = 156446 },
+]
+
+[[package]]
+name = "rcon"
+version = "2.4.9"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/e4/45/edde086b16cd38591794d328ef62c47f089ac04f32a63b4fcab0981d349a/rcon-2.4.9.tar.gz", hash = "sha256:d41a8311dc13352da35163f46a3cc13eb20f5cde1297b75b56e7645ef76d0a48", size = 45220 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/69/d3/2668a6e6bd6d66046ebe811f3fac65402620762e31f80b8f88661a7f3e42/rcon-2.4.9-py3-none-any.whl", hash = "sha256:c0d2477070f189a6b49774133c412473ece40bb452473f160c7373b162dc8929", size = 31129 },
 ]
 
 [[package]]
