@@ -22,7 +22,7 @@ jobs:
 
       - name: Run ruff via nox
         run: |
-          uv sync --dev
+          uv sync --group nox
           uv run nox -s format_check
 
   pyright:
@@ -44,5 +44,5 @@ jobs:
 
       - name: Run pyright via nox
         run: |
-          uv sync --dev
+          uv sync --group nox
           uv run nox -s pyright

@@ -26,5 +26,5 @@ def format_check(session: nox.Session) -> None:
 
 @nox.session()
 def pyright(session: nox.Session) -> None:
-    session.run_install("uv", "sync", "--dev", "--active")
+    session.run_install("uv", "sync", "--dev", "--group", "nox", "--active")
     session.run("pyright", *SCRIPT_PATHS)

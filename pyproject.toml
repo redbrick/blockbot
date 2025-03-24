@@ -25,11 +25,13 @@ Repository = "https://github.com/redbrick/blockbot"
 
 [dependency-groups]
 dev = [
-    "nox>=2025.2.9",
     "pre-commit>=4.2.0",
     "pyright>=1.1.397",
     "ruff>=0.11.2",
     "uv>=0.6.9",  # this should be the same as in the github workflows
+]
+nox = [
+    "nox>=2025.2.9",
 ]
 
 [tool.ruff]
