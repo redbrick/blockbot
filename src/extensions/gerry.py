@@ -1,6 +1,8 @@
 import arc
 import hikari
 
+from src.config import Colour
+
 gerry = arc.GatewayPlugin(name="gerry")
 
 image = "https://cdn.redbrick.dcu.ie/blockbot/gerry.jpg"
@@ -24,7 +26,7 @@ async def gerry_command(
     embed = hikari.Embed(
         title="Gerry",
         description=description,
-        colour=0xffc753,  # the yellow of gerry's jacket
+        colour=Colour.GERRY_YELLOW,
     )
     embed = embed.set_image(image)
 
