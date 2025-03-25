@@ -1,6 +1,4 @@
-import os
 import arc
-import hikari
 from rcon.source import rcon
 
 from src.config import RCON_HOST, RCON_PASSWORD, RCON_PORT, CHANNEL_IDS, ROLE_IDS
@@ -26,7 +24,7 @@ async def whitelist_command(
         )
     ]
 ) -> None:
-    if not RCON_HOST or not RCON_PASSWORD:
+    if not RCON_HOST or not RCON_PASSWORD or not RCON_PORT:
         await ctx.respond("RCON configuration is missing. Please check your environment variables.")
         return
 
