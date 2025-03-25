@@ -1,7 +1,7 @@
 import arc
 import hikari
 
-from src.config import CHANNEL_IDS, ROLE_IDS
+from src.config import CHANNEL_IDS, ROLE_IDS, Colour
 from src.hooks import restrict_to_channels, restrict_to_roles
 
 plugin = arc.GatewayPlugin(name="Verify")
@@ -38,13 +38,18 @@ async def verify_command(
         reason="Verified Redbrick user.",
     )
 
+    role = plugin.client.find_command(hikari.CommandType.SLASH, "role add")
+    assert isinstance(role, arc.SlashSubCommand)
+
     await ctx.client.rest.edit_member(
         ctx.guild_id, user, nickname=username, reason="Verified Redbrick user."
     )
     welcome_embed = hikari.Embed(
         description=f"""
         ## Welcome to Redbrick, {user.mention}!
+        To get started, type {role.make_mention()} to select your roles and stay up to date with the latest news and events.
         """,
+        colour=Colour.BRICKIE_BLUE,
     )
     welcome_embed.set_thumbnail(user.display_avatar_url)
 
@@ -57,6 +62,7 @@ async def verify_command(
 
     admin_embed = hikari.Embed(
         description=f"{user.mention} has been verified with Redbrick username: `{username}`.",
+        colour=Colour.BRICKIE_BLUE,
     )
 
     await ctx.respond(

@@ -1,5 +1,6 @@
 import os
 import sys
+from enum import StrEnum
 
 from dotenv import load_dotenv
 
@@ -59,6 +60,21 @@ ASSIGNABLE_ROLES: dict[str, int] = {
     for role, role_id in ROLE_IDS.items()
     if role in {"webgroup", "gamez", "croomer", "external events"}
 }
+
+
+class Colour(StrEnum):
+    REDBRICK_RED = "#DC2B31"
+    BRICKIE_BLUE = "#3498DB"
+    GERRY_YELLOW = "#FFC753"
+    ROOTHOLDER_YELLOW = "#F1C40F"
+    OLDMITTEE_PINK = "#FF5D9D"
+    ASSOCIATE_GREEN = "#1A7939"
+    WEBGROUP_ORANGE = "#E67E22"
+    GAMEZ_YELLOW = "#F1C40F"
+    EXTERNAL_EVENTS_ORANGE = "#A84300"
+    GUEST_RED = "#992D22"
+    HELP_GREEN = "#00FF00"
+
 
 UID_MAPS = dict(item.split("=") for item in DISCORD_UID_MAP.split(","))
 

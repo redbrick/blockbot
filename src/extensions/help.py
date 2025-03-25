@@ -4,6 +4,8 @@ import itertools
 import arc
 import hikari
 
+from src.config import Colour
+
 plugin = arc.GatewayPlugin(name="Help Command Plugin")
 
 
@@ -31,7 +33,7 @@ async def help_command(ctx: arc.GatewayContext) -> None:
     """Displays a simple list of all bot commands."""
 
     plugin_commands = gather_commands()
-    embed = hikari.Embed(title="Bot Commands", color=0x00FF00)
+    embed = hikari.Embed(title="Bot Commands", color=Colour.HELP_GREEN)
 
     for plugin_, commands in plugin_commands.items():
         embed.add_field(
