@@ -62,21 +62,18 @@ ASSIGNABLE_ROLES: dict[str, int] = {
 }
 
 
-class Colour(int, Enum):
-    REDBRICK_RED = 0xDC2B31  # #dc2b31
-    BRICKIE_BLUE = 0x3498DB  # #3498DB
-    GERRY_YELLOW = 0xFFC753  # #ffc753
-    ROOTHOLDER_YELLOW = 0xF1C40F  # #F1C40F
-    OLDMITTEE_PINK = 0xFF5D9D  # #FF5D9D
-    ASSOCIATE_GREEN = 0x1A7939  # #1A7939
-    WEBGROUP_ORANGE = 0xE67E22  # #E67E22
-    GAMEZ_YELLOW = 0xF1C40F  # #F1C40F
-    EXTERNAL_EVENTS_ORANGE = 0xA84300  # #A84300
-    GUEST_RED = 0x992D22  # #992D22
-    HELP_GREEN = 0x00FF00  # #00FF00
-
-    def __str__(self) -> str:
-        return hex(self.value)
+class Colour(str, Enum):
+    REDBRICK_RED = "#DC2B31"
+    BRICKIE_BLUE = "#3498DB"
+    GERRY_YELLOW = "#FFC753"
+    ROOTHOLDER_YELLOW = "#F1C40F"
+    OLDMITTEE_PINK = "#FF5D9D"
+    ASSOCIATE_GREEN = "#1A7939"
+    WEBGROUP_ORANGE = "#E67E22"
+    GAMEZ_YELLOW = "#F1C40F"
+    EXTERNAL_EVENTS_ORANGE = "#A84300"
+    GUEST_RED = "#992D22"
+    HELP_GREEN = "#00FF00"
 
 
 UID_MAPS = dict(item.split("=") for item in DISCORD_UID_MAP.split(","))
