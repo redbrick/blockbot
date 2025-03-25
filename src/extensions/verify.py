@@ -47,7 +47,7 @@ async def verify_command(
     welcome_embed = hikari.Embed(
         description=f"""
         ## Welcome to Redbrick, {user.mention}!
-        To get started, type {role.make_mention()} to get your roles and stay up to date with the latest news and events.
+        To get started, type {role.make_mention()} to select your roles and stay up to date with the latest news and events.
         """,
     )
     welcome_embed.set_thumbnail(user.display_avatar_url)
