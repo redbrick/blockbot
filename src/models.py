@@ -1,20 +1,11 @@
 from __future__ import annotations
 
-import enum
 import logging
 import typing
 
 import arc
 
-from src.config import convert_to_bool, get_env_var
-
-
-class Feature(enum.StrEnum):
-    # the enum value should be the environment variable
-    DATABASE = "DB_ENABLED"
-    RCON = "RCON_ENABLED"
-    LDAP = "LDAP_ENABLED"
-
+from src.config import Feature, convert_to_bool, get_env_var
 
 type BlockbotContext = arc.Context[Blockbot]
 

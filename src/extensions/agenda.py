@@ -83,7 +83,7 @@ async def gen_agenda(
     url: arc.Option[
         str,
         arc.StrParams("URL of the agenda template from the MD"),
-    ] = AGENDA_TEMPLATE_URL,
+    ] = AGENDA_TEMPLATE_URL,  # pyright: ignore[reportArgumentType] - it is guaranteed to exist because of runtime checks!
     aiohttp_client: aiohttp.ClientSession = arc.inject(),
 ) -> None:
     """Generate a new agenda for committee meetings."""

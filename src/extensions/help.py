@@ -5,7 +5,6 @@ import arc
 import hikari
 
 from src.config import Colour
-
 from src.models import Blockbot, BlockbotContext, BlockbotPlugin
 
 plugin = BlockbotPlugin(name="Help Command Plugin")

@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 import typing
@@ -8,6 +9,13 @@ from dotenv import load_dotenv
 load_dotenv()
 
 T = typing.TypeVar("T", bound=int | str | bool)
+
+
+class Feature(StrEnum):
+    # the enum value should be the environment variable
+    DATABASE = "DB_ENABLED"
+    RCON = "RCON_ENABLED"
+    LDAP = "LDAP_ENABLED"
 
 
 def convert_to_bool(value: str) -> bool:
@@ -24,7 +32,7 @@ def convert_to_bool(value: str) -> bool:
 def get_env_var(
     name: str,
     *,
-    required: typing.Literal[True],
+    required: typing.Literal[True] = True,
     conv: typing.Callable[[str], T] = str,
 ) -> T: ...
 
@@ -33,7 +41,8 @@ def get_env_var(
 def get_env_var(
     name: str,
     *,
-    required: typing.Literal[False],
+    required: typing.Literal[False] = False,
+    required_features: typing.Sequence[Feature] | None = None,
     conv: typing.Callable[[str], T] = str,
     default: T,
 ) -> T: ...
@@ -43,7 +52,8 @@ def get_env_var(
 def get_env_var(
     name: str,
     *,
-    required: typing.Literal[False],
+    required: typing.Literal[False] = False,
+    required_features: typing.Sequence[Feature] | None = None,
     conv: typing.Callable[[str], T] = str,
     default: None = None,
 ) -> T | None: ...
@@ -52,15 +62,28 @@ def get_env_var(
 def get_env_var(
     name: str,
     *,
-    required: bool,
+    required: bool = False,
+    required_features: typing.Sequence[Feature] | None = None,
     conv: typing.Callable[[str], T] = str,
     default: T | None = None,
 ) -> T | None:
     env = os.environ.get(name, "").strip() or None
 
     if required and env is None:
-        print(f"{name} environment variable not set. Exiting.")
+        logging.error(f"'{name}' environment variable not set. Exiting.")
         sys.exit(1)
+
+    if required_features:
+        for feature in required_features:
+            enabled = get_env_var(
+                feature.value, required=False, conv=convert_to_bool, default=True
+            )
+            if enabled and env is None:
+                # feature is enabled, but the env var is not set!
+                logging.error(
+                    f"'{name}' environment variable not set but is required for feature '{feature.name}'. Exiting."
+                )
+                sys.exit(1)
 
     if env is None:
         assert not required
@@ -78,10 +101,10 @@ DB_ENABLED = get_env_var(
     "DB_ENABLED", required=False, conv=convert_to_bool, default=True
 )
 
-DB_HOST = get_env_var("DB_HOST", required=False)
-DB_NAME = get_env_var("DB_NAME", required=False)
-DB_USER = get_env_var("DB_USER", required=False)
-DB_PASSWORD = get_env_var("DB_PASSWORD", required=False)
+DB_HOST = get_env_var("DB_HOST", required_features=[Feature.DATABASE])
+DB_NAME = get_env_var("DB_NAME", required_features=[Feature.DATABASE])
+DB_USER = get_env_var("DB_USER", required_features=[Feature.DATABASE])
+DB_PASSWORD = get_env_var("DB_PASSWORD", required_features=[Feature.DATABASE])
 
 CHANNEL_IDS: dict[str, int] = {
     "lobby": 627542044390457350,
@@ -134,7 +157,9 @@ class Colour(StrEnum):
 
 UID_MAPS: dict[str, str] = dict(item.split("=") for item in DISCORD_UID_MAP.split(","))
 
-LDAP_USERNAME = get_env_var("LDAP_USERNAME", required=False)
-LDAP_PASSWORD = get_env_var("LDAP_PASSWORD", required=False)
+LDAP_USERNAME = get_env_var("LDAP_USERNAME", required_features=[Feature.LDAP])
+LDAP_PASSWORD = get_env_var("LDAP_PASSWORD", required_features=[Feature.LDAP])
 
-AGENDA_TEMPLATE_URL = get_env_var("AGENDA_TEMPLATE_URL", required=False)
+AGENDA_TEMPLATE_URL = get_env_var(
+    "AGENDA_TEMPLATE_URL", required_features=[Feature.LDAP]
+)
