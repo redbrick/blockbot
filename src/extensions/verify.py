@@ -38,8 +38,8 @@ async def verify_command(
         reason="Verified Redbrick user.",
     )
 
-    role = plugin.client.find_command(hikari.CommandType.SLASH, "role")
-    assert isinstance(role, arc.SlashCommand)
+    role = plugin.client.find_command(hikari.CommandType.SLASH, "role add")
+    assert isinstance(role, arc.SlashSubCommand)
 
     await ctx.client.rest.edit_member(
         ctx.guild_id, user, nickname=username, reason="Verified Redbrick user."
