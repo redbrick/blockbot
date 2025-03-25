@@ -49,6 +49,7 @@ async def verify_command(
         ## Welcome to Redbrick, {user.mention}!
         To get started, type {role.make_mention()} to select your roles and stay up to date with the latest news and events.
         """,
+        colour=0x3498DB,  # brickie blue
     )
     welcome_embed.set_thumbnail(user.display_avatar_url)
 
@@ -61,6 +62,7 @@ async def verify_command(
 
     admin_embed = hikari.Embed(
         description=f"{user.mention} has been verified with Redbrick username: `{username}`.",
+        colour=0x3498DB,  # brickie blue
     )
 
     await ctx.respond(
