@@ -32,7 +32,7 @@ async def whitelist_add(
             passwd=RCON_PASSWORD
         )
         await ctx.respond(
-            f"`{username}` {response}",
+            f"`{username}`: {response}",
         )
     except Exception as e:
         await ctx.respond(
@@ -62,7 +62,7 @@ async def whitelist_remove(
             passwd=RCON_PASSWORD
         )
         await ctx.respond(
-            f"`{username}` {response}",
+            f"`{username}`: {response}",
         )
     except Exception as e:
         await ctx.respond(
