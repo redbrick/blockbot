@@ -1,6 +1,6 @@
 import os
 import sys
-from enum import Enum
+from enum import StrEnum
 
 from dotenv import load_dotenv
 
@@ -62,7 +62,7 @@ ASSIGNABLE_ROLES: dict[str, int] = {
 }
 
 
-class Colour(str, Enum):
+class Colour(StrEnum):
     REDBRICK_RED = "#DC2B31"
     BRICKIE_BLUE = "#3498DB"
     GERRY_YELLOW = "#FFC753"
