@@ -38,12 +38,16 @@ async def verify_command(
         reason="Verified Redbrick user.",
     )
 
+    role = plugin.client.find_command(hikari.CommandType.SLASH, "role")
+    assert isinstance(role, arc.SlashCommand)
+
     await ctx.client.rest.edit_member(
         ctx.guild_id, user, nickname=username, reason="Verified Redbrick user."
     )
     welcome_embed = hikari.Embed(
         description=f"""
         ## Welcome to Redbrick, {user.mention}!
+        To get started, type {role.make_mention()} to get your roles and stay up to date with the latest news and events.
         """,
     )
     welcome_embed.set_thumbnail(user.display_avatar_url)
