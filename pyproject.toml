@@ -35,7 +35,7 @@ nox = [
 ]
 
 [tool.ruff]
-include = [".src/*.py", "noxfile.py"]
+include = ["./src/*.py", "noxfile.py"]
 target-version = "py313"
 
 [tool.ruff.format]
