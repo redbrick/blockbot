@@ -3,10 +3,15 @@ import typing
 import arc
 import hikari
 
-type WrappedHookResult = typing.Callable[[arc.GatewayContext], typing.Awaitable[arc.HookResult]]
+from src.models import BlockbotContext
+
+type WrappedHookResult = typing.Callable[
+    [BlockbotContext], typing.Awaitable[arc.HookResult]
+]
+
 
 async def _restrict_to_roles(
-    ctx: arc.GatewayContext,
+    ctx: BlockbotContext,
     role_ids: typing.Sequence[int],
 ) -> arc.HookResult:
     assert ctx.member
@@ -26,14 +31,14 @@ def restrict_to_roles(
 ) -> WrappedHookResult:
     """Any command which uses this hook requires that the command be disabled in DMs as a guild role is required for this hook to function."""
 
-    async def func(ctx: arc.GatewayContext) -> arc.HookResult:
+    async def func(ctx: BlockbotContext) -> arc.HookResult:
         return await _restrict_to_roles(ctx, role_ids)
 
     return func
 
 
 async def _restrict_to_channels(
-    ctx: arc.GatewayContext,
+    ctx: BlockbotContext,
     channel_ids: typing.Sequence[int],
 ) -> arc.HookResult:
     if ctx.channel_id not in channel_ids:
@@ -49,7 +54,7 @@ async def _restrict_to_channels(
 def restrict_to_channels(
     channel_ids: typing.Sequence[int],
 ) -> WrappedHookResult:
-    async def func(ctx: arc.GatewayContext) -> arc.HookResult:
+    async def func(ctx: BlockbotContext) -> arc.HookResult:
         return await _restrict_to_channels(ctx, channel_ids)
 
     return func

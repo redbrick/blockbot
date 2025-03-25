@@ -6,9 +6,15 @@ import hikari
 
 from src.config import AGENDA_TEMPLATE_URL, CHANNEL_IDS, ROLE_IDS, UID_MAPS
 from src.hooks import restrict_to_channels, restrict_to_roles
-from src.utils import get_md_content, post_new_md_content, role_mention, utcnow
+from src.models import Blockbot, BlockbotContext, BlockbotPlugin, Feature
+from src.utils import (
+    get_md_content,
+    post_new_md_content,
+    role_mention,
+    utcnow,
+)
 
-plugin = arc.GatewayPlugin(name="Agenda")
+plugin = BlockbotPlugin(name="Agenda", required_features=[Feature.LDAP])
 
 agenda = plugin.include_slash_group("agenda", "Interact with the agenda.")
 
@@ -55,7 +61,7 @@ def generate_time_choices() -> list[str]:
     autodefer=arc.AutodeferMode.EPHEMERAL,
 )
 async def gen_agenda(
-    ctx: arc.GatewayContext,
+    ctx: BlockbotContext,
     date: arc.Option[
         str,
         arc.StrParams("Select a date.", autocomplete_with=generate_date_choices),
@@ -173,9 +179,7 @@ async def gen_agenda(
     "template",
     "View the agenda template",
 )
-async def view_template(
-    ctx: arc.GatewayContext,
-) -> None:
+async def view_template(ctx: BlockbotContext) -> None:
     """View the agenda template."""
 
     embed = hikari.Embed(
@@ -195,5 +199,5 @@ async def view_template(
 
 
 @arc.loader
-def loader(client: arc.GatewayClient) -> None:
+def loader(client: Blockbot) -> None:
     client.add_plugin(plugin)

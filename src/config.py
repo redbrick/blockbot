@@ -1,32 +1,87 @@
 import os
 import sys
+import typing
 from enum import StrEnum
 
 from dotenv import load_dotenv
 
 load_dotenv()
 
+T = typing.TypeVar("T", bound=int | str | bool)
 
-def get_required_var(var: str) -> str:
-    env = os.environ.get(var)
 
-    if env is None:
-        print(f"{var} environment variable not set. Exiting.")
+def convert_to_bool(value: str) -> bool:
+    value = value.strip().lower()
+    if value in ("1", "true"):
+        return True
+    if value in ("0", "false"):
+        return False
+
+    raise RuntimeError(f"{value} cannot be converted to a bool")
+
+
+@typing.overload
+def get_env_var(
+    name: str,
+    *,
+    required: typing.Literal[True],
+    conv: typing.Callable[[str], T] = str,
+) -> T: ...
+
+
+@typing.overload
+def get_env_var(
+    name: str,
+    *,
+    required: typing.Literal[False],
+    conv: typing.Callable[[str], T] = str,
+    default: T,
+) -> T: ...
+
+
+@typing.overload
+def get_env_var(
+    name: str,
+    *,
+    required: typing.Literal[False],
+    conv: typing.Callable[[str], T] = str,
+    default: None = None,
+) -> T | None: ...
+
+
+def get_env_var(
+    name: str,
+    *,
+    required: bool,
+    conv: typing.Callable[[str], T] = str,
+    default: T | None = None,
+) -> T | None:
+    env = os.environ.get(name, "").strip() or None
+
+    if required and env is None:
+        print(f"{name} environment variable not set. Exiting.")
         sys.exit(1)
 
-    return env
+    if env is None:
+        assert not required
+        return default
+
+    return conv(env)
 
 
-TOKEN = get_required_var("TOKEN")  # required
-DEBUG = os.environ.get("DEBUG") or False
+TOKEN = get_env_var("TOKEN", required=True)
+DEBUG = get_env_var("DEBUG", required=False, conv=convert_to_bool, default=False)
 
-DISCORD_UID_MAP = get_required_var("DISCORD_UID_MAP")
+DISCORD_UID_MAP = get_env_var("DISCORD_UID_MAP", required=True)
 
-DB_ENABLED = os.environ.get("DB_ENABLED", "").strip().lower() != "false"
-DB_HOST = os.environ.get("DB_HOST")
-DB_NAME = os.environ.get("DB_NAME")
-DB_USER = os.environ.get("DB_USER")
-DB_PASSWORD = os.environ.get("DB_PASSWORD")
+DB_ENABLED = get_env_var(
+    "DB_ENABLED", required=False, conv=convert_to_bool, default=True
+)
+
+DB_HOST = get_env_var("DB_HOST", required=False)
+DB_NAME = get_env_var("DB_NAME", required=False)
+DB_USER = get_env_var("DB_USER", required=False)
+DB_PASSWORD = get_env_var("DB_PASSWORD", required=False)
 
 CHANNEL_IDS: dict[str, int] = {
     "lobby": 627542044390457350,
@@ -77,9 +132,9 @@ class Colour(StrEnum):
     HELP_GREEN = "#00FF00"
 
 
-UID_MAPS = dict(item.split("=") for item in DISCORD_UID_MAP.split(","))
+UID_MAPS: dict[str, str] = dict(item.split("=") for item in DISCORD_UID_MAP.split(","))
 
-LDAP_USERNAME = get_required_var("LDAP_USERNAME")
-LDAP_PASSWORD = get_required_var("LDAP_PASSWORD")
+LDAP_USERNAME = get_env_var("LDAP_USERNAME", required=False)
+LDAP_PASSWORD = get_env_var("LDAP_PASSWORD", required=False)
 
-AGENDA_TEMPLATE_URL = get_required_var("AGENDA_TEMPLATE_URL")
+AGENDA_TEMPLATE_URL = get_env_var("AGENDA_TEMPLATE_URL", required=False)

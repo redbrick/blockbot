@@ -2,7 +2,9 @@ import arc
 import hikari
 import miru
 
-plugin = arc.GatewayPlugin("Example Modal")
+from src.models import Blockbot, BlockbotContext, BlockbotPlugin
+
+plugin = BlockbotPlugin("Example Modal")
 
 
 # Modals Guide: https://miru.hypergonial.com/guides/modals/
@@ -31,7 +33,7 @@ class MyModal(miru.Modal, title="Tell us about yourself!"):
 @plugin.include
 @arc.slash_command("modal", "A command with a modal response.")
 async def modal_command(
-    ctx: arc.GatewayContext,
+    ctx: BlockbotContext,
     miru_client: miru.Client = arc.inject(),
 ) -> None:
     modal = MyModal()
@@ -44,5 +46,5 @@ async def modal_command(
 
 
 @arc.loader
-def loader(client: arc.GatewayClient) -> None:
+def loader(client: Blockbot) -> None:
     client.add_plugin(plugin)

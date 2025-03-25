@@ -8,9 +8,10 @@ import miru
 
 from src.config import CHANNEL_IDS, ROLE_IDS
 from src.hooks import restrict_to_channels
+from src.models import Blockbot, BlockbotContext, BlockbotPlugin
 from src.utils import role_mention
 
-plugin = arc.GatewayPlugin(name="Register")
+plugin = BlockbotPlugin(name="Register")
 
 USERNAME_REGEX = re.compile(r"^[a-z0-9][a-z0-9_]{1,6}[a-z0-9]$")
 STUDENT_ID_REGEX = re.compile(r"[0-9]{5,9}")
@@ -108,7 +109,7 @@ class RegisterView(miru.View):
     autodefer=arc.AutodeferMode.EPHEMERAL,  # ensure all responses are ephemeral if auto defer responds first
 )
 async def register_command(
-    ctx: arc.GatewayContext,
+    ctx: BlockbotContext,
     student_id: arc.Option[
         str, arc.StrParams(description="Your student ID.", min_length=5, max_length=9)
     ],
@@ -169,5 +170,5 @@ async def register_command(
 
 
 @arc.loader
-def loader(client: arc.GatewayClient) -> None:
+def loader(client: Blockbot) -> None:
     client.add_plugin(plugin)

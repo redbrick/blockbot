@@ -2,13 +2,15 @@ import arc
 import hikari
 from fortune import fortune  # pyright: ignore[reportMissingTypeStubs]
 
-fortune_cmd = arc.GatewayPlugin(name="fortune")
+from src.models import Blockbot, BlockbotContext, BlockbotPlugin
+
+plugin = BlockbotPlugin(name="fortune")
 
 
-@fortune_cmd.include
+@plugin.include
 @arc.slash_command("fortune", "Send a user a random Fortune!")
 async def fortune_command(
-    ctx: arc.GatewayContext,
+    ctx: BlockbotContext,
     user: arc.Option[hikari.User | None, arc.UserParams("A user")] = None,
 ) -> None:
     """Send a random Fortune!"""
@@ -41,5 +43,5 @@ async def fortune_command(
 
 
 @arc.loader
-def loader(client: arc.GatewayClient) -> None:
-    client.add_plugin(fortune_cmd)
+def loader(client: Blockbot) -> None:
+    client.add_plugin(plugin)

@@ -7,6 +7,7 @@ import miru
 
 from src.config import DB_ENABLED, DEBUG, TOKEN
 from src.database import init_db
+from src.models import Blockbot, BlockbotContext
 
 bot = hikari.GatewayBot(
     token=TOKEN,
@@ -17,9 +18,9 @@ bot = hikari.GatewayBot(
     logs="DEBUG" if DEBUG else "INFO",
 )
 
-logging.info(f"Debug mode is {DEBUG}; You can safely ignore this.")
+logging.info(f"Config: Debug: {DEBUG}; Database enabled: {DB_ENABLED};")
 
-client = arc.GatewayClient(bot, invocation_contexts=[hikari.ApplicationContextType.GUILD])
+client = Blockbot(bot, invocation_contexts=[hikari.ApplicationContextType.GUILD])
 miru_client = miru.Client.from_arc(client)
 
 client.set_type_dependency(miru.Client, miru_client)
@@ -49,12 +50,13 @@ async def on_stop(
 
 
 @client.set_error_handler
-async def error_handler(ctx: arc.GatewayContext, exc: Exception) -> None:
+async def error_handler(ctx: BlockbotContext, exc: Exception) -> None:
     if DEBUG:
         message = f"```{exc}```"
     else:
         message = "If this persists, create an issue at <https://webgroup-issues.redbrick.dcu.ie/>."
 
+    # TODO: check double response?
     await ctx.respond(f"❌ Blockbot encountered an unhandled exception. {message}")
     logging.error(exc)
 
@@ -64,4 +66,5 @@ async def error_handler(ctx: arc.GatewayContext, exc: Exception) -> None:
 @client.add_startup_hook
 async def startup_hook(_: arc.GatewayClient) -> None:
     if DB_ENABLED:
+        logging.info("Initialising database")
         await init_db()

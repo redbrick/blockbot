@@ -2,9 +2,10 @@ import arc
 import hikari
 
 from src.config import ASSIGNABLE_ROLES
+from src.models import Blockbot, BlockbotContext, BlockbotPlugin
 from src.utils import role_mention
 
-plugin = arc.GatewayPlugin(name="User Roles")
+plugin = BlockbotPlugin(name="User Roles")
 
 role = plugin.include_slash_group("role", "Get/remove assignable roles.")
 
@@ -17,7 +18,7 @@ role_choices = [
 @role.include
 @arc.slash_subcommand("add", "Add an assignable role.")
 async def add_role(
-    ctx: arc.GatewayContext,
+    ctx: BlockbotContext,
     role: arc.Option[str, arc.StrParams("The role to add.", choices=role_choices)],
 ) -> None:
     # commands are not available in DMs, so guild_id and member will always be available
@@ -46,7 +47,7 @@ async def add_role(
 @role.include
 @arc.slash_subcommand("remove", "Remove an assignable role.")
 async def remove_role(
-    ctx: arc.GatewayContext,
+    ctx: BlockbotContext,
     role: arc.Option[str, arc.StrParams("The role to remove.", choices=role_choices)],
 ) -> None:
     # commands are not available in DMs, so guild_id and member will always be available
@@ -73,7 +74,7 @@ async def remove_role(
 
 
 @role.set_error_handler
-async def role_error_handler(ctx: arc.GatewayContext, exc: Exception) -> None:
+async def role_error_handler(ctx: BlockbotContext, exc: Exception) -> None:
     role = ctx.get_option("role", arc.OptionType.STRING)
     assert role is not None
 
@@ -95,5 +96,5 @@ async def role_error_handler(ctx: arc.GatewayContext, exc: Exception) -> None:
 
 
 @arc.loader
-def loader(client: arc.GatewayClient) -> None:
+def loader(client: Blockbot) -> None:
     client.add_plugin(plugin)

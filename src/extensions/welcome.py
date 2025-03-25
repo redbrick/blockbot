@@ -2,9 +2,10 @@ import arc
 import hikari
 
 from src.config import CHANNEL_IDS
+from src.models import Blockbot, BlockbotPlugin
 from src.utils import channel_mention, get_guild
 
-plugin = arc.GatewayPlugin(name="Welcome")
+plugin = BlockbotPlugin(name="Welcome")
 
 
 @plugin.listen()
@@ -34,5 +35,5 @@ async def on_member_join(event: hikari.MemberCreateEvent) -> None:
 
 
 @arc.loader
-def loader(client: arc.GatewayClient) -> None:
+def loader(client: Blockbot) -> None:
     client.add_plugin(plugin)

@@ -1,16 +1,17 @@
 import arc
 
+from src.models import Blockbot, BlockbotContext, BlockbotPlugin
 from src.utils import utcnow
 
-start_time = utcnow()
+START_TIME = utcnow()
 
-plugin = arc.GatewayPlugin("Blockbot Uptime")
+plugin = BlockbotPlugin("Blockbot Uptime")
 
 
 @plugin.include
 @arc.slash_command("uptime", "Show formatted uptime of Blockbot")
-async def uptime(ctx: arc.GatewayContext) -> None:
-    up_time = utcnow() - start_time
+async def uptime(ctx: BlockbotContext) -> None:
+    up_time = utcnow() - START_TIME
     d = up_time.days
     h, ms = divmod(up_time.seconds, 3600)
     m, s = divmod(ms, 60)
@@ -25,5 +26,5 @@ async def uptime(ctx: arc.GatewayContext) -> None:
 
 
 @arc.loader
-def loader(client: arc.GatewayClient) -> None:
+def loader(client: Blockbot) -> None:
     client.add_plugin(plugin)
