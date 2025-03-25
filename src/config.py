@@ -100,6 +100,12 @@ DISCORD_UID_MAP = get_env_var("DISCORD_UID_MAP", required=True)
 DB_ENABLED = get_env_var(
     "DB_ENABLED", required=False, conv=convert_to_bool, default=True
 )
+PERMS_ENABLED = get_env_var(
+    "PERMS_ENABLED",
+    required=False,
+    conv=convert_to_bool,
+    default=True,
+)
 
 DB_HOST = get_env_var("DB_HOST", required_features=[Feature.DATABASE])
 DB_NAME = get_env_var("DB_NAME", required_features=[Feature.DATABASE])

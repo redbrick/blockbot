@@ -1,8 +1,10 @@
+import logging
 import typing
 
 import arc
 import hikari
 
+from src.config import PERMS_ENABLED
 from src.models import BlockbotContext
 
 type WrappedHookResult = typing.Callable[
@@ -16,12 +18,19 @@ async def _restrict_to_roles(
 ) -> arc.HookResult:
     assert ctx.member
 
-    if not any(role_id in ctx.member.role_ids for role_id in role_ids):
+    if PERMS_ENABLED and not any(
+        role_id in ctx.member.role_ids for role_id in role_ids
+    ):
         await ctx.respond(
             "❌ This command is restricted. Only allowed roles are permitted to use this command.",
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return arc.HookResult(abort=True)
+
+    if not PERMS_ENABLED:
+        logging.warning(
+            f"permission hooks disabled; bypassing role restrictions for '{ctx.command.name}' command"
+        )
 
     return arc.HookResult()  # by default, abort is set to False
 
@@ -41,12 +50,17 @@ async def _restrict_to_channels(
     ctx: BlockbotContext,
     channel_ids: typing.Sequence[int],
 ) -> arc.HookResult:
-    if ctx.channel_id not in channel_ids:
+    if PERMS_ENABLED and ctx.channel_id not in channel_ids:
         await ctx.respond(
             "❌ This command cannot be used in this channel.",
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return arc.HookResult(abort=True)
+
+    if not PERMS_ENABLED:
+        logging.warning(
+            f"permission hooks disabled; bypassing channel restrictions for '{ctx.command.name}' command"
+        )
 
     return arc.HookResult()
 
