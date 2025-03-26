@@ -27,12 +27,12 @@ def build_boost_message(
 ) -> str:
     assert message_type in BOOST_MESSAGE_TYPES
 
-    base_message = f"<@{booster_user.id}> just boosted the server 🎉"
+    base_message = f"<@{booster_user.id}> just boosted the server"
     multiple_boosts_message = (
         f" **{number_of_boosts}** times" if number_of_boosts else ""
     )
 
-    message = base_message + multiple_boosts_message + "!"
+    message = base_message + multiple_boosts_message + "! 🎉"
 
     if message_type in BOOST_TIERS:
         count = BOOST_TIERS.index(message_type) + 1
