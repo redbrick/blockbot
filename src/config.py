@@ -15,6 +15,13 @@ class Feature(StrEnum):
     # the enum value should be the environment variable
     DATABASE = "DB_ENABLED"
     LDAP = "LDAP_ENABLED"
+    PERMISSION_HOOKS = "PERMS_ENABLED"
+
+    @property
+    def enabled(self) -> bool:
+        return get_env_var(
+            self.value, required=False, conv=convert_to_bool, default=True
+        )
 
 
 def convert_to_bool(value: str) -> bool:
@@ -74,10 +81,7 @@ def get_env_var(
 
     if required_features:
         for feature in required_features:
-            enabled = get_env_var(
-                feature.value, required=False, conv=convert_to_bool, default=True
-            )
-            if enabled and env is None:
+            if feature.enabled and env is None:
                 # feature is enabled, but the env var is not set!
                 logging.error(
                     f"'{name}' environment variable not set but is required for feature '{feature.name}'. Exiting."
@@ -95,16 +99,6 @@ TOKEN = get_env_var("TOKEN", required=True)
 DEBUG = get_env_var("DEBUG", required=False, conv=convert_to_bool, default=False)
 
 DISCORD_UID_MAP = get_env_var("DISCORD_UID_MAP", required=True)
-
-DB_ENABLED = get_env_var(
-    "DB_ENABLED", required=False, conv=convert_to_bool, default=True
-)
-PERMS_ENABLED = get_env_var(
-    "PERMS_ENABLED",
-    required=False,
-    conv=convert_to_bool,
-    default=True,
-)
 
 DB_HOST = get_env_var("DB_HOST", required_features=[Feature.DATABASE])
 DB_NAME = get_env_var("DB_NAME", required_features=[Feature.DATABASE])

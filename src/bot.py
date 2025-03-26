@@ -5,7 +5,7 @@ import arc
 import hikari
 import miru
 
-from src.config import DB_ENABLED, DEBUG, TOKEN
+from src.config import DEBUG, TOKEN, Feature
 from src.database import init_db
 from src.models import Blockbot, BlockbotContext
 
@@ -18,15 +18,17 @@ bot = hikari.GatewayBot(
     logs="DEBUG" if DEBUG else "INFO",
 )
 
-logging.info(f"Config: Debug: {DEBUG}; Database enabled: {DB_ENABLED};")
-
 client = Blockbot(bot, invocation_contexts=[hikari.ApplicationContextType.GUILD])
 miru_client = miru.Client.from_arc(client)
 
 client.set_type_dependency(miru.Client, miru_client)
 
-client.load_extensions_from("./src/extensions/")
+# log disabled features
+for feature in Feature:
+    if not feature.enabled:
+        logging.warning(f"feature {feature.name} is disabled")
 
+client.load_extensions_from("./src/extensions/")
 if DEBUG:
     client.load_extensions_from("./src/examples/")
 
@@ -65,6 +67,6 @@ async def error_handler(ctx: BlockbotContext, exc: Exception) -> None:
 
 @client.add_startup_hook
 async def startup_hook(_: arc.GatewayClient) -> None:
-    if DB_ENABLED:
+    if Feature.DATABASE.enabled:
         logging.info("Initialising database")
         await init_db()

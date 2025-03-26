@@ -5,7 +5,8 @@ import typing
 
 import arc
 
-from src.config import Feature, convert_to_bool, get_env_var
+if typing.TYPE_CHECKING:
+    from src.config import Feature
 
 type BlockbotContext = arc.Context[Blockbot]
 
@@ -15,10 +16,7 @@ class Blockbot(arc.GatewayClient):
         plugin_enabled: bool = True
 
         for feature in plugin.required_features:
-            enabled = get_env_var(
-                feature.value, required=False, conv=convert_to_bool, default=True
-            )
-            if not enabled:
+            if not feature.enabled:
                 plugin_enabled = False
                 break
 

@@ -4,9 +4,9 @@ import aiohttp
 import arc
 import hikari
 
-from src.config import AGENDA_TEMPLATE_URL, CHANNEL_IDS, ROLE_IDS, UID_MAPS
+from src.config import AGENDA_TEMPLATE_URL, CHANNEL_IDS, ROLE_IDS, UID_MAPS, Feature
 from src.hooks import restrict_to_channels, restrict_to_roles
-from src.models import Blockbot, BlockbotContext, BlockbotPlugin, Feature
+from src.models import Blockbot, BlockbotContext, BlockbotPlugin
 from src.utils import (
     get_md_content,
     post_new_md_content,

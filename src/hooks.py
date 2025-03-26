@@ -4,7 +4,7 @@ import typing
 import arc
 import hikari
 
-from src.config import PERMS_ENABLED
+from src.config import Feature
 from src.models import BlockbotContext
 
 type WrappedHookResult = typing.Callable[
@@ -14,7 +14,7 @@ type WrappedHookResult = typing.Callable[
 
 def can_be_disabled(func: WrappedHookResult) -> WrappedHookResult:
     async def wrapper(ctx: BlockbotContext) -> arc.HookResult:
-        if not PERMS_ENABLED:
+        if not Feature.PERMISSION_HOOKS.enabled:
             logging.warning(
                 f"permission hook disabled; bypassing restrictions for '{ctx.command.name}' command"
             )
