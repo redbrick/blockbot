@@ -5,7 +5,7 @@ import arc
 import hikari
 import miru
 
-from src.config import DEBUG, TOKEN, Feature
+from src.config import DEBUG, TOKEN, DB_HOST, Feature
 from src.database import init_db
 from src.models import Blockbot, BlockbotContext
 
@@ -68,5 +68,6 @@ async def error_handler(ctx: BlockbotContext, exc: Exception) -> None:
 @client.add_startup_hook
 async def startup_hook(_: arc.GatewayClient) -> None:
     if Feature.DATABASE.enabled:
+        logging.info(f"DB_HOST: {DB_HOST}")
         logging.info("Initialising database")
         await init_db()
