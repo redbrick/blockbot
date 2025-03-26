@@ -14,7 +14,6 @@ T = typing.TypeVar("T", bound=int | str | bool)
 class Feature(StrEnum):
     # the enum value should be the environment variable
     DATABASE = "DB_ENABLED"
-    RCON = "RCON_ENABLED"
     LDAP = "LDAP_ENABLED"
 
 
