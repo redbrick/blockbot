@@ -12,19 +12,19 @@ options.sessions = ["format_fix", "pyright"]
 
 @nox.session()
 def format_fix(session: nox.Session) -> None:
-    session.run_install("uv", "sync", "-q", "--only-dev", "--active")
-    session.run("uv", "run", "--active", "ruff", "format", *SCRIPT_PATHS)
-    session.run("uv", "run", "--active", "ruff", "check", *SCRIPT_PATHS, "--fix")
+    session.run_install("uv", "sync", "--only-dev", "--active")
+    session.run("python", "-m", "ruff", "format", *SCRIPT_PATHS)
+    session.run("python", "-m", "ruff", "check", *SCRIPT_PATHS, "--fix")
 
 
 @nox.session()
 def format_check(session: nox.Session) -> None:
-    session.run_install("uv", "sync", "-q", "--only-dev", "--active")
-    session.run("uv", "run", "--active", "ruff", "format", *SCRIPT_PATHS, "--check")
-    session.run("uv", "run", "--active", "ruff", "check", *SCRIPT_PATHS)
+    session.run_install("uv", "sync", "--only-dev", "--active")
+    session.run("python", "-m", "ruff", "format", *SCRIPT_PATHS, "--check")
+    session.run("python", "-m", "ruff", "check", *SCRIPT_PATHS)
 
 
 @nox.session()
 def pyright(session: nox.Session) -> None:
-    session.run_install("uv", "sync", "-q", "--dev", "--group", "nox", "--active")
-    session.run("uv", "run", "--active", "pyright", *SCRIPT_PATHS)
+    session.run_install("uv", "sync", "--dev", "--group", "nox", "--active")
+    session.run("pyright", *SCRIPT_PATHS)
