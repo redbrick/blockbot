@@ -45,7 +45,7 @@ DB_USER={{ key "blockbot-dev/db/user" }}
 RCON_HOST=vanilla-mc-rcon.service.consul
 {{ range service "vanilla-mc-rcon" }}
 RCON_PORT={{ .Port }}{{ end }}
-RCON_PASSWORD={{ key "games/mc/vanilla-mc/rcon/password" }}
+RCON_PASSWORD=hehe
 EOF
         destination = "local/.env"
         env         = true
