@@ -1,31 +1,109 @@
+import logging
 import os
 import sys
+import typing
 from enum import StrEnum
 
 from dotenv import load_dotenv
 
 load_dotenv()
 
+T = typing.TypeVar("T", bound=int | str | bool)
 
-def get_required_var(var: str) -> str:
-    env = os.environ.get(var)
 
-    if env is None:
-        print(f"{var} environment variable not set. Exiting.")
+class Feature(StrEnum):
+    # the enum value should be the environment variable
+    DATABASE = "DB_ENABLED"
+    LDAP = "LDAP_ENABLED"
+    PERMISSION_HOOKS = "PERMS_ENABLED"
+
+    @property
+    def enabled(self) -> bool:
+        return get_env_var(
+            self.value, required=False, conv=convert_to_bool, default=True
+        )
+
+
+def convert_to_bool(value: str) -> bool:
+    value = value.strip().lower()
+    if value in ("1", "true"):
+        return True
+    if value in ("0", "false"):
+        return False
+
+    raise RuntimeError(f"{value} cannot be converted to a bool")
+
+
+@typing.overload
+def get_env_var(
+    name: str,
+    *,
+    required: typing.Literal[True] = True,
+    conv: typing.Callable[[str], T] = str,
+) -> T: ...
+
+
+@typing.overload
+def get_env_var(
+    name: str,
+    *,
+    required: typing.Literal[False] = False,
+    required_features: typing.Sequence[Feature] | None = None,
+    conv: typing.Callable[[str], T] = str,
+    default: T,
+) -> T: ...
+
+
+@typing.overload
+def get_env_var(
+    name: str,
+    *,
+    required: typing.Literal[False] = False,
+    required_features: typing.Sequence[Feature] | None = None,
+    conv: typing.Callable[[str], T] = str,
+    default: None = None,
+) -> T | None: ...
+
+
+def get_env_var(
+    name: str,
+    *,
+    required: bool = False,
+    required_features: typing.Sequence[Feature] | None = None,
+    conv: typing.Callable[[str], T] = str,
+    default: T | None = None,
+) -> T | None:
+    env = os.environ.get(name, "").strip() or None
+
+    if required and env is None:
+        logging.error(f"'{name}' environment variable not set. Exiting.")
         sys.exit(1)
 
-    return env
+    if required_features:
+        for feature in required_features:
+            if feature.enabled and env is None:
+                # feature is enabled, but the env var is not set!
+                logging.error(
+                    f"'{name}' environment variable not set but is required for feature '{feature.name}'. Exiting."
+                )
+                sys.exit(1)
+
+    if env is None:
+        assert not required
+        return default
+
+    return conv(env)
 
 
-TOKEN = get_required_var("TOKEN")  # required
-DEBUG = os.environ.get("DEBUG") or False
+TOKEN = get_env_var("TOKEN", required=True)
+DEBUG = get_env_var("DEBUG", required=False, conv=convert_to_bool, default=False)
 
-DISCORD_UID_MAP = get_required_var("DISCORD_UID_MAP")
+DISCORD_UID_MAP = get_env_var("DISCORD_UID_MAP", required=True)
 
-DB_HOST = os.environ.get("DB_HOST")
-DB_NAME = os.environ.get("DB_NAME")
-DB_USER = os.environ.get("DB_USER")
-DB_PASSWORD = os.environ.get("DB_PASSWORD")
+DB_HOST = get_env_var("DB_HOST", required_features=[Feature.DATABASE])
+DB_NAME = get_env_var("DB_NAME", required_features=[Feature.DATABASE])
+DB_USER = get_env_var("DB_USER", required_features=[Feature.DATABASE])
+DB_PASSWORD = get_env_var("DB_PASSWORD", required_features=[Feature.DATABASE])
 
 CHANNEL_IDS: dict[str, int] = {
     "lobby": 627542044390457350,
@@ -76,9 +154,11 @@ class Colour(StrEnum):
     HELP_GREEN = "#00FF00"
 
 
-UID_MAPS = dict(item.split("=") for item in DISCORD_UID_MAP.split(","))
+UID_MAPS: dict[str, str] = dict(item.split("=") for item in DISCORD_UID_MAP.split(","))
 
-LDAP_USERNAME = get_required_var("LDAP_USERNAME")
-LDAP_PASSWORD = get_required_var("LDAP_PASSWORD")
+LDAP_USERNAME = get_env_var("LDAP_USERNAME", required_features=[Feature.LDAP])
+LDAP_PASSWORD = get_env_var("LDAP_PASSWORD", required_features=[Feature.LDAP])
 
-AGENDA_TEMPLATE_URL = get_required_var("AGENDA_TEMPLATE_URL")
+AGENDA_TEMPLATE_URL = get_env_var(
+    "AGENDA_TEMPLATE_URL", required_features=[Feature.LDAP]
+)

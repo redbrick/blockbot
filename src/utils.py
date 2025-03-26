@@ -1,21 +1,20 @@
 import datetime
+import typing
 from urllib.parse import urlparse
 
 import aiohttp
 import arc
 import hikari
-import typing
 
 from src.config import LDAP_PASSWORD, LDAP_USERNAME
 
 
 class EventWithGuildAttributes(typing.Protocol):
     @property
-    def guild_id(self) -> hikari.Snowflake:
-        ...
+    def guild_id(self) -> hikari.Snowflake: ...
 
-    def get_guild(self) -> hikari.GatewayGuild | None:
-        ...
+    def get_guild(self) -> hikari.GatewayGuild | None: ...
+
 
 async def get_guild(
     client: arc.GatewayClient,

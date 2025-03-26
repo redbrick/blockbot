@@ -5,8 +5,9 @@ import arc
 import hikari
 
 from src.config import Colour
+from src.models import Blockbot, BlockbotContext, BlockbotPlugin
 
-plugin = arc.GatewayPlugin(name="Help Command Plugin")
+plugin = BlockbotPlugin(name="Help Command Plugin")
 
 
 def gather_commands() -> dict[str | None, list[str]]:
@@ -29,7 +30,7 @@ def gather_commands() -> dict[str | None, list[str]]:
 
 @plugin.include
 @arc.slash_command("help", "Displays a list of all commands.")
-async def help_command(ctx: arc.GatewayContext) -> None:
+async def help_command(ctx: BlockbotContext) -> None:
     """Displays a simple list of all bot commands."""
 
     plugin_commands = gather_commands()
@@ -46,5 +47,5 @@ async def help_command(ctx: arc.GatewayContext) -> None:
 
 
 @arc.loader
-def load(client: arc.GatewayClient) -> None:
+def load(client: Blockbot) -> None:
     client.add_plugin(plugin)

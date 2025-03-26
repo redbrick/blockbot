@@ -4,13 +4,15 @@ import aiohttp
 import arc
 import hikari
 
-xkcd = arc.GatewayPlugin(name="xkcd")
+from src.models import Blockbot, BlockbotContext, BlockbotPlugin
+
+xkcd = BlockbotPlugin(name="xkcd")
 
 
 @xkcd.include
 @arc.slash_command("xkcd", "Wisdom from xkcd!")
 async def xkcd_command(
-    ctx: arc.GatewayContext,
+    ctx: BlockbotContext,
     num: arc.Option[
         int | None, arc.IntParams("Optionally specify an xkcd number.")
     ] = None,
@@ -61,5 +63,5 @@ async def xkcd_command(
 
 
 @arc.loader
-def loader(client: arc.GatewayClient) -> None:
+def loader(client: Blockbot) -> None:
     client.add_plugin(xkcd)

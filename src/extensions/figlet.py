@@ -2,7 +2,9 @@ import arc
 import hikari
 from pyfiglet import Figlet  # pyright: ignore[reportMissingTypeStubs]
 
-plugin = arc.GatewayPlugin(name="figlet")
+from src.models import Blockbot, BlockbotContext, BlockbotPlugin
+
+plugin = BlockbotPlugin(name="figlet")
 
 fonts = [
     "standard",
@@ -27,7 +29,7 @@ fonts = [
 @plugin.include
 @arc.slash_command("figlet", "ASCIIify your words!")
 async def figlet_command(
-    ctx: arc.GatewayContext,
+    ctx: BlockbotContext,
     text: arc.Option[str, arc.StrParams("Your words to ASCIIify.")],
     font: arc.Option[
         str,
@@ -70,5 +72,5 @@ async def figlet_command(
 
 
 @arc.loader
-def loader(client: arc.GatewayClient) -> None:
+def loader(client: Blockbot) -> None:
     client.add_plugin(plugin)

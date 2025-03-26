@@ -2,16 +2,17 @@ import arc
 import hikari
 
 from src.config import Colour
+from src.models import Blockbot, BlockbotContext, BlockbotPlugin
 
-gerry = arc.GatewayPlugin(name="gerry")
+plugin = BlockbotPlugin(name="gerry")
 
 image = "https://cdn.redbrick.dcu.ie/blockbot/gerry.jpg"
 
 
-@gerry.include
+@plugin.include
 @arc.slash_command("gerry", "So tell me Frank!")
 async def gerry_command(
-    ctx: arc.GatewayContext,
+    ctx: BlockbotContext,
     user: arc.Option[
         hikari.User | None,
         arc.UserParams("The user to send a gerry to."),
@@ -34,5 +35,5 @@ async def gerry_command(
 
 
 @arc.loader
-def loader(client: arc.GatewayClient) -> None:
-    client.add_plugin(gerry)
+def loader(client: Blockbot) -> None:
+    client.add_plugin(plugin)

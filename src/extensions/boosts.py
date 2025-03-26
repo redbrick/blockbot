@@ -2,9 +2,10 @@ import arc
 import hikari
 
 from src.config import CHANNEL_IDS
+from src.models import Blockbot, BlockbotPlugin
 from src.utils import get_guild
 
-plugin = arc.GatewayPlugin(name="Boosts")
+plugin = BlockbotPlugin(name="Boosts")
 
 BOOST_TIERS: list[hikari.MessageType] = [
     hikari.MessageType.USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_1,
@@ -60,5 +61,5 @@ async def on_message(event: hikari.GuildMessageCreateEvent) -> None:
 
 
 @arc.loader
-def loader(client: arc.GatewayClient) -> None:
+def loader(client: Blockbot) -> None:
     client.add_plugin(plugin)

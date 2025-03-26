@@ -3,8 +3,9 @@ import hikari
 
 from src.config import CHANNEL_IDS, ROLE_IDS, Colour
 from src.hooks import restrict_to_channels, restrict_to_roles
+from src.models import Blockbot, BlockbotContext, BlockbotPlugin
 
-plugin = arc.GatewayPlugin(name="Verify")
+plugin = BlockbotPlugin(name="Verify")
 
 
 @plugin.include
@@ -17,7 +18,7 @@ plugin = arc.GatewayPlugin(name="Verify")
     "Verify a Redbrick account.",
 )
 async def verify_command(
-    ctx: arc.GatewayContext,
+    ctx: BlockbotContext,
     username: arc.Option[
         str,
         arc.StrParams("Redbrick username.", min_length=3, max_length=8),
@@ -71,5 +72,5 @@ async def verify_command(
 
 
 @arc.loader
-def loader(client: arc.GatewayClient) -> None:
+def loader(client: Blockbot) -> None:
     client.add_plugin(plugin)

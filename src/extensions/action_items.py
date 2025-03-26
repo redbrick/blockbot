@@ -4,14 +4,15 @@ import aiohttp
 import arc
 import hikari
 
-from src.config import CHANNEL_IDS, ROLE_IDS, UID_MAPS
+from src.config import CHANNEL_IDS, ROLE_IDS, UID_MAPS, Feature
 from src.hooks import restrict_to_channels, restrict_to_roles
+from src.models import Blockbot, BlockbotContext, BlockbotPlugin
 from src.utils import get_md_content, role_mention
 
-action_items = arc.GatewayPlugin(name="Action Items")
+plugin = BlockbotPlugin(name="Action Items", required_features=[Feature.LDAP])
 
 
-@action_items.include
+@plugin.include
 @arc.with_hook(restrict_to_channels(channel_ids=[CHANNEL_IDS["action-items"]]))
 @arc.with_hook(restrict_to_roles(role_ids=[ROLE_IDS["committee"]]))
 @arc.slash_command(
@@ -20,7 +21,7 @@ action_items = arc.GatewayPlugin(name="Action Items")
     autodefer=arc.AutodeferMode.EPHEMERAL,
 )
 async def get_action_items(
-    ctx: arc.GatewayContext,
+    ctx: BlockbotContext,
     url: arc.Option[str, arc.StrParams("URL of the minutes from the MD")],
     aiohttp_client: aiohttp.ClientSession = arc.inject(),
 ) -> None:
@@ -79,14 +80,14 @@ async def get_action_items(
         formatted_bullet_points[i] = item
 
     # Send title to the action-items channel
-    await action_items.client.rest.create_message(
+    await plugin.client.rest.create_message(
         CHANNEL_IDS["action-items"],
         content="# Action Items:",
     )
 
     # send each bullet point separately
     for item in formatted_bullet_points:
-        message = await action_items.client.rest.create_message(
+        message = await plugin.client.rest.create_message(
             CHANNEL_IDS["action-items"],
             mentions_everyone=False,
             user_mentions=True,
@@ -94,7 +95,7 @@ async def get_action_items(
             content=item,
         )
 
-        await action_items.client.rest.add_reaction(
+        await plugin.client.rest.add_reaction(
             channel=message.channel_id,
             message=message.id,
             emoji="✅",
@@ -112,7 +113,7 @@ async def check_valid_reaction(
     event: hikari.GuildReactionAddEvent | hikari.GuildReactionDeleteEvent,
     message: hikari.PartialMessage,
 ) -> bool:
-    bot_user = action_items.client.app.get_me()
+    bot_user = plugin.client.app.get_me()
     if not bot_user:  # bot_user will always be available after the bot has started
         return False
 
@@ -147,21 +148,21 @@ async def validate_user_reaction(
     if user_id in mentioned_ids:
         return True
 
-    member = action_items.client.cache.get_member(
+    member = plugin.client.cache.get_member(
         guild_id,
         user_id,
-    ) or await action_items.client.rest.fetch_member(guild_id, user_id)
+    ) or await plugin.client.rest.fetch_member(guild_id, user_id)
 
     # user's role is mentioned
     return any(role_id in mentioned_ids for role_id in member.role_ids)
 
 
-@action_items.listen()
+@plugin.listen()
 async def reaction_add(event: hikari.GuildReactionAddEvent) -> None:
     # retrieve the message that was reacted to
-    message = action_items.client.cache.get_message(
+    message = plugin.client.cache.get_message(
         event.message_id,
-    ) or await action_items.client.rest.fetch_message(
+    ) or await plugin.client.rest.fetch_message(
         event.channel_id,
         event.message_id,
     )
@@ -184,18 +185,18 @@ async def reaction_add(event: hikari.GuildReactionAddEvent) -> None:
     if not message.content.startswith("- ✅ ~~"):
         # add strikethrough and checkmark
         updated_content = f"- ✅ ~~{message.content[2:]}~~"
-        await action_items.client.rest.edit_message(
+        await plugin.client.rest.edit_message(
             event.channel_id,
             event.message_id,
             content=updated_content,
         )
 
 
-@action_items.listen()
+@plugin.listen()
 async def reaction_remove(event: hikari.GuildReactionDeleteEvent) -> None:
     # retrieve the message that was un-reacted to
     # NOTE: cannot use cached message as the reaction count will be outdated
-    message = await action_items.client.rest.fetch_message(
+    message = await plugin.client.rest.fetch_message(
         event.channel_id,
         event.message_id,
     )
@@ -231,7 +232,7 @@ async def reaction_remove(event: hikari.GuildReactionDeleteEvent) -> None:
     if message.content.startswith("- ✅ ~~") and valid_reaction_count == 0:
         # add strikethrough and checkmark
         updated_content = f"- {message.content[6:-2]}"
-        await action_items.client.rest.edit_message(
+        await plugin.client.rest.edit_message(
             event.channel_id,
             event.message_id,
             content=updated_content,
@@ -239,5 +240,5 @@ async def reaction_remove(event: hikari.GuildReactionDeleteEvent) -> None:
 
 
 @arc.loader
-def loader(client: arc.GatewayClient) -> None:
-    client.add_plugin(action_items)
+def loader(client: Blockbot) -> None:
+    client.add_plugin(plugin)

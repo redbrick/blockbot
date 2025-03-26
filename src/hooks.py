@@ -1,17 +1,37 @@
+import logging
 import typing
 
 import arc
 import hikari
 
-type WrappedHookResult = typing.Callable[[arc.GatewayContext], typing.Awaitable[arc.HookResult]]
+from src.config import Feature
+from src.models import BlockbotContext
+
+type WrappedHookResult = typing.Callable[
+    [BlockbotContext], typing.Awaitable[arc.HookResult]
+]
+
+
+def can_be_disabled(func: WrappedHookResult) -> WrappedHookResult:
+    async def wrapper(ctx: BlockbotContext) -> arc.HookResult:
+        if not Feature.PERMISSION_HOOKS.enabled:
+            logging.warning(
+                f"permission hook disabled; bypassing restrictions for '{ctx.command.name}' command"
+            )
+            return arc.HookResult(abort=False)
+
+        return await func(ctx)
+
+    return wrapper
+
 
 async def _restrict_to_roles(
-    ctx: arc.GatewayContext,
+    ctx: BlockbotContext,
     role_ids: typing.Sequence[int],
 ) -> arc.HookResult:
     assert ctx.member
 
-    if not any(role_id in ctx.member.role_ids for role_id in role_ids):
+    if not all(role_id in ctx.member.role_ids for role_id in role_ids):
         await ctx.respond(
             "❌ This command is restricted. Only allowed roles are permitted to use this command.",
             flags=hikari.MessageFlag.EPHEMERAL,
@@ -26,14 +46,15 @@ def restrict_to_roles(
 ) -> WrappedHookResult:
     """Any command which uses this hook requires that the command be disabled in DMs as a guild role is required for this hook to function."""
 
-    async def func(ctx: arc.GatewayContext) -> arc.HookResult:
+    @can_be_disabled
+    async def func(ctx: BlockbotContext) -> arc.HookResult:
         return await _restrict_to_roles(ctx, role_ids)
 
     return func
 
 
 async def _restrict_to_channels(
-    ctx: arc.GatewayContext,
+    ctx: BlockbotContext,
     channel_ids: typing.Sequence[int],
 ) -> arc.HookResult:
     if ctx.channel_id not in channel_ids:
@@ -49,7 +70,8 @@ async def _restrict_to_channels(
 def restrict_to_channels(
     channel_ids: typing.Sequence[int],
 ) -> WrappedHookResult:
-    async def func(ctx: arc.GatewayContext) -> arc.HookResult:
+    @can_be_disabled
+    async def func(ctx: BlockbotContext) -> arc.HookResult:
         return await _restrict_to_channels(ctx, channel_ids)
 
     return func

@@ -1,14 +1,16 @@
 import arc
 import hikari
 
-plugin = arc.GatewayPlugin("Example Options")
+from src.models import Blockbot, BlockbotContext, BlockbotPlugin
+
+plugin = BlockbotPlugin("Example Options")
 
 
 # Options Guide: https://arc.hypergonial.com/guides/options/
 @plugin.include
 @arc.slash_command("options", "A command with options")
 async def options(
-    ctx: arc.GatewayContext,
+    ctx: BlockbotContext,
     str_option: arc.Option[str, arc.StrParams("A string option.", name="string")],
     int_option: arc.Option[
         int,
@@ -43,5 +45,5 @@ async def options(
 
 
 @arc.loader
-def loader(client: arc.GatewayClient) -> None:
+def loader(client: Blockbot) -> None:
     client.add_plugin(plugin)

@@ -2,7 +2,9 @@ import arc
 import hikari
 import miru
 
-plugin = arc.GatewayPlugin("Example Components")
+from src.models import Blockbot, BlockbotContext, BlockbotPlugin
+
+plugin = BlockbotPlugin("Example Components")
 
 
 class View(miru.View):
@@ -72,7 +74,7 @@ class View(miru.View):
 @plugin.include
 @arc.slash_command("components", "A command with components.")
 async def components_cmd(
-    ctx: arc.GatewayContext,
+    ctx: BlockbotContext,
     miru_client: miru.Client = arc.inject(),
 ) -> None:
     view = View(ctx.user.id)
@@ -82,5 +84,5 @@ async def components_cmd(
 
 
 @arc.loader
-def loader(client: arc.GatewayClient) -> None:
+def loader(client: Blockbot) -> None:
     client.add_plugin(plugin)
