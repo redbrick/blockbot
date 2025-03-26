@@ -42,9 +42,9 @@ DB_NAME={{ key "blockbot-dev/db/name" }} # database name
 DB_PASSWORD={{ key "blockbot-dev/db/password" }}
 DB_USER={{ key "blockbot-dev/db/user" }}
 
-RCON_HOST={{ key "blockbot/rcon/host" }}
-RCON_PORT={{ key "blockbot/rcon/port" }}
-RCON_PASSWORD={{ key "blockbot/rcon/password" }}
+RCON_HOST={{ key "blockbot-dev/rcon/host" }}
+RCON_PORT={{ key "blockbot-dev/rcon/port" }}
+RCON_PASSWORD={{ key "blockbot-dev/rcon/password" }}
 EOF
         destination = "local/.env"
         env         = true
