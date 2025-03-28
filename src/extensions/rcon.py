@@ -64,7 +64,7 @@ async def run_rcon_command(command: str, username: str) -> str:
 async def rcon_error_handler(ctx: BlockbotContext, exc: Exception) -> None:
     if isinstance(exc, (WrongPassword, SessionTimeout)):
         await ctx.respond(
-            f"❌ Error: {exc!s}",
+            f"❌ Error: {exc}",
         )
         return
 
