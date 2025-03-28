@@ -16,6 +16,7 @@ class Feature(StrEnum):
     DATABASE = "DB_ENABLED"
     LDAP = "LDAP_ENABLED"
     PERMISSION_HOOKS = "PERMS_ENABLED"
+    RCON = "RCON_ENABLED"
 
     @property
     def enabled(self) -> bool:
@@ -162,3 +163,7 @@ LDAP_PASSWORD = get_env_var("LDAP_PASSWORD", required_features=[Feature.LDAP])
 AGENDA_TEMPLATE_URL = get_env_var(
     "AGENDA_TEMPLATE_URL", required_features=[Feature.LDAP]
 )
+
+RCON_HOST = get_env_var("RCON_HOST", required_features=[Feature.RCON])
+RCON_PORT = get_env_var("RCON_PORT", required_features=[Feature.RCON], conv=int)
+RCON_PASSWORD = get_env_var("RCON_PASSWORD", required_features=[Feature.RCON])

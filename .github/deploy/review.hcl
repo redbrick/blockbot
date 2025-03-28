@@ -41,6 +41,8 @@ DB_HOST={{ env "NOMAD_ADDR_db" }} # address and port
 DB_NAME={{ key "blockbot-dev/db/name" }} # database name
 DB_PASSWORD={{ key "blockbot-dev/db/password" }}
 DB_USER={{ key "blockbot-dev/db/user" }}
+
+RCON_ENABLED=false
 EOF
         destination = "local/.env"
         env         = true
