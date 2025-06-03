@@ -32,12 +32,17 @@ async def verify_command(
 
     assert ctx.guild_id is not None
 
-    await ctx.client.rest.add_role_to_member(
-        ctx.guild_id,
-        user,
+    roles_to_add = [
         ROLE_IDS["brickie"],
-        reason="Verified Redbrick user.",
-    )
+        ROLE_IDS["external events"],
+    ]
+    for role in roles_to_add:
+        await ctx.client.rest.add_role_to_member(
+            ctx.guild_id,
+            user,
+            role,
+            reason="Verified Redbrick user.",
+        )
 
     role = plugin.client.find_command(hikari.CommandType.SLASH, "role add")
     assert isinstance(role, arc.SlashSubCommand)
