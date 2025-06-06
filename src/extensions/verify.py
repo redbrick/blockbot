@@ -1,7 +1,7 @@
 import arc
 import hikari
 
-from src.config import CHANNEL_IDS, ROLE_IDS, Colour
+from src.config import CHANNEL_IDS, DEFAULT_ROLES, ROLE_IDS, Colour
 from src.hooks import restrict_to_channels, restrict_to_roles
 from src.models import Blockbot, BlockbotContext, BlockbotPlugin
 
@@ -24,32 +24,30 @@ async def verify_command(
         arc.StrParams("Redbrick username.", min_length=3, max_length=8),
     ],
     user: arc.Option[
-        hikari.User,
-        arc.UserParams("The Discord user to verify"),
+        hikari.Member,
+        arc.MemberParams("The Discord user to verify"),
     ],
 ) -> None:
     """Verify a Discord member against a Redbrick account."""
 
     assert ctx.guild_id is not None
 
-    roles_to_add = [
-        ROLE_IDS["brickie"],
-        ROLE_IDS["external events"],
-    ]
-    for role in roles_to_add:
-        await ctx.client.rest.add_role_to_member(
-            ctx.guild_id,
-            user,
-            role,
-            reason="Verified Redbrick user.",
-        )
+    current_roles = await user.fetch_roles()
+    current_role_ids: set[hikari.Snowflake] = {role.id for role in current_roles}
+
+    final_role_ids = list(current_role_ids | DEFAULT_ROLES)
+
+    await ctx.client.rest.edit_member(
+        ctx.guild_id,
+        user,
+        nickname=username,
+        roles=final_role_ids,
+        reason="Verified Redbrick user.",
+    )
 
     role = plugin.client.find_command(hikari.CommandType.SLASH, "role add")
     assert isinstance(role, arc.SlashSubCommand)
 
-    await ctx.client.rest.edit_member(
-        ctx.guild_id, user, nickname=username, reason="Verified Redbrick user."
-    )
     welcome_embed = hikari.Embed(
         description=f"""
         ## Welcome to Redbrick, {user.mention}!
