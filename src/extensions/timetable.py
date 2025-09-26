@@ -9,7 +9,7 @@ from src.models import Blockbot, BlockbotContext, BlockbotPlugin
 
 plugin = BlockbotPlugin(name="Get Timetable Command")
 
-timetables = plugin.include_slash_group("timetables", "Get Timetable's ics files and urls.")
+timetable = plugin.include_slash_group("timetable", "Get Timetable's ics files and urls.")
 
 TIMETABLE_CACHE = {}
 
@@ -30,41 +30,47 @@ async def fetch_and_cache_timetable_data():
                 else:
                     TIMETABLE_CACHE[key] = []
 
-@timetables.include
-@arc.slash_subcommand("course", "Allows you to get the timetable for a subject using the course code.")
-async def timetable_command(
-    ctx: BlockbotContext,
-    course_id: arc.Option[
-        str, arc.StrParams(description="The course code. E.g. 'COMSCI1'.", min_length=3, max_length=12)
-    ],
-    ) -> None:
+async def send_timetable_info(ctx, timetable_type, user_data):
     # Ensure cache is populated
     if not TIMETABLE_CACHE:
         await fetch_and_cache_timetable_data()
 
-    matching_courses = [
-        item for item in TIMETABLE_CACHE.get("course", [])
-        if course_id.lower() in item.get("name", "").lower()
+    matching_fields = [
+        item for item in TIMETABLE_CACHE.get(timetable_type, [])
+        if user_data.lower() in item.get("name", "").lower()
     ]
 
-    if len(matching_courses) > 1:
-        choices = "\n".join(
+    if len(matching_fields) > 1:
+        max_length = 4096
+        base_text = f"Multiple {str(timetable_type)}s matched your query. Please be more specific:\n"
+        choices_lines = [
             f"- {item.get('name', '')} (ID: {item.get('identity', '')})"
-            for item in matching_courses
-        )
+            for item in matching_fields
+        ]
+        choices_str = ""
+        for line in choices_lines:
+            if len(base_text) + len(choices_str) + len(line) + 4 > max_length:
+                choices_str += "\n..."
+                break
+            choices_str += line + "\n"
 
         embed = hikari.Embed(
             title="Multiple Matches Found",
-            description=f"Multiple courses matched your query. Please be more specific or use the ID:\n{choices}",
+            description=base_text + choices_str,
             color=Colour.GERRY_YELLOW,
         )
         await ctx.respond(embed=embed)
         return
-    elif len(matching_courses) == 1:
-        course = matching_courses[0]
-        ics_url = f"https://timetable.redbrick.dcu.ie/api?courses={course.get('identity', '')}"
+    elif len(matching_fields) == 1:
+        match = matching_fields[0]
+        if (timetable_type != "club") and (timetable_type != "society"):
+            ics_url = f"https://timetable.redbrick.dcu.ie/api?{str(timetable_type)}s={match.get('identity', '')}"
+        else:
+            if timetable_type == "society":
+                timetable_type = "societie"
+            ics_url = f"https://timetable.redbrick.dcu.ie/api/cns?{str(timetable_type)}s={match.get('identity', '')}"
         embed = hikari.Embed(
-            title=f"Timetable for {course.get('name', '')}",
+            title=f"Timetable for {match.get('name', '')}",
             description=f"[Download ICS]({ics_url}) \n \n URL for calendar subscription: ```{ics_url}```",
             color=Colour.BRICKIE_BLUE,
         ).set_footer(text="Powered by TimetableSync")
@@ -72,11 +78,61 @@ async def timetable_command(
         return
 
     embed = hikari.Embed(
-        title="Course Not Found",
-        description=f"No course found matching '{course_id}'. Please check the course code and try again", 
+        title=f"{str(timetable_type).capitalize()} Not Found",
+        description=f"No {str(timetable_type)} found matching '{user_data}'. Please check the {str(timetable_type)} code/name and try again", 
         color=Colour.REDBRICK_RED,
     )
     await ctx.respond(embed=embed)
+
+@timetable.include
+@arc.slash_subcommand("course", "Allows you to get the timetable for a course using the course code.")
+async def timetable_command(
+    ctx: BlockbotContext,
+    course_id: arc.Option[
+        str, arc.StrParams(description="The course code. E.g. 'COMSCI1'.", min_length=3, max_length=12)
+    ],
+    ) -> None:
+    await send_timetable_info(ctx, "course", course_id)
+
+@timetable.include
+@arc.slash_subcommand("module", "Allows you to get the timetable for a module using the module code.")
+async def timetable_command(
+    ctx: BlockbotContext,
+    module_id: arc.Option[
+        str, arc.StrParams(description="The module code. E.g. 'ACC1005'.", min_length=3, max_length=12)
+    ],
+    ) -> None:
+    await send_timetable_info(ctx, "module", module_id)
+
+@timetable.include
+@arc.slash_subcommand("location", "Allows you to get the timetable for a location using its location code.")
+async def timetable_command(
+    ctx: BlockbotContext,
+    location_id: arc.Option[
+        str, arc.StrParams(description="The location code. E.g. 'AHC.CG01'.", min_length=3, max_length=12)
+    ],
+    ) -> None:
+    await send_timetable_info(ctx, "location", location_id)
+
+@timetable.include
+@arc.slash_subcommand("club", "Allows you to get the timetable for a Specific club using its name.")
+async def timetable_command(
+    ctx: BlockbotContext,
+    club_name: arc.Option[
+        str, arc.StrParams(description="The club name. E.g. 'Archery Club'.", min_length=3, max_length=12)
+    ],
+    ) -> None:
+    await send_timetable_info(ctx, "club", club_name)
+
+@timetable.include
+@arc.slash_subcommand("society", "Allows you to get the timetable for a specific society using its name.")
+async def timetable_command(
+    ctx: BlockbotContext,
+    society_name: arc.Option[
+        str, arc.StrParams(description="The society name. E.g. 'Redbrick'.", min_length=3, max_length=12)
+    ],
+    ) -> None:
+    await send_timetable_info(ctx, "society", society_name)
 
 @arc.loader
 def loader(client: Blockbot) -> None:
