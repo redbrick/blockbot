@@ -31,7 +31,6 @@ async def fetch_and_cache_timetable_data():
                     TIMETABLE_CACHE[key] = []
 
 async def send_timetable_info(ctx, timetable_type, user_data):
-    # Ensure cache is populated
     if not TIMETABLE_CACHE:
         await fetch_and_cache_timetable_data()
 
@@ -69,11 +68,13 @@ async def send_timetable_info(ctx, timetable_type, user_data):
             if timetable_type == "society":
                 timetable_type = "societie"
             ics_url = f"https://timetable.redbrick.dcu.ie/api/cns?{str(timetable_type)}s={match.get('identity', '')}"
+        
         embed = hikari.Embed(
             title=f"Timetable for {match.get('name', '')}",
             description=f"[Download ICS]({ics_url}) \n \n URL for calendar subscription: ```{ics_url}```",
             color=Colour.BRICKIE_BLUE,
         ).set_footer(text="Powered by TimetableSync")
+
         await ctx.respond(embed=embed)
         return
 
