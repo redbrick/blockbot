@@ -27,6 +27,9 @@ job "blockbot-[[.environment_slug]]" {
       }
 
       template {
+        destination = "local/.env"
+        env         = true
+        change_mode = "restart"
         data        = <<EOF
 TOKEN={{ key "blockbot-dev/discord/token" }}
 DEBUG=true
@@ -44,8 +47,6 @@ DB_USER={{ key "blockbot-dev/db/user" }}
 
 RCON_ENABLED=false
 EOF
-        destination = "local/.env"
-        env         = true
       }
     }
     task "blockbot-dev-db" {
