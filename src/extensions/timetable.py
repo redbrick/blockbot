@@ -11,7 +11,7 @@ timetable = plugin.include_slash_group(
     "timetable", "Get Timetable's ics files and urls."
 )
 
-TIMETABLE_CACHE = {}
+TIMETABLE_CACHE: dict[str, list[dict]] = {}
 
 TIMETABLE_ENDPOINTS = {
     "course": "https://timetable.redbrick.dcu.ie/api/all/course",
@@ -38,17 +38,17 @@ async def send_timetable_info(
     if not TIMETABLE_CACHE:
         await fetch_and_cache_timetable_data()
 
-    matching_fields = [
+    matching_fields: list[dict] = [
         item
         for item in TIMETABLE_CACHE.get(timetable_type, [])
-        if user_data.lower() in item.get("name", "").lower()
+        if user_data.lower() in str(item.get("name", "")).lower()
     ]
 
     if len(matching_fields) > 1:
         max_length = 4096
         base_text = f"Multiple {timetable_type!s}s matched your query. Please be more specific:\n"
         choices_lines = [
-            f"- {item.get('name', '')} (ID: {item.get('identity', '')})"
+            f"- {dict(item).get('name', '')} (ID: {dict(item).get('identity', '')})"
             for item in matching_fields
         ]
         choices_str = ""
@@ -66,7 +66,7 @@ async def send_timetable_info(
         await ctx.respond(embed=embed)
         return
     if len(matching_fields) == 1:
-        match = matching_fields[0]
+        match: dict = matching_fields[0]
         if timetable_type not in {"club", "society"}:
             ics_url = f"https://timetable.redbrick.dcu.ie/api?{timetable_type!s}s={match.get('identity', '')}"
         else:
