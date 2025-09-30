@@ -27,6 +27,9 @@ job "blockbot" {
       }
 
       template {
+        destination = "local/.env"
+        env         = true
+        change_mode = "restart"
         data        = <<EOF
 TOKEN={{ key "blockbot/discord/token" }}
 
@@ -46,8 +49,6 @@ RCON_HOST=vanilla-mc-rcon.service.consul
 RCON_PORT={{ .Port }}{{ end }}
 RCON_PASSWORD={{ key "games/mc/vanilla-mc/rcon/password" }}
 EOF
-        destination = "local/.env"
-        env         = true
       }
     }
     task "blockbot-db" {
