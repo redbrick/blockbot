@@ -24,6 +24,10 @@ class Feature(StrEnum):
             self.value, required=False, conv=convert_to_bool, default=True
         )
 
+    @enabled.setter
+    def enabled(self, value: bool) -> None:
+        set_env_var(self.value, "true" if value else "false")
+
 
 def convert_to_bool(value: str) -> bool:
     value = value.strip().lower()
@@ -85,15 +89,24 @@ def get_env_var(
             if feature.enabled and env is None:
                 # feature is enabled, but the env var is not set!
                 logging.error(
-                    f"'{name}' environment variable not set but is required for feature '{feature.name}'. Exiting."
+                    f"Disabling feature '{feature.name}' as environment variable '{name}' not set"
                 )
-                sys.exit(1)
+                feature.enabled = False
+                return None
 
     if env is None:
         assert not required
         return default
 
     return conv(env)
+
+
+def set_env_var(
+    name: str,
+    value: str,
+) -> str:
+    os.environ[name] = value
+    return value
 
 
 TOKEN = get_env_var("TOKEN", required=True)
