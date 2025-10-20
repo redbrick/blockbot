@@ -9,6 +9,8 @@ from src.config import DEBUG, TOKEN, Feature
 from src.database import init_db
 from src.models import Blockbot, BlockbotContext
 
+logger = logging.getLogger(__name__)
+
 bot = hikari.GatewayBot(
     token=TOKEN,
     banner=None,
@@ -25,8 +27,7 @@ client.set_type_dependency(miru.Client, miru_client)
 
 # log disabled features
 for feature in Feature:
-    if not feature.enabled:
-        logging.warning(f"feature {feature.name} is disabled")
+    logger.info(f"feature {feature.name} is {'en' if feature.enabled else 'dis'}abled")
 
 client.load_extensions_from("./src/extensions/")
 if DEBUG:
@@ -60,7 +61,7 @@ async def error_handler(ctx: BlockbotContext, exc: Exception) -> None:
 
     # TODO: check double response?
     await ctx.respond(f"❌ Blockbot encountered an unhandled exception. {message}")
-    logging.error(exc)
+    logger.error(exc)
 
     raise exc
 
@@ -68,5 +69,5 @@ async def error_handler(ctx: BlockbotContext, exc: Exception) -> None:
 @client.add_startup_hook
 async def startup_hook(_: arc.GatewayClient) -> None:
     if Feature.DATABASE.enabled:
-        logging.info("Initialising database")
+        logger.info("Initialising database")
         await init_db()
