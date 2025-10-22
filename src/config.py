@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+logger = logging.getLogger(__name__)
+
 T = typing.TypeVar("T", bound=int | str | bool)
 
 
@@ -23,6 +25,10 @@ class Feature(StrEnum):
         return get_env_var(
             self.value, required=False, conv=convert_to_bool, default=True
         )
+
+    @enabled.setter
+    def enabled(self, value: bool) -> None:
+        set_env_var(self.value, "true" if value else "false")
 
 
 def convert_to_bool(value: str) -> bool:
@@ -77,23 +83,32 @@ def get_env_var(
     env = os.environ.get(name, "").strip() or None
 
     if required and env is None:
-        logging.error(f"'{name}' environment variable not set. Exiting.")
+        logger.error(f"'{name}' environment variable not set. Exiting.")
         sys.exit(1)
 
     if required_features:
         for feature in required_features:
             if feature.enabled and env is None:
                 # feature is enabled, but the env var is not set!
-                logging.error(
-                    f"'{name}' environment variable not set but is required for feature '{feature.name}'. Exiting."
+                logger.error(
+                    f"Disabling feature '{feature.name}' as environment variable '{name}' not set"
                 )
-                sys.exit(1)
+                feature.enabled = False
+                return None
 
     if env is None:
         assert not required
         return default
 
     return conv(env)
+
+
+def set_env_var(
+    name: str,
+    value: str,
+) -> str:
+    os.environ[name] = value
+    return value
 
 
 TOKEN = get_env_var("TOKEN", required=True)
