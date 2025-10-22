@@ -8,6 +8,8 @@ import arc
 if typing.TYPE_CHECKING:
     from src.config import Feature
 
+logger = logging.getLogger(__name__)
+
 type BlockbotContext = arc.Context[Blockbot]
 
 
@@ -23,7 +25,7 @@ class Blockbot(arc.GatewayClient):
         if plugin_enabled:
             super().add_plugin(plugin)  # pyright: ignore[reportArgumentType]
 
-        logging.debug(
+        logger.debug(
             f"plugin '{plugin.name}' is {'enabled' if plugin_enabled else 'disabled'}"
         )
 

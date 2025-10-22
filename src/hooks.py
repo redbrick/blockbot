@@ -11,11 +11,13 @@ type WrappedHookResult = typing.Callable[
     [BlockbotContext], typing.Awaitable[arc.HookResult]
 ]
 
+logger = logging.getLogger(__name__)
+
 
 def can_be_disabled(func: WrappedHookResult) -> WrappedHookResult:
     async def wrapper(ctx: BlockbotContext) -> arc.HookResult:
         if not Feature.PERMISSION_HOOKS.enabled:
-            logging.warning(
+            logger.warning(
                 f"permission hook disabled; bypassing restrictions for '{ctx.command.name}' command"
             )
             return arc.HookResult(abort=False)
