@@ -143,7 +143,7 @@ async def gen_agenda(
 
 - Please fill in your sections with anything you would like to discuss.
 - Put your Redbrick `username` beside any agenda items you add.
-- If you can't attend the meeting, please DM <@{UID_MAPS["kronos"]}> with your reason.
+- If you can't attend the meeting, please DM <@{UID_MAPS["secretary"]}> or <@{UID_MAPS["chair"]}> with your reason.
 - React with <:bigRed:634311607039819776> if you can make it.
 
 ||{role_mention(ROLE_IDS["committee"])}||
