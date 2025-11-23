@@ -1,5 +1,6 @@
 import logging
 import typing
+from typing import Callable, Awaitable
 
 import arc
 import hikari
@@ -43,18 +44,30 @@ async def _restrict_to_roles(
     return arc.HookResult()  # by default, abort is set to False
 
 
+class RoleRestrictedHook:
+    def __init__(
+        self,
+        role_ids: typing.Sequence[int],
+        func: Callable[[BlockbotContext], Awaitable[arc.HookResult]],
+    ):
+        self.role_ids = role_ids
+        self.func = func
+
+    async def __call__(self, ctx: BlockbotContext) -> arc.HookResult:
+        return await self.func(ctx)
+
+
 def restrict_to_roles(
     role_ids: typing.Sequence[int],
-) -> WrappedHookResult:
+) -> RoleRestrictedHook:
     """Any command which uses this hook requires that the command be disabled in DMs as a guild role is required for this hook to function."""
 
     @can_be_disabled
     async def func(ctx: BlockbotContext) -> arc.HookResult:
         return await _restrict_to_roles(ctx, role_ids)
 
-    # Attach the role_ids to the hook function for easier access
-    func.role_ids = role_ids
-    return func
+    # Return the custom wrapper with role_ids
+    return RoleRestrictedHook(role_ids, func)
 
 
 async def _restrict_to_channels(

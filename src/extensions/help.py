@@ -1,5 +1,6 @@
 import collections
 import itertools
+from typing import Optional, Sequence
 
 import arc
 import hikari
@@ -24,7 +25,7 @@ def gather_commands(ctx: BlockbotContext) -> dict[str | None, list[str]]:
 
             # Check if the command has hooks
             hooks = getattr(cmd, "hooks", None)
-            required_roles = None
+            required_roles: Optional[Sequence[int]] = None
 
             if hooks:
                 # Get required roles from hook
@@ -38,8 +39,11 @@ def gather_commands(ctx: BlockbotContext) -> dict[str | None, list[str]]:
                 )
 
             # Check roles of member
-            if required_roles and not any(
-                role_id in ctx.member.role_ids for role_id in required_roles
+            if ctx.member is None or (
+                required_roles
+                and not any(
+                    role_id in ctx.member.role_ids for role_id in required_roles
+                )
             ):
                 continue
 
