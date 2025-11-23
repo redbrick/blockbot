@@ -1,6 +1,6 @@
 import logging
 import typing
-from typing import Callable, Awaitable
+from typing import Awaitable, Callable
 
 import arc
 import hikari
@@ -49,7 +49,7 @@ class RoleRestrictedHook:
         self,
         role_ids: typing.Sequence[int],
         func: Callable[[BlockbotContext], Awaitable[arc.HookResult]],
-    ):
+    ) -> None:
         self.role_ids = role_ids
         self.func = func
 
