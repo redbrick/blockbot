@@ -52,6 +52,8 @@ def restrict_to_roles(
     async def func(ctx: BlockbotContext) -> arc.HookResult:
         return await _restrict_to_roles(ctx, role_ids)
 
+    # Attach the role_ids to the hook function for easier access
+    func.role_ids = role_ids
     return func
 
 
