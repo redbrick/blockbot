@@ -30,9 +30,9 @@ def gather_commands(ctx: BlockbotContext) -> dict[str | None, list[str]]:
                 # Get required roles from hook
                 required_roles = next(
                     (
-                        getattr(hook, "role_ids", None)
+                        hook.role_ids
                         for hook in hooks
-                        if getattr(hook, "role_ids", None)
+                        if hasattr(hook, "role_ids") and hook.role_ids is not None
                     ),
                     None,
                 )
