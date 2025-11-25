@@ -155,6 +155,12 @@ ASSIGNABLE_ROLES: dict[str, int] = {
     if role in {"webgroup", "gamez", "croomer", "external events"}
 }
 
+DEFAULT_ROLES: set[int] = {
+    role_id
+    for role, role_id in ROLE_IDS.items()
+    if role in {"brickie", "external events"}
+}
+
 
 class Colour(StrEnum):
     REDBRICK_RED = "#DC2B31"
