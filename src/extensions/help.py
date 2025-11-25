@@ -1,11 +1,11 @@
 import collections
 import itertools
-from typing import Optional, Sequence
 
 import arc
 import hikari
 
 from src.config import Colour
+from src.hooks import RoleRestrictedHook
 from src.models import Blockbot, BlockbotContext, BlockbotPlugin
 
 plugin = BlockbotPlugin(name="Help Command Plugin")
@@ -24,22 +24,14 @@ def gather_commands(ctx: BlockbotContext) -> dict[str | None, list[str]]:
                 continue
 
             # Check if the command has hooks
-            hooks = getattr(cmd, "hooks", None)
-            required_roles: Optional[Sequence[int]] = None
+            hooks = cmd.hooks
 
-            if hooks:
-                # Get required roles from hook
-                required_roles = next(
-                    (
-                        hook.role_ids
-                        for hook in hooks
-                        if hasattr(hook, "role_ids") and hook.role_ids is not None
-                    ),
-                    None,
-                )
+            required_roles: set[int] = set()
+            for hook in hooks:
+                if isinstance(hook, RoleRestrictedHook):
+                    required_roles.update(hook.role_ids)
 
-            # Check roles of member
-            if ctx.member is None or (
+            if not ctx.member or (
                 required_roles
                 and not any(
                     role_id in ctx.member.role_ids for role_id in required_roles
