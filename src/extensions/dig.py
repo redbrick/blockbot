@@ -24,7 +24,7 @@ async def dig_command(
 
     try:
         response = await asyncresolver.resolve(domain, record_type)
-    except resolver.NoAnswer as e:
+    except (resolver.NoAnswer, resolver.NXDOMAIN) as e:
         await ctx.respond(f"❌ {e}", flags=hikari.MessageFlag.EPHEMERAL)
         return
 
