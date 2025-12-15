@@ -31,7 +31,7 @@ async def gerry_command(
         description=description,
         colour=Colour.GERRY_YELLOW,
     )
-    embed = embed.set_image(image)
+    embed = embed.set_image(IMAGE)
 
     await ctx.respond(embed)
 
