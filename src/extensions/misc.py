@@ -8,7 +8,7 @@ from src.models import Blockbot, BlockbotContext, BlockbotPlugin
 
 plugin = BlockbotPlugin(name="misc")
 
-image = "https://cdn.redbrick.dcu.ie/blockbot/gerry.jpg"
+IMAGE = "https://cdn.redbrick.dcu.ie/blockbot/gerry.jpg"
 
 
 @plugin.include
@@ -59,7 +59,7 @@ async def fortune_command(
     else:
         message = f"```{fortune_message}```"
 
-        # do not exceed Discord's 2000 character limit
+    # do not exceed Discord's 2000 character limit
     if len(message) > 2000:
         await ctx.respond(
             "❌ FThe generated fortune is too long to send. Please try again.",
