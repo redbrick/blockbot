@@ -3,7 +3,7 @@ name = "blockbot"
 version = "0.1.0"
 description = "Discord bot maintained by the Redbrick webgroup"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = "~=3.13"
 license = { text = "MIT" }
 authors = [{ name = "JedHazaymeh", email = "magma@redbrick.dcu.ie" }, { name = "nova", email = "nova@redbrick.dcu.ie"}]
 maintainers = [{ name = "nova", email = "nova@redbrick.dcu.ie"}, { name = "wizzdom", email = "wizzdom@redbrick.dcu.ie"}]
