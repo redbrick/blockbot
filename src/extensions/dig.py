@@ -1,14 +1,16 @@
 import arc
 import hikari
-from dns import resolver
+from dns import asyncresolver, resolver
 
-dig = arc.GatewayPlugin(name="dig")
+from src.models import Blockbot, BlockbotContext, BlockbotPlugin
+
+plugin = BlockbotPlugin(name="dig")
 
 
-@dig.include
+@plugin.include
 @arc.slash_command("dig", "Query DNS records for a domain")
 async def dig_command(
-    ctx: arc.GatewayContext,
+    ctx: BlockbotContext,
     domain: arc.Option[str, arc.StrParams("The domain to query")],
     record_type: arc.Option[
         str,
@@ -19,10 +21,9 @@ async def dig_command(
     ] = "A",
 ) -> None:
     """Query DNS records for a domain"""
-    record_type = record_type.upper()
 
     try:
-        response = resolver.resolve(domain, record_type)
+        response = await asyncresolver.resolve(domain, record_type)
     except resolver.NoAnswer as e:
         await ctx.respond(f"❌ {e}", flags=hikari.MessageFlag.EPHEMERAL)
         return
@@ -36,5 +37,5 @@ async def dig_command(
 
 
 @arc.loader
-def loader(client: arc.GatewayClient) -> None:
-    client.add_plugin(dig)
+def loader(client: Blockbot) -> None:
+    client.add_plugin(plugin)
