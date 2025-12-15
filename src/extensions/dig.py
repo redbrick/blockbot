@@ -15,7 +15,7 @@ async def dig_command(
     record_type: arc.Option[
         str,
         arc.StrParams(
-            "Type of record to query",
+            "Type of record to query. Default: A",
             choices=["A", "AAAA", "CNAME", "MX", "NS", "PTR", "SOA", "SRV", "TXT"],
         ),
     ] = "A",
