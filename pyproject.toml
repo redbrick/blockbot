@@ -10,6 +10,7 @@ maintainers = [{ name = "nova", email = "nova@redbrick.dcu.ie"}, { name = "wizzd
 dependencies = [
     "aiohttp>=3.11.14",
     "asyncpg>=0.30.0",
+    "dnspython>=2.7.0",
     "fortune-python>=1.1.1",
     "hikari>=2.2.0",
     "hikari-arc>=2.0.0",
