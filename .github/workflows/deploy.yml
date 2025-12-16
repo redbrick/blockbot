@@ -17,14 +17,15 @@ jobs:
 
     runs-on: [self-hosted, deployment-runner]
     container:
-      image: hashicorp/levant:0.3
+      image: hashicorp/levant:0.4
       options: --user root
     if: github.ref != 'refs/heads/main' && github.event_name == 'push'
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: |
           levant deploy \
+          -force-count=true \
           -var git_sha="${GITHUB_SHA}" \
           -var environment_slug="${GITHUB_REF_NAME}" \
           -address "http://nomad.service.consul:4646" \
@@ -45,12 +46,12 @@ jobs:
       - build
     runs-on: [self-hosted, deployment-runner]
     container:
-      image: hashicorp/levant:0.3
+      image: hashicorp/levant:0.4
       options: --user root
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: |
           levant deploy \
           -var git_sha="${GITHUB_SHA}" \
