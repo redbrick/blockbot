@@ -8,6 +8,7 @@ license = { text = "MIT" }
 authors = [{ name = "JedHazaymeh", email = "magma@redbrick.dcu.ie" }, { name = "nova", email = "nova@redbrick.dcu.ie"}]
 maintainers = [{ name = "nova", email = "nova@redbrick.dcu.ie"}, { name = "wizzdom", email = "wizzdom@redbrick.dcu.ie"}]
 dependencies = [
+    "aiofiles>=25.1.0",
     "aiohttp>=3.11.14",
     "asyncpg>=0.30.0",
     "dnspython>=2.7.0",
