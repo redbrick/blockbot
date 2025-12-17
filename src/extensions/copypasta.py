@@ -57,7 +57,6 @@ async def load_text(file_name: str) -> list[list[str]]:
     # handle leftovers
     if embed_len:
         current_message.append(current_embed)
-        # message_len += embed_len
     if current_message:
         messages.append(current_message)
 
