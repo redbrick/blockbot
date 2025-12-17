@@ -65,7 +65,7 @@ async def load_text(file_name: str) -> list[list[str]]:
 
 @plugin.include
 @arc.slash_command("copypasta", "So tell me Frank!")
-async def gerry_command(
+async def copypasta_command(
     ctx: BlockbotContext,
     copypasta: arc.Option[
         str,
