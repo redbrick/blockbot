@@ -2,11 +2,12 @@ import arc
 import hikari
 
 from src.config import Colour
-from src.models import BlockbotContext
+from src.models import Blockbot, BlockbotContext, BlockbotPlugin
 
 IMAGE = "https://cdn.redbrick.dcu.ie/blockbot/gerry.jpg"
 
-from src.extensions.misc import plugin
+plugin = BlockbotPlugin(name="gerry")
+
 
 @plugin.include
 @arc.slash_command("gerry", "So tell me Frank!")
@@ -31,3 +32,8 @@ async def gerry_command(
     embed = embed.set_image(IMAGE)
 
     await ctx.respond(embed)
+
+
+@arc.loader
+def loader(client: Blockbot) -> None:
+    client.add_plugin(plugin)

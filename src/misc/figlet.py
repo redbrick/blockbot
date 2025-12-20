@@ -2,9 +2,7 @@ import arc
 import hikari
 from pyfiglet import Figlet  # pyright: ignore[reportMissingTypeStubs]
 
-from src.models import BlockbotContext
-
-from src.extensions.misc import plugin
+from src.models import Blockbot, BlockbotContext, BlockbotPlugin
 
 fonts = [
     "standard",
@@ -24,6 +22,8 @@ fonts = [
     "graffiti",
     "katakana",
 ]
+plugin = BlockbotPlugin(name="figlet")
+
 
 @plugin.include
 @arc.slash_command("figlet", "ASCIIify your words!")
@@ -68,3 +68,8 @@ async def figlet_command(
 
     # send ASCII art in a codeblock
     await ctx.respond(message)
+
+
+@arc.loader
+def loader(client: Blockbot) -> None:
+    client.add_plugin(plugin)
