@@ -4,7 +4,7 @@ from dns import asyncresolver, resolver
 
 from src.models import Blockbot, BlockbotContext, BlockbotPlugin
 
-plugin = BlockbotPlugin(name="dig")
+from src.extensions.misc import plugin
 
 
 @plugin.include
@@ -34,8 +34,3 @@ async def dig_command(
         description=f"""```{result}```""",
     )
     await ctx.respond(embed=embed)
-
-
-@arc.loader
-def loader(client: Blockbot) -> None:
-    client.add_plugin(plugin)
