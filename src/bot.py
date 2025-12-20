@@ -33,6 +33,10 @@ client.load_extensions_from("./src/extensions/")
 if DEBUG:
     client.load_extensions_from("./src/examples/")
 
+# Misc
+if Feature.MISC.enabled:
+    client.load_extensions_from("./src/misc/")
+
 
 @client.listen(hikari.StartingEvent)
 async def on_start(_: hikari.StartingEvent) -> None:
