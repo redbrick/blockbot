@@ -4,10 +4,7 @@ from fortune import fortune  # pyright: ignore[reportMissingTypeStubs]
 
 from src.models import Blockbot, BlockbotContext, BlockbotPlugin
 
-plugin = BlockbotPlugin(name="fortune")
 
-
-@plugin.include
 @arc.slash_command("fortune", "Send a user a random Fortune!")
 async def fortune_command(
     ctx: BlockbotContext,
@@ -43,5 +40,5 @@ async def fortune_command(
 
 
 @arc.loader
-def loader(client: Blockbot) -> None:
-    client.add_plugin(plugin)
+def loader(plugin: BlockbotPlugin) -> None:
+    plugin.add_command(fortune_command)

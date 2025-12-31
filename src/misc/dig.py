@@ -4,10 +4,6 @@ from dns import asyncresolver, resolver
 
 from src.models import Blockbot, BlockbotContext, BlockbotPlugin
 
-plugin = BlockbotPlugin(name="dig")
-
-
-@plugin.include
 @arc.slash_command("dig", "Query DNS records for a domain")
 async def dig_command(
     ctx: BlockbotContext,
@@ -37,5 +33,5 @@ async def dig_command(
 
 
 @arc.loader
-def loader(client: Blockbot) -> None:
-    client.add_plugin(plugin)
+def loader(plugin: BlockbotPlugin) -> None:
+    plugin.add_command(dig_command)

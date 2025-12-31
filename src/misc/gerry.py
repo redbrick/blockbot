@@ -6,10 +6,6 @@ from src.models import Blockbot, BlockbotContext, BlockbotPlugin
 
 IMAGE = "https://cdn.redbrick.dcu.ie/blockbot/gerry.jpg"
 
-plugin = BlockbotPlugin(name="gerry")
-
-
-@plugin.include
 @arc.slash_command("gerry", "So tell me Frank!")
 async def gerry_command(
     ctx: BlockbotContext,
@@ -35,5 +31,5 @@ async def gerry_command(
 
 
 @arc.loader
-def loader(client: Blockbot) -> None:
-    client.add_plugin(plugin)
+def loader(plugin: BlockbotPlugin) -> None:
+    plugin.add_command(gerry_command)

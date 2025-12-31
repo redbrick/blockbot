@@ -22,10 +22,8 @@ fonts = [
     "graffiti",
     "katakana",
 ]
-plugin = BlockbotPlugin(name="figlet")
 
 
-@plugin.include
 @arc.slash_command("figlet", "ASCIIify your words!")
 async def figlet_command(
     ctx: BlockbotContext,
@@ -71,5 +69,5 @@ async def figlet_command(
 
 
 @arc.loader
-def loader(client: Blockbot) -> None:
-    client.add_plugin(plugin)
+def loader(plugin: BlockbotPlugin) -> None:
+    plugin.add_command(figlet_command)
