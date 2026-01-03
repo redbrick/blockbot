@@ -1,18 +1,45 @@
 from __future__ import annotations
 
-import logging
-import typing
-import pathlib
-import arc
 import importlib
+import logging
+import pathlib
+import sys
+import typing
+
+import arc
 from arc import ExtensionLoadError
 
 if typing.TYPE_CHECKING:
+    from arc.abc import CallableCommandBase
+    from arc.internal.types import BuilderT
+
     from src.config import Feature
 
 logger = logging.getLogger(__name__)
 
 type BlockbotContext = arc.Context[Blockbot]
+
+
+def command_loader(
+    callback: typing.Callable[[BlockbotPlugin], None] | None = None,
+) -> (
+    typing.Callable[[BlockbotPlugin], None]
+    | typing.Callable[
+        [typing.Callable[[BlockbotPlugin], None]],
+        typing.Callable[[BlockbotPlugin], None],
+    ]
+):
+    def decorator(
+        func: typing.Callable[[BlockbotPlugin], None],
+    ) -> typing.Callable[[BlockbotPlugin], None]:
+        module = sys.modules[func.__module__]
+        setattr(module, "__arc_extension_loader__", func)
+        return func
+
+    if callback is not None:
+        return decorator(callback)
+
+    return decorator
 
 
 class Blockbot(arc.GatewayClient):
@@ -46,14 +73,18 @@ class BlockbotPlugin(arc.GatewayPluginBase[Blockbot]):
         """The features required for this plugin to be enabled."""
         return self._required_features
 
-    def load_commands_from(self, dir_path: str | pathlib.Path, recursive: bool = False):
+    def load_commands_from(
+        self, dir_path: str | pathlib.Path, recursive: bool = False
+    ) -> typing.Self:
         if isinstance(dir_path, str):
             dir_path = pathlib.Path(dir_path)
 
         try:
             dir_path.absolute().relative_to(pathlib.Path.cwd())
         except ValueError:
-            raise ExtensionLoadError("dir_path must be relative to the current working directory.")
+            raise ExtensionLoadError(
+                "dir_path must be relative to the current working directory."
+            )
 
         if not dir_path.is_dir():
             raise ExtensionLoadError("dir_path must exist and be a directory.")
@@ -71,11 +102,7 @@ class BlockbotPlugin(arc.GatewayPluginBase[Blockbot]):
 
         return self
 
-    def add_command(self, command):
-        self.include(command)
-        pass
-
-    def load_command(self, path: str):
+    def load_command(self, path: str) -> typing.Self:
         parents = path.split(".")
         name = parents.pop()
 
@@ -94,3 +121,6 @@ class BlockbotPlugin(arc.GatewayPluginBase[Blockbot]):
         logger.info(f"Loaded command: '{path}' for plugin '{self.name}'.")
 
         return self
+
+    def add_command(self, command: CallableCommandBase[Blockbot, BuilderT]) -> None:
+        self.include(command)

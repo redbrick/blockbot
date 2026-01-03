@@ -2,7 +2,7 @@ import arc
 import hikari
 from fortune import fortune  # pyright: ignore[reportMissingTypeStubs]
 
-from src.models import Blockbot, BlockbotContext, BlockbotPlugin
+from src.models import BlockbotContext, BlockbotPlugin, command_loader
 
 
 @arc.slash_command("fortune", "Send a user a random Fortune!")
@@ -39,6 +39,6 @@ async def fortune_command(
     await ctx.respond(message, user_mentions=True)
 
 
-@arc.loader
+@command_loader
 def loader(plugin: BlockbotPlugin) -> None:
     plugin.add_command(fortune_command)

@@ -2,7 +2,7 @@ import arc
 import hikari
 from pyfiglet import Figlet  # pyright: ignore[reportMissingTypeStubs]
 
-from src.models import Blockbot, BlockbotContext, BlockbotPlugin
+from src.models import BlockbotContext, BlockbotPlugin, command_loader
 
 fonts = [
     "standard",
@@ -68,6 +68,6 @@ async def figlet_command(
     await ctx.respond(message)
 
 
-@arc.loader
+@command_loader
 def loader(plugin: BlockbotPlugin) -> None:
     plugin.add_command(figlet_command)

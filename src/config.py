@@ -19,7 +19,6 @@ class Feature(StrEnum):
     LDAP = "LDAP_ENABLED"
     PERMISSION_HOOKS = "PERMS_ENABLED"
     RCON = "RCON_ENABLED"
-    MISC = "MISC_ENABLED"
 
     @property
     def enabled(self) -> bool:

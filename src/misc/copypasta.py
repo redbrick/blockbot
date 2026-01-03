@@ -5,7 +5,7 @@ import arc
 import hikari
 
 from src.config import Colour
-from src.models import Blockbot, BlockbotContext, BlockbotPlugin
+from src.models import BlockbotContext, BlockbotPlugin, command_loader
 
 MAX_EMBED = 4096
 MAX_MESSAGE = 6000
@@ -103,6 +103,6 @@ async def copypasta_command(
         )
 
 
-@arc.loader
+@command_loader
 def loader(plugin: BlockbotPlugin) -> None:
     plugin.add_command(copypasta_command)
