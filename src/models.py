@@ -1,16 +1,59 @@
 from __future__ import annotations
 
+import importlib
 import logging
+import pathlib
+import sys
 import typing
 
 import arc
+from arc import ExtensionLoadError
 
 if typing.TYPE_CHECKING:
+    from arc.abc import CallableCommandBase
+    from arc.internal.types import BuilderT
+
     from src.config import Feature
 
 logger = logging.getLogger(__name__)
 
 type BlockbotContext = arc.Context[Blockbot]
+
+
+def command_loader(
+    callback: typing.Callable[[BlockbotPlugin], None] | None = None,
+) -> (
+    typing.Callable[[BlockbotPlugin], None]
+    | typing.Callable[
+        [typing.Callable[[BlockbotPlugin], None]],
+        typing.Callable[[BlockbotPlugin], None],
+    ]
+):
+    """Decorator to set the command load callback for this module. (Logic is similar to arc.loader)
+    Example
+    --------
+    ```py
+    plugin.load_commands_from("./src/misc")
+
+
+    # In ./src/misc/some_command.py:
+    @command_loader
+    def load_commands(plugin: BlockbotPlugin) -> None:
+        plugin.add_command(...)
+    ```
+    """
+
+    def decorator(
+        func: typing.Callable[[BlockbotPlugin], None],
+    ) -> typing.Callable[[BlockbotPlugin], None]:
+        module = sys.modules[func.__module__]
+        setattr(module, "__blockbot_command_loader__", func)
+        return func
+
+    if callback is not None:
+        return decorator(callback)
+
+    return decorator
 
 
 class Blockbot(arc.GatewayClient):
@@ -43,3 +86,62 @@ class BlockbotPlugin(arc.GatewayPluginBase[Blockbot]):
     def required_features(self) -> typing.Sequence[Feature]:
         """The features required for this plugin to be enabled."""
         return self._required_features
+
+    def load_commands_from(
+        self, dir_path: str | pathlib.Path, recursive: bool = False
+    ) -> typing.Self:
+        """Load all commands from a directory into plugin.
+        dir_path: The directory path to load commands from.
+        recursive: Whether to load commands recursively from subdirectories.
+        """
+
+        if isinstance(dir_path, str):
+            dir_path = pathlib.Path(dir_path)
+
+        try:
+            dir_path.absolute().relative_to(pathlib.Path.cwd())
+        except ValueError:
+            raise ExtensionLoadError(
+                "dir_path must be relative to the current working directory."
+            )
+
+        if not dir_path.is_dir():
+            raise ExtensionLoadError("dir_path must exist and be a directory.")
+
+        globfunc = dir_path.rglob if recursive else dir_path.glob
+        loaded = 0
+
+        for file in globfunc(r"**/[!_]*.py"):
+            module_path = ".".join(file.as_posix()[:-3].split("/"))
+            self._load_command(module_path)
+            loaded += 1
+
+        if loaded == 0:
+            logger.warning(f"No extensions were found at '{dir_path}'.")
+
+        return self
+
+    def _load_command(self, path: str) -> typing.Self:
+        """Load a command module into the plugin."""
+        parents = path.split(".")
+        name = parents.pop()
+
+        pkg = ".".join(parents)
+
+        if pkg:
+            name = "." + name
+
+        module = importlib.import_module(path, package=pkg)
+
+        loader = getattr(module, "__blockbot_command_loader__", None)
+
+        if loader is None:
+            raise ValueError(f"Module '{path}' does not have a loader.")
+        loader(self)
+        logger.info(f"Loaded command: '{path}' for plugin '{self.name}'.")
+
+        return self
+
+    def add_command(self, command: CallableCommandBase[Blockbot, BuilderT]) -> None:
+        """Add a command to the plugin."""
+        self.include(command)

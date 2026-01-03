@@ -2,12 +2,9 @@ import arc
 import hikari
 from dns import asyncresolver, resolver
 
-from src.models import Blockbot, BlockbotContext, BlockbotPlugin
-
-plugin = BlockbotPlugin(name="dig")
+from src.models import BlockbotContext, BlockbotPlugin, command_loader
 
 
-@plugin.include
 @arc.slash_command("dig", "Query DNS records for a domain")
 async def dig_command(
     ctx: BlockbotContext,
@@ -36,6 +33,6 @@ async def dig_command(
     await ctx.respond(embed=embed)
 
 
-@arc.loader
-def loader(client: Blockbot) -> None:
-    client.add_plugin(plugin)
+@command_loader
+def loader(plugin: BlockbotPlugin) -> None:
+    plugin.add_command(dig_command)
