@@ -34,12 +34,15 @@ def command_loader(
     --------
     ```py
     plugin.load_commands_from("./src/misc")
+
+
     # In ./src/misc/some_command.py:
     @command_loader
     def load_commands(plugin: BlockbotPlugin) -> None:
         plugin.add_command(...)
     ```
     """
+
     def decorator(
         func: typing.Callable[[BlockbotPlugin], None],
     ) -> typing.Callable[[BlockbotPlugin], None]:
