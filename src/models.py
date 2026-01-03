@@ -29,11 +29,22 @@ def command_loader(
         typing.Callable[[BlockbotPlugin], None],
     ]
 ):
+    """Decorator to set the command load callback for this module. (Logic is similar to arc.loader)
+    Example
+    --------
+    ```py
+    plugin.load_commands_from("./src/misc")
+    # In ./src/misc/some_command.py:
+    @command_loader
+    def load_commands(plugin: BlockbotPlugin) -> None:
+        plugin.add_command(...)
+    ```
+    """
     def decorator(
         func: typing.Callable[[BlockbotPlugin], None],
     ) -> typing.Callable[[BlockbotPlugin], None]:
         module = sys.modules[func.__module__]
-        setattr(module, "__arc_extension_loader__", func)
+        setattr(module, "__blockbot_command_loader__", func)
         return func
 
     if callback is not None:
@@ -76,6 +87,11 @@ class BlockbotPlugin(arc.GatewayPluginBase[Blockbot]):
     def load_commands_from(
         self, dir_path: str | pathlib.Path, recursive: bool = False
     ) -> typing.Self:
+        """Load all commands from a directory into plugin.
+        dir_path: The directory path to load commands from.
+        recursive: Whether to load commands recursively from subdirectories.
+        """
+
         if isinstance(dir_path, str):
             dir_path = pathlib.Path(dir_path)
 
@@ -94,7 +110,7 @@ class BlockbotPlugin(arc.GatewayPluginBase[Blockbot]):
 
         for file in globfunc(r"**/[!_]*.py"):
             module_path = ".".join(file.as_posix()[:-3].split("/"))
-            self.load_command(module_path)
+            self._load_command(module_path)
             loaded += 1
 
         if loaded == 0:
@@ -102,7 +118,8 @@ class BlockbotPlugin(arc.GatewayPluginBase[Blockbot]):
 
         return self
 
-    def load_command(self, path: str) -> typing.Self:
+    def _load_command(self, path: str) -> typing.Self:
+        """Load a command module into the plugin."""
         parents = path.split(".")
         name = parents.pop()
 
@@ -113,7 +130,7 @@ class BlockbotPlugin(arc.GatewayPluginBase[Blockbot]):
 
         module = importlib.import_module(path, package=pkg)
 
-        loader = getattr(module, "__arc_extension_loader__", None)
+        loader = getattr(module, "__blockbot_command_loader__", None)
 
         if loader is None:
             raise ValueError(f"Module '{path}' does not have a loader.")
@@ -123,4 +140,5 @@ class BlockbotPlugin(arc.GatewayPluginBase[Blockbot]):
         return self
 
     def add_command(self, command: CallableCommandBase[Blockbot, BuilderT]) -> None:
+        """Add a command to the plugin."""
         self.include(command)
