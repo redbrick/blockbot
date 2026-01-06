@@ -6,6 +6,9 @@ import miru
 from src.config import Colour
 from src.models import Blockbot, BlockbotContext, BlockbotPlugin
 
+MAX_EMBED = 4096
+MAX_DROPDOWN_OPTIONS = 25
+
 plugin = BlockbotPlugin(name="Get Timetable Command")
 
 timetable = plugin.include_slash_group(
@@ -16,21 +19,24 @@ timetable = plugin.include_slash_group(
 async def _get_matching_fields(
     timetable_type: str, user_data: str
 ) -> list[dict[str, str]]:
+    """Fetch matching fields from the timetable API using the ?query."""
     matching_fields: list[dict[str, str]] = []
-    async with (
-        aiohttp.ClientSession() as session,
-        session.get(
-            f"https://timetable.redbrick.dcu.ie/api/all/{timetable_type}?query={user_data}"
-        ) as resp,
-    ):
-        if resp.status == 200:
-            matching_fields = await resp.json()
-        else:
-            matching_fields = []
+    try:
+        async with (
+            aiohttp.ClientSession() as session,
+            session.get(
+                f"https://timetable.redbrick.dcu.ie/api/all/{timetable_type}?query={user_data}"
+            ) as resp,
+        ):
+            if resp.status == 200:
+                matching_fields = await resp.json()
+    except aiohttp.ClientError:
+        matching_fields = []
     return matching_fields
 
 
 async def _get_ics_link(timetable_type: str, match: dict[str, str]) -> str:
+    """Generate the ICS link for the matched timetable using its identity."""
     if timetable_type not in {"club", "society"}:
         ics_url = f"https://timetable.redbrick.dcu.ie/api?{timetable_type!s}s={match.get('identity', '')}"
     else:
@@ -48,8 +54,10 @@ async def _timetable_response(
     matching_fields: list[dict[str, str]],
     miru_client: miru.Client,
 ) -> None:
-    if len(matching_fields) > 25:
-        max_length = 4096
+    """Handle the timetable response based on the number of matches."""
+
+    """Display a message and ask for clarification if there are more than 25 matches."""
+    if len(matching_fields) > MAX_DROPDOWN_OPTIONS:
         base_text = f"Multiple {timetable_type!s}s matched your query. Please be more specific:\n"
         choices_lines = [
             f"- {item.get('name', '')} (ID: {item.get('identity', '')})"
@@ -57,7 +65,7 @@ async def _timetable_response(
         ]
         choices_str = ""
         for line in choices_lines:
-            if len(base_text) + len(choices_str) + len(line) + 4 > max_length:
+            if len(base_text) + len(choices_str) + len(line) + 4 > MAX_EMBED:
                 choices_str += "\n..."
                 break
             choices_str += line + "\n"
@@ -70,7 +78,8 @@ async def _timetable_response(
         await ctx.respond(embed=embed)
         return
 
-    if 1 < len(matching_fields) <= 25:
+    """Display a dropdown if there are between 2 and 25 matches."""
+    if 1 < len(matching_fields) <= MAX_DROPDOWN_OPTIONS:
 
         class TimetableSelectView(miru.View):
             def __init__(self, user_id: int) -> None:
@@ -94,10 +103,10 @@ async def _timetable_response(
             async def on_select(
                 self, ctx_sub: miru.ViewContext, select: miru.TextSelect
             ) -> None:
-                # Restruct matching_fields and recall _timetable_response
                 selected_id = select.values[0]
                 # Delete original message
                 await ctx_sub.message.delete()
+                # Recalling the timetable response with the selected option
                 await _timetable_response(
                     ctx,
                     timetable_type,
@@ -147,6 +156,7 @@ async def _timetable_response(
         miru_client.start_view(view, bind_to=await response.retrieve_message())
         return
 
+    """Display the timetable ICS link if there is exactly one match."""
     if len(matching_fields) == 1:
         match: dict[str, str] = matching_fields[0]
         ics_url = await _get_ics_link(timetable_type, match)
@@ -171,6 +181,7 @@ async def _timetable_response(
 async def send_timetable_info(
     ctx: BlockbotContext, timetable_type: str, user_data: str, miru_client: miru.Client
 ) -> None:
+    """Send timetable information based on the type and user data provided."""
     matching_fields = await _get_matching_fields(timetable_type, user_data)
     await _timetable_response(
         ctx, timetable_type, user_data, matching_fields, miru_client
