@@ -2,6 +2,7 @@ import aiohttp
 import arc
 import hikari
 import miru
+from arc.command.option import StrOption
 
 from src.config import Colour
 from src.models import Blockbot, BlockbotContext, BlockbotPlugin
@@ -193,103 +194,61 @@ async def send_timetable_info(
     )
 
 
-@timetable.include
-@arc.slash_subcommand(
-    "course", "Allows you to get the timetable for a course using the course code."
-)
-async def course_command(
+async def timetable_command(
     ctx: BlockbotContext,
-    course_id: arc.Option[
-        str,
-        arc.StrParams(
-            description="The course code. E.g. 'COMSCI1'.", min_length=3, max_length=12
-        ),
-    ],
+    item_id: arc.Option[str, arc.StrParams()],
     miru_client: miru.Client = arc.inject(),
     session_client: aiohttp.ClientSession = arc.inject(),
 ) -> None:
-    await send_timetable_info(ctx, "course", course_id, miru_client, session_client)
-
-
-@timetable.include
-@arc.slash_subcommand(
-    "module", "Allows you to get the timetable for a module using the module code."
-)
-async def module_command(
-    ctx: BlockbotContext,
-    module_id: arc.Option[
-        str,
-        arc.StrParams(
-            description="The module code. E.g. 'ACC1005'.", min_length=3, max_length=12
-        ),
-    ],
-    miru_client: miru.Client = arc.inject(),
-    session_client: aiohttp.ClientSession = arc.inject(),
-) -> None:
-    await send_timetable_info(ctx, "module", module_id, miru_client, session_client)
-
-
-@timetable.include
-@arc.slash_subcommand(
-    "location",
-    "Allows you to get the timetable for a location using its location code.",
-)
-async def location_command(
-    ctx: BlockbotContext,
-    location_id: arc.Option[
-        str,
-        arc.StrParams(
-            description="The location code. E.g. 'AHC.CG01'.",
-            min_length=3,
-            max_length=12,
-        ),
-    ],
-    miru_client: miru.Client = arc.inject(),
-    session_client: aiohttp.ClientSession = arc.inject(),
-) -> None:
-    await send_timetable_info(ctx, "location", location_id, miru_client, session_client)
-
-
-@timetable.include
-@arc.slash_subcommand(
-    "club", "Allows you to get the timetable for a Specific club using its name."
-)
-async def club_command(
-    ctx: BlockbotContext,
-    club_name: arc.Option[
-        str,
-        arc.StrParams(
-            description="The club name. E.g. 'Archery Club'.",
-            min_length=3,
-            max_length=12,
-        ),
-    ],
-    miru_client: miru.Client = arc.inject(),
-    session_client: aiohttp.ClientSession = arc.inject(),
-) -> None:
-    await send_timetable_info(ctx, "club", club_name, miru_client, session_client)
-
-
-@timetable.include
-@arc.slash_subcommand(
-    "society", "Allows you to get the timetable for a specific society using its name."
-)
-async def society_command(
-    ctx: BlockbotContext,
-    society_name: arc.Option[
-        str,
-        arc.StrParams(
-            description="The society name. E.g. 'Redbrick'.",
-            min_length=3,
-            max_length=12,
-        ),
-    ],
-    miru_client: miru.Client = arc.inject(),
-    session_client: aiohttp.ClientSession = arc.inject(),
-) -> None:
-    await send_timetable_info(ctx, "society", society_name, miru_client, session_client)
+    await send_timetable_info(
+        ctx, ctx.command.name, item_id, miru_client, session_client
+    )
 
 
 @arc.loader
 def loader(client: Blockbot) -> None:
+    for name, cmd_description, opt_description in (
+        (
+            "course",
+            "Allows you to get the timetable for a course using the course code.",
+            "The course code. E.g. 'COMSCI1'.",
+        ),
+        (
+            "module",
+            "Allows you to get the timetable for a module using the module code.",
+            "The module code. E.g. 'ACC1005'.",
+        ),
+        (
+            "location",
+            "Allows you to get the timetable for a location using its location code.",
+            "The location code. E.g. 'AHC.CG01'.",
+        ),
+        (
+            "club",
+            "Allows you to get the timetable for a Specific club using its name.",
+            "The club name. E.g. 'Archery Club'.",
+        ),
+        (
+            "society",
+            "Allows you to get the timetable for a specific society using its name.",
+            "The society name. E.g. 'Redbrick'.",
+        ),
+    ):
+        timetable.include(
+            arc.SlashSubCommand(
+                name=name,
+                description=cmd_description,
+                callback=timetable_command,
+                options={
+                    "item_id": StrOption(  # pyright: ignore[reportArgumentType]
+                        name=name,
+                        description=opt_description,
+                        arg_name="item_id",
+                        min_length=3,
+                        max_length=12,
+                    ),
+                },
+            )
+        )
+
     client.add_plugin(plugin)
