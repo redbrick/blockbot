@@ -9,30 +9,21 @@ from src.models import Blockbot, BlockbotContext, BlockbotPlugin
 MAX_EMBED = 4096
 MAX_DROPDOWN_OPTIONS = 25
 
-plugin = BlockbotPlugin(name="Get Timetable Command")
+plugin = BlockbotPlugin(name="Timetable")
 
 timetable = plugin.include_slash_group(
-    "timetable", "Get Timetable's ics files and urls."
+    "timetable", "Get timetable information from https://timetable.redbrick.dcu.ie/"
 )
 
 
 async def _get_matching_fields(
-    timetable_type: str, user_data: str
-) -> list[dict[str, str]]:
+    timetable_type: str, user_data: str, session: aiohttp.ClientSession
+) -> tuple[list[dict[str, str]], int]:
     """Fetch matching fields from the timetable API using the ?query."""
-    matching_fields: list[dict[str, str]] = []
-    try:
-        async with (
-            aiohttp.ClientSession() as session,
-            session.get(
-                f"https://timetable.redbrick.dcu.ie/api/all/{timetable_type}?query={user_data}"
-            ) as resp,
-        ):
-            if resp.status == 200:
-                matching_fields = await resp.json()
-    except aiohttp.ClientError:
-        matching_fields = []
-    return matching_fields
+    async with session.get(
+        f"https://timetable.redbrick.dcu.ie/api/all/{timetable_type}?query={user_data}"
+    ) as resp:
+        return await resp.json(), resp.status
 
 
 async def _get_ics_link(timetable_type: str, match: dict[str, str]) -> str:
@@ -56,7 +47,7 @@ async def _timetable_response(
 ) -> None:
     """Handle the timetable response based on the number of matches."""
 
-    """Display a message and ask for clarification if there are more than 25 matches."""
+    # Display a message and ask for clarification if there are more than 25 matches.
     if len(matching_fields) > MAX_DROPDOWN_OPTIONS:
         base_text = f"Multiple {timetable_type!s}s matched your query. Please be more specific:\n"
         choices_lines = [
@@ -78,7 +69,7 @@ async def _timetable_response(
         await ctx.respond(embed=embed)
         return
 
-    """Display a dropdown if there are between 2 and 25 matches."""
+    # Display a dropdown if there are between 2 and 25 matches.
     if 1 < len(matching_fields) <= MAX_DROPDOWN_OPTIONS:
 
         class TimetableSelectView(miru.View):
@@ -156,7 +147,7 @@ async def _timetable_response(
         miru_client.start_view(view, bind_to=await response.retrieve_message())
         return
 
-    """Display the timetable ICS link if there is exactly one match."""
+    # Display the timetable ICS link if there is exactly one match.
     if len(matching_fields) == 1:
         match: dict[str, str] = matching_fields[0]
         ics_url = await _get_ics_link(timetable_type, match)
@@ -179,10 +170,24 @@ async def _timetable_response(
 
 
 async def send_timetable_info(
-    ctx: BlockbotContext, timetable_type: str, user_data: str, miru_client: miru.Client
+    ctx: BlockbotContext,
+    timetable_type: str,
+    user_data: str,
+    miru_client: miru.Client,
+    session_client: aiohttp.ClientSession,
 ) -> None:
     """Send timetable information based on the type and user data provided."""
-    matching_fields = await _get_matching_fields(timetable_type, user_data)
+    matching_fields, status = await _get_matching_fields(
+        timetable_type, user_data, session_client
+    )
+
+    if status != 200:
+        await ctx.respond(
+            f"❌ Failed to fetch timetable data. Status code: `{status}`",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
+        return
+
     await _timetable_response(
         ctx, timetable_type, user_data, matching_fields, miru_client
     )
@@ -201,8 +206,9 @@ async def course_command(
         ),
     ],
     miru_client: miru.Client = arc.inject(),
+    session_client: aiohttp.ClientSession = arc.inject(),
 ) -> None:
-    await send_timetable_info(ctx, "course", course_id, miru_client)
+    await send_timetable_info(ctx, "course", course_id, miru_client, session_client)
 
 
 @timetable.include
@@ -218,8 +224,9 @@ async def module_command(
         ),
     ],
     miru_client: miru.Client = arc.inject(),
+    session_client: aiohttp.ClientSession = arc.inject(),
 ) -> None:
-    await send_timetable_info(ctx, "module", module_id, miru_client)
+    await send_timetable_info(ctx, "module", module_id, miru_client, session_client)
 
 
 @timetable.include
@@ -238,8 +245,9 @@ async def location_command(
         ),
     ],
     miru_client: miru.Client = arc.inject(),
+    session_client: aiohttp.ClientSession = arc.inject(),
 ) -> None:
-    await send_timetable_info(ctx, "location", location_id, miru_client)
+    await send_timetable_info(ctx, "location", location_id, miru_client, session_client)
 
 
 @timetable.include
@@ -257,8 +265,9 @@ async def club_command(
         ),
     ],
     miru_client: miru.Client = arc.inject(),
+    session_client: aiohttp.ClientSession = arc.inject(),
 ) -> None:
-    await send_timetable_info(ctx, "club", club_name, miru_client)
+    await send_timetable_info(ctx, "club", club_name, miru_client, session_client)
 
 
 @timetable.include
@@ -276,8 +285,9 @@ async def society_command(
         ),
     ],
     miru_client: miru.Client = arc.inject(),
+    session_client: aiohttp.ClientSession = arc.inject(),
 ) -> None:
-    await send_timetable_info(ctx, "society", society_name, miru_client)
+    await send_timetable_info(ctx, "society", society_name, miru_client, session_client)
 
 
 @arc.loader
