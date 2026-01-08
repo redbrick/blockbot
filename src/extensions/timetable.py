@@ -17,6 +17,66 @@ timetable = plugin.include_slash_group(
 )
 
 
+class TimetableSelect(miru.TextSelect):
+    def __init__(
+        self, timetable_type: str, *, options: list[miru.SelectOption]
+    ) -> None:
+        self.timetable_type = timetable_type
+
+        super().__init__(
+            options=options,
+            custom_id="timetable_select",
+            placeholder="Choose an option...",
+            min_values=1,
+            max_values=1,
+        )
+
+    async def callback(self, ctx: miru.ViewContext) -> None:
+        selected_identity = self.values[0]
+        selected_option = next(
+            opt for opt in self.options if opt.value == selected_identity
+        )
+
+        ics_url = await _get_ics_link(self.timetable_type, selected_identity)
+
+        embed = hikari.Embed(
+            title=f"Timetable for {selected_option.label}",
+            description=f"[Download ICS]({ics_url}) \n \n URL for calendar subscription: ```{ics_url}```",
+            color=Colour.BRICKIE_BLUE,
+        ).set_footer(text="Powered by TimetableSync")
+
+        await ctx.edit_response(embed=embed, components=[])
+        self.view.stop()
+
+
+class TimetableSelectView(miru.View):
+    def __init__(self, user_id: int) -> None:
+        self.user_id = user_id
+        super().__init__(timeout=60)
+
+    async def view_check(self, ctx_sub: miru.ViewContext) -> bool:
+        # This view will only handle interactions that belong to the
+        # user who originally ran the command.
+        # For every other user they will receive an error message.
+        if ctx_sub.user.id != self.user_id:
+            await ctx_sub.respond(
+                "You can't press this!",
+                flags=hikari.MessageFlag.EPHEMERAL,
+            )
+            return False
+
+        return True
+
+    async def on_timeout(self) -> None:
+        message = self.message
+
+        # Since the view is bound to a message, we can assert it's not None
+        assert message
+
+        await message.edit("Interaction Timed Out", components=[], embed=None)
+        self.stop()
+
+
 async def _get_matching_fields(
     timetable_type: str, user_data: str, session: aiohttp.ClientSession
 ) -> tuple[list[dict[str, str]], int]:
@@ -27,14 +87,16 @@ async def _get_matching_fields(
         return await resp.json(), resp.status
 
 
-async def _get_ics_link(timetable_type: str, match: dict[str, str]) -> str:
+async def _get_ics_link(timetable_type: str, identity: str) -> str:
     """Generate the ICS link for the matched timetable using its identity."""
     if timetable_type not in {"club", "society"}:
-        ics_url = f"https://timetable.redbrick.dcu.ie/api?{timetable_type!s}s={match['identity']}"
+        ics_url = f"https://timetable.redbrick.dcu.ie/api?{timetable_type}s={identity}"
     else:
         if timetable_type == "society":
             timetable_type = "societie"
-        ics_url = f"https://timetable.redbrick.dcu.ie/api/cns?{timetable_type!s}s={match['identity']}"
+        ics_url = (
+            f"https://timetable.redbrick.dcu.ie/api/cns?{timetable_type}s={identity}"
+        )
 
     return ics_url
 
@@ -50,10 +112,11 @@ async def _timetable_response(
 
     # Display a message and ask for clarification if there are more than 25 matches.
     if len(matching_fields) > MAX_DROPDOWN_OPTIONS:
-        base_text = f"Multiple {timetable_type!s}s matched your query. Please be more specific:\n"
+        base_text = (
+            f"Multiple {timetable_type}s matched your query. Please be more specific:\n"
+        )
         choices_lines = [
-            f"- {item.get('name', '')} (ID: {item['identity']})"
-            for item in matching_fields
+            f"- {item['name']} (ID: {item['identity']})" for item in matching_fields
         ]
         choices_str = ""
         for line in choices_lines:
@@ -72,78 +135,27 @@ async def _timetable_response(
 
     # Display a dropdown if there are between 2 and 25 matches.
     if 1 < len(matching_fields) <= MAX_DROPDOWN_OPTIONS:
-
-        class TimetableSelectView(miru.View):
-            def __init__(self, user_id: int) -> None:
-                self.user_id = user_id
-                super().__init__(timeout=60)
-
-            @miru.text_select(
-                custom_id="timetable_select",
-                placeholder="Choose an option..",
-                min_values=1,
-                max_values=1,
-                options=[
-                    miru.SelectOption(
-                        label=item.get("name", ""),
-                        value=item["identity"],
-                        description=f"ID: {item['identity']}",
-                    )
-                    for item in matching_fields
-                ],
-            )
-            async def on_select(
-                self, ctx_sub: miru.ViewContext, select: miru.TextSelect
-            ) -> None:
-                selected_id = select.values[0]
-                # Delete original message
-                await ctx_sub.message.delete()
-                # Recalling the timetable response with the selected option
-                await _timetable_response(
-                    ctx,
-                    timetable_type,
-                    user_data,
-                    [
-                        {
-                            "name": next(
-                                item.get("name", "")
-                                for item in matching_fields
-                                if item["identity"] == selected_id
-                            ),
-                            "identity": select.values[0],
-                        }
-                    ],
-                    miru_client,
-                )
-
-            async def view_check(self, ctx_sub: miru.ViewContext) -> bool:
-                # This view will only handle interactions that belong to the
-                # user who originally ran the command.
-                # For every other user they will receive an error message.
-                if ctx_sub.user.id != self.user_id:
-                    await ctx_sub.respond(
-                        "You can't press this!",
-                        flags=hikari.MessageFlag.EPHEMERAL,
-                    )
-                    return False
-
-                return True
-
-            async def on_timeout(self) -> None:
-                message = self.message
-
-                # Since the view is bound to a message, we can assert it's not None
-                assert message
-
-                await message.edit("Interaction Timed Out", components=[], embed=None)
-                self.stop()
-
         embed = hikari.Embed(
             title="Multiple Matches Found",
             description="Please select the correct option from the dropdown below.",
             color=Colour.GERRY_YELLOW,
         )
         view = TimetableSelectView(ctx.user.id)
+
+        view.add_item(
+            TimetableSelect(
+                timetable_type=timetable_type,
+                options=[
+                    miru.SelectOption(
+                        label=item["name"],
+                        value=item["identity"],
+                        description=f"ID: {item['identity']}",
+                    )
+                    for item in matching_fields
+                ],
+            )
+        )
+
         response = await ctx.respond(embed=embed, components=view)
         miru_client.start_view(view, bind_to=await response.retrieve_message())
         return
@@ -151,10 +163,10 @@ async def _timetable_response(
     # Display the timetable ICS link if there is exactly one match.
     if len(matching_fields) == 1:
         match: dict[str, str] = matching_fields[0]
-        ics_url = await _get_ics_link(timetable_type, match)
+        ics_url = await _get_ics_link(timetable_type, match["identity"])
 
         embed = hikari.Embed(
-            title=f"Timetable for {match.get('name', '')}",
+            title=f"Timetable for {match['name']}",
             description=f"[Download ICS]({ics_url}) \n \n URL for calendar subscription: ```{ics_url}```",
             color=Colour.BRICKIE_BLUE,
         ).set_footer(text="Powered by TimetableSync")
@@ -164,7 +176,7 @@ async def _timetable_response(
 
     embed = hikari.Embed(
         title=f"{str(timetable_type).capitalize()} Not Found",
-        description=f"No {timetable_type!s} found matching '{user_data}'. Please check the {timetable_type!s} code/name and try again",
+        description=f"No {timetable_type} found matching '{user_data}'. Please check the {timetable_type} code/name and try again",
         color=Colour.REDBRICK_RED,
     )
     await ctx.respond(embed=embed)
