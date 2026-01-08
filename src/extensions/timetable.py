@@ -30,11 +30,11 @@ async def _get_matching_fields(
 async def _get_ics_link(timetable_type: str, match: dict[str, str]) -> str:
     """Generate the ICS link for the matched timetable using its identity."""
     if timetable_type not in {"club", "society"}:
-        ics_url = f"https://timetable.redbrick.dcu.ie/api?{timetable_type!s}s={match.get('identity', '')}"
+        ics_url = f"https://timetable.redbrick.dcu.ie/api?{timetable_type!s}s={match['identity']}"
     else:
         if timetable_type == "society":
             timetable_type = "societie"
-        ics_url = f"https://timetable.redbrick.dcu.ie/api/cns?{timetable_type!s}s={match.get('identity', '')}"
+        ics_url = f"https://timetable.redbrick.dcu.ie/api/cns?{timetable_type!s}s={match['identity']}"
 
     return ics_url
 
@@ -52,7 +52,7 @@ async def _timetable_response(
     if len(matching_fields) > MAX_DROPDOWN_OPTIONS:
         base_text = f"Multiple {timetable_type!s}s matched your query. Please be more specific:\n"
         choices_lines = [
-            f"- {item.get('name', '')} (ID: {item.get('identity', '')})"
+            f"- {item.get('name', '')} (ID: {item['identity']})"
             for item in matching_fields
         ]
         choices_str = ""
@@ -86,8 +86,8 @@ async def _timetable_response(
                 options=[
                     miru.SelectOption(
                         label=item.get("name", ""),
-                        value=item.get("identity", ""),
-                        description=f"ID: {item.get('identity', '')}",
+                        value=item["identity"],
+                        description=f"ID: {item['identity']}",
                     )
                     for item in matching_fields
                 ],
@@ -108,7 +108,7 @@ async def _timetable_response(
                             "name": next(
                                 item.get("name", "")
                                 for item in matching_fields
-                                if item.get("identity", "") == selected_id
+                                if item["identity"] == selected_id
                             ),
                             "identity": select.values[0],
                         }
