@@ -75,15 +75,16 @@ class TimetableSelectView(miru.View):
 
 async def _get_matching_fields(
     timetable_type: str, user_data: str, session: aiohttp.ClientSession
-) -> tuple[list[dict[str, str]], int]:
+) -> list[dict[str, str]]:
     """Fetch matching fields from the timetable API using the ?query."""
     async with session.get(
         f"https://timetable.redbrick.dcu.ie/api/all/{timetable_type}?query={user_data}"
     ) as resp:
-        return await resp.json(), resp.status
+        resp.raise_for_status()
+        return await resp.json()
 
 
-async def _get_ics_link(timetable_type: str, identity: str) -> str:
+def _get_ics_link(timetable_type: str, identity: str) -> str:
     """Generate the ICS link for the matched timetable using its identity."""
     if timetable_type not in {"club", "society"}:
         ics_url = f"https://timetable.redbrick.dcu.ie/api?{timetable_type}s={identity}"
@@ -101,7 +102,7 @@ async def _create_ics_embed(
     timetable_type: str, identity: str, name: str
 ) -> hikari.Embed:
     """Create an embed containing the ICS link for the timetable."""
-    ics_url = await _get_ics_link(timetable_type, identity)
+    ics_url = _get_ics_link(timetable_type, identity)
 
     return hikari.Embed(
         title=f"Timetable for {name}",
@@ -195,16 +196,10 @@ async def send_timetable_info(
     session_client: aiohttp.ClientSession,
 ) -> None:
     """Send timetable information based on the type and user data provided."""
-    matching_fields, status = await _get_matching_fields(
+
+    matching_fields = await _get_matching_fields(
         timetable_type, user_data, session_client
     )
-
-    if status != 200:
-        await ctx.respond(
-            f"❌ Failed to fetch timetable data. Status code: `{status}`",
-            flags=hikari.MessageFlag.EPHEMERAL,
-        )
-        return
 
     await _timetable_response(
         ctx, timetable_type, user_data, matching_fields, miru_client
@@ -220,6 +215,23 @@ async def timetable_command(
     await send_timetable_info(
         ctx, ctx.command.name, item_id, miru_client, session_client
     )
+
+
+@timetable.set_error_handler
+async def timetable_error_handler(ctx: BlockbotContext, error: Exception) -> None:
+    if isinstance(error, aiohttp.ClientResponseError):
+        await ctx.respond(
+            f"❌ Timetable API returned an error: `{error.status} {error.message}`",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
+        return
+    if isinstance(error, aiohttp.ClientError):
+        await ctx.respond(
+            "❌ Failed to connect to the Timetable API. Please try again later.",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
+        return
+    raise error
 
 
 @arc.loader
