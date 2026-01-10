@@ -36,16 +36,12 @@ class TimetableSelect(miru.TextSelect):
         selected_option = next(
             opt for opt in self.options if opt.value == selected_identity
         )
-
-        ics_url = await _get_ics_link(self.timetable_type, selected_identity)
-
-        embed = hikari.Embed(
-            title=f"Timetable for {selected_option.label}",
-            description=f"[Download ICS]({ics_url}) \n \n URL for calendar subscription: ```{ics_url}```",
-            color=Colour.BRICKIE_BLUE,
-        ).set_footer(text="Powered by TimetableSync")
-
-        await ctx.edit_response(embed=embed, components=[])
+        await ctx.edit_response(
+            embed=await _create_ics_embed(
+                self.timetable_type, selected_identity, selected_option.label
+            ),
+            components=[],
+        )
         self.view.stop()
 
 
@@ -99,6 +95,19 @@ async def _get_ics_link(timetable_type: str, identity: str) -> str:
         )
 
     return ics_url
+
+
+async def _create_ics_embed(
+    timetable_type: str, identity: str, name: str
+) -> hikari.Embed:
+    """Create an embed containing the ICS link for the timetable."""
+    ics_url = await _get_ics_link(timetable_type, identity)
+
+    return hikari.Embed(
+        title=f"Timetable for {name}",
+        description=f"[Download ICS]({ics_url}) \n \n URL for calendar subscription: ```{ics_url}```",
+        color=Colour.BRICKIE_BLUE,
+    ).set_footer(text="Powered by TimetableSync")
 
 
 async def _timetable_response(
@@ -163,15 +172,11 @@ async def _timetable_response(
     # Display the timetable ICS link if there is exactly one match.
     if len(matching_fields) == 1:
         match: dict[str, str] = matching_fields[0]
-        ics_url = await _get_ics_link(timetable_type, match["identity"])
-
-        embed = hikari.Embed(
-            title=f"Timetable for {match['name']}",
-            description=f"[Download ICS]({ics_url}) \n \n URL for calendar subscription: ```{ics_url}```",
-            color=Colour.BRICKIE_BLUE,
-        ).set_footer(text="Powered by TimetableSync")
-
-        await ctx.respond(embed=embed)
+        await ctx.respond(
+            embed=await _create_ics_embed(
+                timetable_type, match["identity"], match["name"]
+            )
+        )
         return
 
     embed = hikari.Embed(
