@@ -23,6 +23,7 @@ async def gerry_command(
 
     embed = hikari.Embed(
         title="Gerry",
+        url="https://s.rb.dcu.ie/gerry",
         description=description,
         colour=Colour.GERRY_YELLOW,
     )
