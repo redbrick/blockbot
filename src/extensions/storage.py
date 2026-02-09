@@ -68,13 +68,13 @@ async def upload_command(
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
             return
-
         data = await response.read()
         minio_client.put_object(
             bucket_name,
             file.filename,
             io.BytesIO(data),
-            len(data)
+            len(data),
+            content_type=response.content_type
         )
     await ctx.respond(
         f"✅ File `{file.filename}` uploaded successfully as `{file.filename}`.",
