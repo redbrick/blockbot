@@ -17,10 +17,19 @@ minio_client = Minio(
     secure=False
 )
 
+async def get_bucket_choices(ctx: arc.AutocompleteData) -> list[str]:
+    """Fetch available buckets from MinIO for autocomplete."""
+    try:
+        response = minio_client.list_buckets()
+        return [bucket.name for bucket in response]
+    except S3Error:
+        return []
+
 @minio.include
 @arc.slash_command("upload", "Upload a file to the storage server.")
 async def upload_command(
         ctx: BlockbotContext,
+        bucket_name: arc.Option[str, arc.StrParams("The bucket to add the files to.", autocomplete_with=get_bucket_choices)],
         file: arc.Option[hikari.Attachment, arc.AttachmentParams("The file to upload.")],
         aiohttp_client: aiohttp.ClientSession = arc.inject(),
 ) -> None:
@@ -34,11 +43,6 @@ async def upload_command(
 
     # The file to upload, change this path if needed
     source_file = file.url
-
-    # await ctx.respond(minio_client.list_buckets() or "Nope")
-
-    # The destination bucket and filename on the MinIO server
-    bucket_name = "python-test-bucket"
 
     # Make the bucket if it doesn't exist.
     found = minio_client.bucket_exists(bucket_name)
