@@ -4,9 +4,9 @@ import aiohttp
 import arc
 import hikari
 from arc.internal.types import ChoiceT, ClientT
-
 from minio import Minio
 from minio.error import S3Error
+
 from src.config import (
     MINIO_ACCESS_KEY,
     MINIO_ENDPOINT,
