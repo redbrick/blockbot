@@ -5,7 +5,7 @@ from src.config import Colour
 from src.models import BlockbotContext, BlockbotPlugin, command_loader
 
 IMAGE = "https://cdn.redbrick.dcu.ie/blockbot/gerry.jpg"
-GERRY_VIDEO_URL = "https://www.youtube.com/watch?v=RdiUq3eoSNc"
+GERRY_VIDEO_URL = "https://s.rb.dcu.ie/gerry"
 
 
 @arc.slash_command("gerry", "So tell me Frank!")
