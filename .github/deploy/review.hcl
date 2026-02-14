@@ -46,6 +46,12 @@ DB_PASSWORD={{ key "blockbot-dev/db/password" }}
 DB_USER={{ key "blockbot-dev/db/user" }}
 
 RCON_ENABLED=false
+
+MINIO_ENDPOINT={{ key "blockbot/minio/endpoint" }}
+MINIO_SECURE={{ key "blockbot/minio/secure" }}
+MINIO_REGION={{ key "blockbot/minio/region" }}
+MINIO_ACCESS_KEY={{ key "blockbot/minio/access_key" }}
+MINIO_SECRET_KEY={{ key "blockbot/minio/secret_key" }}
 EOF
       }
     }

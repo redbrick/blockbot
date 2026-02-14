@@ -193,5 +193,12 @@ RCON_PASSWORD = get_env_var("RCON_PASSWORD", required_features=[Feature.RCON])
 MINIO_ENDPOINT = get_env_var(
     "MINIO_ENDPOINT", required_features=[Feature.MINIO], default="localhost:9000"
 )
+MINIO_SECURE = get_env_var(
+    "MINIO_SECURE",
+    required_features=[Feature.MINIO],
+    conv=convert_to_bool,
+    default=False,
+)
+MINIO_REGION = get_env_var("MINIO_REGION", required_features=[Feature.MINIO])
 MINIO_ACCESS_KEY = get_env_var("MINIO_ACCESS_KEY", required_features=[Feature.MINIO])
 MINIO_SECRET_KEY = get_env_var("MINIO_SECRET_KEY", required_features=[Feature.MINIO])

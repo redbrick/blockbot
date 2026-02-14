@@ -10,7 +10,9 @@ from minio.error import S3Error
 from src.config import (
     MINIO_ACCESS_KEY,
     MINIO_ENDPOINT,
+    MINIO_REGION,
     MINIO_SECRET_KEY,
+    MINIO_SECURE,
     ROLE_IDS,
     Feature,
 )
@@ -21,9 +23,10 @@ minio = BlockbotPlugin(name="minio", required_features=[Feature.MINIO])
 
 minio_client = Minio(
     MINIO_ENDPOINT,
+    region=MINIO_REGION,
     access_key=MINIO_ACCESS_KEY,
     secret_key=MINIO_SECRET_KEY,
-    secure=False,
+    secure=MINIO_SECURE,
 )
 
 
