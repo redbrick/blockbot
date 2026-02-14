@@ -82,6 +82,9 @@ async def upload_command(
         )
         return
 
+    # Normalize path
+    path = path.rstrip("/") if path else ""
+
     if path and not path.endswith("/"):
         path += "/"
 
@@ -98,7 +101,7 @@ async def upload_command(
         return
 
     # Check if path to the folder is valid and exists in the bucket
-    if not minio_prefix_exists(bucket_name, path):
+    if path and not minio_prefix_exists(bucket_name, path):
         await ctx.respond(
             f"❌ The specified path `{path}` does not exist in bucket `{bucket_name}`.",
             flags=hikari.MessageFlag.EPHEMERAL,
