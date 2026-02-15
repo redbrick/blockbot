@@ -69,10 +69,10 @@ async def upload_command(
             "The bucket to add the files to.", autocomplete_with=get_bucket_choices
         ),
     ],
+    file: arc.Option[hikari.Attachment, arc.AttachmentParams("The file to upload.")],
     path: arc.Option[
         str, arc.StrParams("The path to the folder to save the file. (e.g. `folder/`)")
-    ],
-    file: arc.Option[hikari.Attachment, arc.AttachmentParams("The file to upload.")],
+    ] = "/",
     aiohttp_client: aiohttp.ClientSession = arc.inject(),
 ) -> None:
     if not file:
