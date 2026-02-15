@@ -124,8 +124,13 @@ async def upload_command(
             len(data),
             content_type=response.content_type,
         )
+
+    protocol = "https://" if MINIO_SECURE else "http://"
+    file_path = f"{bucket_name}/{path}{file.filename}"
+    link = f"{protocol}{MINIO_ENDPOINT}/{file_path}"
+
     await ctx.respond(
-        f"✅ File `{file.filename}` uploaded successfully at `{bucket_name}/{path}{file.filename}`.",
+        f"✅ File `{file.filename}` uploaded successfully at `{file_path}`. \nLink: {link}",
         flags=hikari.MessageFlag.EPHEMERAL,
     )
 
