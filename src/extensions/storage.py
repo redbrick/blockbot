@@ -4,8 +4,8 @@ import aiohttp
 import arc
 import hikari
 from arc.internal.types import ChoiceT, ClientT
-from minio import Minio
-from minio.error import S3Error
+from miniopy_async.api import Minio
+from miniopy_async.error import S3Error
 
 from src.config import (
     MINIO_ACCESS_KEY,
@@ -40,22 +40,22 @@ async def get_bucket_choices(ctx: arc.AutocompleteData[ClientT, ChoiceT]) -> lis
     if ROLE_IDS["committee"] not in ctx.interaction.member.role_ids:
         return []
 
-    response = minio_client.list_buckets()
+    response = await minio_client.list_buckets()
     buckets = [bucket.name for bucket in response]
     if ctx.focused_value:
         buckets = [b for b in buckets if str(ctx.focused_value).lower() in b.lower()]
     return buckets[:25]
 
 
-def minio_prefix_exists(bucket_name: str, prefix: str) -> bool:
+async def minio_prefix_exists(bucket_name: str, prefix: str) -> bool:
     """Check if a prefix (folder) exists in a MinIO bucket."""
 
-    objects = minio_client.list_objects(bucket_name, prefix=prefix, recursive=True)
-    try:
-        next(objects)  # Will raise StopIteration if no object exists
+    objects = await minio_client.list_objects(
+        bucket_name, prefix=prefix, recursive=True
+    )
+    for _ in objects:
         return True
-    except StopIteration:
-        return False
+    return False
 
 
 @minio.include
@@ -75,7 +75,6 @@ async def upload_command(
     ] = "/",
     aiohttp_client: aiohttp.ClientSession = arc.inject(),
 ) -> None:
-
     # Normalize path
     path = path.rstrip("/") if path else ""
 
@@ -86,7 +85,7 @@ async def upload_command(
     source_file = file.url
 
     # Check if bucket exists in MinIO
-    found = minio_client.bucket_exists(bucket_name)
+    found = await minio_client.bucket_exists(bucket_name)
     if not found:
         await ctx.respond(
             f"❌ Bucket `{bucket_name}` does not exist on the storage server.",
@@ -95,7 +94,7 @@ async def upload_command(
         return
 
     # Check if path to the folder is valid and exists in the bucket
-    if path and not minio_prefix_exists(bucket_name, path):
+    if path and not await minio_prefix_exists(bucket_name, path):
         await ctx.respond(
             f"❌ The specified path `{path}` does not exist in bucket `{bucket_name}`.",
             flags=hikari.MessageFlag.EPHEMERAL,
@@ -111,7 +110,7 @@ async def upload_command(
             )
             return
         data = await response.read()
-        minio_client.put_object(
+        await minio_client.put_object(
             bucket_name,
             f"{path}{file.filename}",
             io.BytesIO(data),

@@ -20,7 +20,7 @@ dependencies = [
     "python-dotenv>=1.0.1",
     "sqlalchemy>=2.0.39",
     "rcon>=2.4.9",
-    "minio>=7.2.20",
+    "miniopy-async>=1.23.4",
 ]
 
 [project.urls]
