@@ -5,6 +5,7 @@ from src.config import Colour
 from src.models import BlockbotContext, BlockbotPlugin, command_loader
 
 IMAGE = "https://cdn.redbrick.dcu.ie/blockbot/gerry.jpg"
+GERRY_VIDEO_URL = "https://s.rb.dcu.ie/gerry"
 
 
 @arc.slash_command("gerry", "So tell me Frank!")
@@ -24,6 +25,7 @@ async def gerry_command(
     embed = hikari.Embed(
         title="Gerry",
         description=description,
+        url=GERRY_VIDEO_URL,
         colour=Colour.GERRY_YELLOW,
     )
     embed = embed.set_image(IMAGE)
