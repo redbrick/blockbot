@@ -75,12 +75,6 @@ async def upload_command(
     ] = "/",
     aiohttp_client: aiohttp.ClientSession = arc.inject(),
 ) -> None:
-    if not file:
-        await ctx.respond(
-            "❌ Please attach a file to upload.",
-            flags=hikari.MessageFlag.EPHEMERAL,
-        )
-        return
 
     # Normalize path
     path = path.rstrip("/") if path else ""
