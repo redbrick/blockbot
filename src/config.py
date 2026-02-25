@@ -19,6 +19,7 @@ class Feature(StrEnum):
     LDAP = "LDAP_ENABLED"
     PERMISSION_HOOKS = "PERMS_ENABLED"
     RCON = "RCON_ENABLED"
+    MINIO = "MINIO_ENABLED"
 
     @property
     def enabled(self) -> bool:
@@ -188,3 +189,16 @@ AGENDA_TEMPLATE_URL = get_env_var(
 RCON_HOST = get_env_var("RCON_HOST", required_features=[Feature.RCON])
 RCON_PORT = get_env_var("RCON_PORT", required_features=[Feature.RCON], conv=int)
 RCON_PASSWORD = get_env_var("RCON_PASSWORD", required_features=[Feature.RCON])
+
+MINIO_ENDPOINT = get_env_var(
+    "MINIO_ENDPOINT", required_features=[Feature.MINIO], default="localhost:9000"
+)
+MINIO_SECURE = get_env_var(
+    "MINIO_SECURE",
+    required_features=[Feature.MINIO],
+    conv=convert_to_bool,
+    default=False,
+)
+MINIO_REGION = get_env_var("MINIO_REGION", required_features=[Feature.MINIO])
+MINIO_ACCESS_KEY = get_env_var("MINIO_ACCESS_KEY", required_features=[Feature.MINIO])
+MINIO_SECRET_KEY = get_env_var("MINIO_SECRET_KEY", required_features=[Feature.MINIO])

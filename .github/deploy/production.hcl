@@ -48,6 +48,12 @@ RCON_HOST=vanilla-mc-rcon.service.consul
 {{ range service "vanilla-mc-rcon" }}
 RCON_PORT={{ .Port }}{{ end }}
 RCON_PASSWORD={{ key "games/mc/vanilla-mc/rcon/password" }}
+
+MINIO_ENDPOINT={{ key "blockbot/minio/endpoint" }}
+MINIO_SECURE={{ key "blockbot/minio/secure" }}
+MINIO_REGION={{ key "blockbot/minio/region" }}
+MINIO_ACCESS_KEY={{ key "blockbot/minio/access_key" }}
+MINIO_SECRET_KEY={{ key "blockbot/minio/secret_key" }}
 EOF
       }
     }
