@@ -76,6 +76,7 @@ ignore = [
     "PLR2004", # magic-value-comparison
     "PLR0913", # too-many-arguments
     "COM812", # missing-trailing-comma
+    "TC002", # typing-only-third-party-import
 ]
 
 [tool.ruff.lint.pydocstyle]
