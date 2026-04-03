@@ -22,7 +22,7 @@ jobs:
     if: github.ref != 'refs/heads/main' && github.event_name == 'push'
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v4
       - run: |
           levant deploy \
           -var git_sha="${GITHUB_SHA}" \
@@ -50,7 +50,7 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v4
       - run: |
           levant deploy \
           -var git_sha="${GITHUB_SHA}" \
