@@ -60,7 +60,11 @@ async def minio_prefix_exists(bucket_name: str, prefix: str) -> bool:
 
 @minio.include
 @arc.with_hook(restrict_to_roles(role_ids=[ROLE_IDS["committee"]]))
-@arc.slash_command("upload", "Upload a file to the storage server.")
+@arc.slash_command(
+    "upload",
+    "Upload a file to the storage server.",
+    autodefer=arc.AutodeferMode.EPHEMERAL,
+)
 async def upload_command(
     ctx: BlockbotContext,
     bucket_name: arc.Option[
