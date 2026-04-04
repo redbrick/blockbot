@@ -1,4 +1,5 @@
 import logging
+import traceback
 
 import aiohttp
 import arc
@@ -53,17 +54,16 @@ async def on_stop(
 
 
 @client.set_error_handler
-async def error_handler(ctx: BlockbotContext, exc: Exception) -> None:
+async def error_handler(ctx: BlockbotContext, exc: Exception) -> None:  # noqa: ARG001
+    traceback_str = traceback.format_exc()
+
     if DEBUG:
-        message = f"```{exc}```"
+        message = f"```{traceback_str}```"
     else:
         message = "If this persists, create an issue at <https://webgroup-issues.redbrick.dcu.ie/>."
 
-    # TODO: check double response?
     await ctx.respond(f"❌ Blockbot encountered an unhandled exception. {message}")
-    logger.error(exc)
-
-    raise exc
+    logger.error(traceback_str)
 
 
 @client.add_startup_hook
