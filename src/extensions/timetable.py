@@ -73,12 +73,21 @@ class TimetableSelectView(miru.View):
         self.stop()
 
 
+def _get_group_type(timetable_type: str) -> str:
+    if timetable_type in {"club", "society"}:
+        return "cns"
+
+    return "timetable"
+
+
 async def _get_matching_fields(
     timetable_type: str, user_data: str, session: aiohttp.ClientSession
 ) -> list[dict[str, str]]:
     """Fetch matching fields from the timetable API using the ?query."""
+    group_type = _get_group_type(timetable_type)
+
     async with session.get(
-        f"https://timetable.redbrick.dcu.ie/api/all/{timetable_type}?query={user_data}"
+        f"https://timetable.redbrick.dcu.ie/api/v3/{group_type}/category/{timetable_type}/items?query={user_data}"
     ) as resp:
         resp.raise_for_status()
         return await resp.json()
@@ -86,16 +95,8 @@ async def _get_matching_fields(
 
 def _get_ics_link(timetable_type: str, identity: str) -> str:
     """Generate the ICS link for the matched timetable using its identity."""
-    if timetable_type not in {"club", "society"}:
-        ics_url = f"https://timetable.redbrick.dcu.ie/api?{timetable_type}s={identity}"
-    else:
-        if timetable_type == "society":
-            timetable_type = "societie"
-        ics_url = (
-            f"https://timetable.redbrick.dcu.ie/api/cns?{timetable_type}s={identity}"
-        )
-
-    return ics_url
+    group_type = _get_group_type(timetable_type)
+    return f"https://timetable.redbrick.dcu.ie/api/v3/{group_type}/events?{timetable_type}={identity}"
 
 
 async def _create_ics_embed(
@@ -120,13 +121,16 @@ async def _timetable_response(
 ) -> None:
     """Handle the timetable response based on the number of matches."""
 
+    group_type = _get_group_type(timetable_type)
+
     # Display a message and ask for clarification if there are more than 25 matches.
     if len(matching_fields) > MAX_DROPDOWN_OPTIONS:
         base_text = (
             f"Multiple {timetable_type}s matched your query. Please be more specific:\n"
         )
         choices_lines = [
-            f"- {item['name']} (ID: {item['identity']})" for item in matching_fields
+            f"- {item['name']} (ID: {item['id'] if group_type == 'cns' else item['identity']})"
+            for item in matching_fields
         ]
         choices_str = ""
         for line in choices_lines:
@@ -158,8 +162,8 @@ async def _timetable_response(
                 options=[
                     miru.SelectOption(
                         label=item["name"],
-                        value=item["identity"],
-                        description=f"ID: {item['identity']}",
+                        value=item["id"] if group_type == "cns" else item["identity"],
+                        description=f"ID: {item['id'] if group_type == 'cns' else item['identity']}",
                     )
                     for item in matching_fields
                 ],
@@ -173,9 +177,12 @@ async def _timetable_response(
     # Display the timetable ICS link if there is exactly one match.
     if len(matching_fields) == 1:
         match: dict[str, str] = matching_fields[0]
+        group_type = _get_group_type(timetable_type)
         await ctx.respond(
             embed=await _create_ics_embed(
-                timetable_type, match["identity"], match["name"]
+                timetable_type,
+                match["id"] if group_type == "cns" else match["identity"],
+                match["name"],
             )
         )
         return
