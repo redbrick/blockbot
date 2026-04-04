@@ -4,6 +4,7 @@ services:
     restart: unless-stopped
     depends_on:
       - postgres
+      - minio
     env_file:
       - .env
 
