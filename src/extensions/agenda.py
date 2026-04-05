@@ -29,19 +29,39 @@ async def generate_date_choices(
     ]
 
 
-def generate_time_choices() -> list[str]:
-    """Generate time options in 30-minute intervals."""
-    base_time = datetime.time(0, 0)
-    times: list[str] = []
+# def generate_time_choices() -> list[str]:
+#     """Generate time options for every hour."""
+#     base_time = datetime.time(0, 0)
+#     times: list[str] = []
+#
+#     for hour in range(24):
+#         current_time = (
+#             datetime.datetime.combine(utcnow().today(), base_time)
+#             + datetime.timedelta(hours=hour * 30)
+#         ).time()
+#         times.append(current_time.strftime("%H:%M"))
+#
+#     return times
 
-    for interval in range(48):
-        current_time = (
+
+async def generate_time_autocomplete(
+    ctx: arc.AutocompleteData[arc.GatewayClient, str],
+) -> list[str]:
+    """Generate up to 25 matching half-hour time suggestions."""
+    base_time = datetime.time(0, 0)
+    times = [
+        (
             datetime.datetime.combine(utcnow().today(), base_time)
             + datetime.timedelta(minutes=interval * 30)
-        ).time()
-        times.append(current_time.strftime("%H:%M"))
-
-    return times
+        )
+        .time()
+        .strftime("%H:%M")
+        for interval in range(48)
+    ]
+    if ctx.focused_value:
+        focused_value = str(ctx.focused_value).strip()
+        times = [time for time in times if focused_value in time]
+    return times[:25]
 
 
 @agenda.include
@@ -70,7 +90,7 @@ async def gen_agenda(
         str,
         arc.StrParams(
             "Enter the time in HH:MM format.",
-            choices=generate_time_choices(),
+            autocomplete_with=generate_time_autocomplete,
         ),
     ],
     room: arc.Option[
@@ -93,11 +113,18 @@ async def gen_agenda(
         .replace(tzinfo=datetime.timezone.utc)
         .date()
     )
-    parsed_time = (
-        datetime.datetime.strptime(time, "%H:%M")
-        .replace(tzinfo=datetime.timezone.utc)
-        .time()
-    )
+    try:
+        parsed_time = (
+            datetime.datetime.strptime(time, "%H:%M")
+            .replace(tzinfo=datetime.timezone.utc)
+            .time()
+        )
+    except ValueError:
+        await ctx.respond(
+            "❌ Invalid time format. Please use `HH:MM` (e.g. `18:30`).",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
+        return
 
     parsed_datetime = datetime.datetime.combine(parsed_date, parsed_time)
 
