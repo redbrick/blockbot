@@ -39,7 +39,6 @@ async def generate_time_autocomplete(
             datetime.datetime.combine(utcnow().today(), base_time)
             + datetime.timedelta(minutes=interval * 30)
         )
-        .time()
         .strftime("%H:%M")
         for interval in range(48)
     ]
