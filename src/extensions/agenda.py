@@ -29,21 +29,6 @@ async def generate_date_choices(
     ]
 
 
-# def generate_time_choices() -> list[str]:
-#     """Generate time options for every hour."""
-#     base_time = datetime.time(0, 0)
-#     times: list[str] = []
-#
-#     for hour in range(24):
-#         current_time = (
-#             datetime.datetime.combine(utcnow().today(), base_time)
-#             + datetime.timedelta(hours=hour * 30)
-#         ).time()
-#         times.append(current_time.strftime("%H:%M"))
-#
-#     return times
-
-
 async def generate_time_autocomplete(
     ctx: arc.AutocompleteData[arc.GatewayClient, str],
 ) -> list[str]:
