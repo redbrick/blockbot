@@ -30,14 +30,14 @@ async def generate_date_choices(
 
 
 def generate_time_choices() -> list[str]:
-    """Generate time options for every hour."""
+    """Generate time options in 30-minute intervals."""
     base_time = datetime.time(0, 0)
     times: list[str] = []
 
-    for hour in range(24):
+    for interval in range(48):
         current_time = (
             datetime.datetime.combine(utcnow().today(), base_time)
-            + datetime.timedelta(hours=hour)
+            + datetime.timedelta(minutes=interval * 30)
         ).time()
         times.append(current_time.strftime("%H:%M"))
 
