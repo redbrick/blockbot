@@ -1,8 +1,11 @@
+import contextlib
 import datetime
+import typing
 
 import aiohttp
 import arc
 import hikari
+import miru
 
 from src.config import AGENDA_TEMPLATE_URL, CHANNEL_IDS, ROLE_IDS, UID_MAPS, Feature
 from src.hooks import restrict_to_channels, restrict_to_roles
@@ -17,6 +20,9 @@ from src.utils import (
 plugin = BlockbotPlugin(name="Agenda", required_features=[Feature.LDAP])
 
 agenda = plugin.include_slash_group("agenda", "Interact with the agenda.")
+
+POLL_MODE_CHOICES = ["yes_no", "custom"]
+CUSTOM_POLL_EMOJIS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣"]
 
 
 async def generate_date_choices(
@@ -45,6 +51,129 @@ async def generate_time_autocomplete(
         focused_value = str(ctx.focused_value).strip()
         times = [time for time in times if focused_value in time]
     return times[:25]
+
+
+def parse_custom_poll_options(raw_options: str | None) -> list[str] | None:
+    """Parse custom poll options into a unique list."""
+    if not raw_options:
+        return None
+
+    parsed_options = [opt.strip() for opt in raw_options.split(",") if opt.strip()]
+    unique_options = list(dict.fromkeys(parsed_options))
+
+    if not 2 <= len(unique_options) <= 5:
+        return None
+    return unique_options
+
+
+async def post_reaction_poll(*, question: str, options: list[str]) -> None:
+    """Post a reaction-based poll in committee-announcements."""
+    option_emojis = ["👍", "👎"] if options == ["Yes", "No"] else CUSTOM_POLL_EMOJIS
+    selected_emojis = option_emojis[: len(options)]
+
+    poll_lines = "\n".join(
+        f"{emoji} {option}"
+        for emoji, option in zip(selected_emojis, options, strict=True)
+    )
+    poll_message = await plugin.client.rest.create_message(
+        CHANNEL_IDS["committee-announcements"],
+        mentions_everyone=False,
+        user_mentions=False,
+        role_mentions=False,
+        content=f"## 📊 Poll: {question}\n{poll_lines}\n\nReact below to vote.",
+    )
+
+    for emoji in selected_emojis:
+        await plugin.client.rest.add_reaction(
+            channel=poll_message.channel_id,
+            message=poll_message.id,
+            emoji=emoji,
+        )
+
+
+async def post_poll(*, question: str, options: list[str]) -> None:
+    """Post a native Discord poll, falling back to reactions if unavailable."""
+    from hikari.impl.special_endpoints import PollBuilder
+
+    try:
+        poll = PollBuilder(
+            question_text=question,
+            allow_multiselect=False,
+            duration=24,
+        )
+        for option in options:
+            poll.add_answer(text=option)
+
+        await plugin.client.rest.create_message(
+            CHANNEL_IDS["committee-announcements"],
+            poll=poll,
+        )
+        return
+    except Exception:
+        pass
+
+    await post_reaction_poll(question=question, options=options)
+
+
+class AgendaConfirmView(miru.View):
+    def __init__(
+        self,
+        *,
+        author_id: int,
+        on_confirm: typing.Callable[[], typing.Awaitable[str]],
+    ) -> None:
+        self.author_id = author_id
+        self.on_confirm = on_confirm
+        super().__init__(timeout=120)
+
+    async def disable_all(self) -> None:
+        for item in self.children:
+            item.disabled = True
+
+        if self.message is None:
+            return
+
+        with contextlib.suppress(hikari.NotFoundError):
+            await self.message.edit(components=self)
+
+    async def on_timeout(self) -> None:
+        await self.disable_all()
+        self.stop()
+
+    @miru.button(label="Confirm", style=hikari.ButtonStyle.SUCCESS, custom_id="agenda_confirm")
+    async def confirm_post(self, ctx: miru.ViewContext, _: miru.Button) -> None:
+        if ctx.user.id != self.author_id:
+            await ctx.respond(
+                "You are not allowed to confirm this action.",
+                flags=hikari.MessageFlag.EPHEMERAL,
+            )
+            return
+
+        try:
+            response_text = await self.on_confirm()
+        except aiohttp.ClientResponseError as error:
+            response_text = (
+                "❌ Failed to post agenda/poll. "
+                f"Upstream returned status `{error.status}`."
+            )
+        except Exception:
+            response_text = "❌ Failed to post agenda/poll due to an unexpected error."
+        await self.disable_all()
+        await ctx.edit_response(response_text, components=self)
+        self.stop()
+
+    @miru.button(label="Cancel", style=hikari.ButtonStyle.DANGER, custom_id="agenda_cancel")
+    async def cancel_post(self, ctx: miru.ViewContext, _: miru.Button) -> None:
+        if ctx.user.id != self.author_id:
+            await ctx.respond(
+                "You are not allowed to cancel this action.",
+                flags=hikari.MessageFlag.EPHEMERAL,
+            )
+            return
+
+        await self.disable_all()
+        await ctx.edit_response("❌ Agenda generation cancelled.", components=self)
+        self.stop()
 
 
 @agenda.include
@@ -83,10 +212,30 @@ async def gen_agenda(
     note: arc.Option[
         str | None, arc.StrParams("Optional note to be included in the announcement.")
     ] = None,
+    add_poll: arc.Option[
+        bool,
+        arc.BoolParams("Add a poll to committee-announcements?"),
+    ] = False,
+    poll_mode: arc.Option[
+        str,
+        arc.StrParams(
+            "Poll mode (`yes_no` or `custom`).",
+            choices=POLL_MODE_CHOICES,
+        ),
+    ] = "yes_no",
+    poll_question: arc.Option[
+        str | None,
+        arc.StrParams("Poll question (required when `add_poll` is enabled)."),
+    ] = None,
+    poll_options: arc.Option[
+        str | None,
+        arc.StrParams("Comma-separated custom poll options (2-5 options)."),
+    ] = None,
     url: arc.Option[
         str,
         arc.StrParams("URL of the agenda template from the MD"),
     ] = AGENDA_TEMPLATE_URL,  # pyright: ignore[reportArgumentType] - it is guaranteed to exist because of runtime checks!
+    miru_client: miru.Client = arc.inject(),
     aiohttp_client: aiohttp.ClientSession = arc.inject(),
 ) -> None:
     """Generate a new agenda for committee meetings."""
@@ -114,6 +263,28 @@ async def gen_agenda(
     formatted_date = parsed_datetime.strftime("%Y-%m-%d")
     formatted_time = parsed_datetime.strftime("%H:%M")
     formatted_datetime = parsed_datetime.strftime("%A, %Y-%m-%d %H:%M")
+
+    parsed_poll_options: list[str] = []
+    if add_poll:
+        cleaned_question = (poll_question or "").strip()
+        if not cleaned_question:
+            await ctx.respond(
+                "❌ `poll_question` is required when `add_poll` is enabled.",
+                flags=hikari.MessageFlag.EPHEMERAL,
+            )
+            return
+
+        if poll_mode == "custom":
+            custom_options = parse_custom_poll_options(poll_options)
+            if custom_options is None:
+                await ctx.respond(
+                    "❌ `poll_options` must contain 2-5 unique, non-empty comma-separated values.",
+                    flags=hikari.MessageFlag.EPHEMERAL,
+                )
+                return
+            parsed_poll_options = custom_options
+        else:
+            parsed_poll_options = ["Yes", "No"]
 
     try:
         content = await get_md_content(url, aiohttp_client)
@@ -161,25 +332,62 @@ async def gen_agenda(
     if note:
         announce_text += f"## Note:\n{note}"
 
-    announce = await plugin.client.rest.create_message(
-        CHANNEL_IDS["committee-announcements"],
-        mentions_everyone=False,
-        user_mentions=True,
-        role_mentions=True,
-        content=announce_text,
+    async def send_agenda_and_poll() -> str:
+        announce = await plugin.client.rest.create_message(
+            CHANNEL_IDS["committee-announcements"],
+            mentions_everyone=False,
+            user_mentions=True,
+            role_mentions=True,
+            content=announce_text,
+        )
+
+        try:
+            await plugin.client.rest.add_reaction(
+                channel=announce.channel_id,
+                message=announce.id,
+                emoji=hikari.CustomEmoji.parse("<:bigRed:634311607039819776>"),
+            )
+        except (hikari.BadRequestError, hikari.NotFoundError, hikari.ForbiddenError):
+            await plugin.client.rest.add_reaction(
+                channel=announce.channel_id,
+                message=announce.id,
+                emoji="🧱",
+            )
+
+        if add_poll:
+            await post_poll(
+                question=(poll_question or "").strip(),
+                options=parsed_poll_options,
+            )
+            return "✅ Agenda generated and poll posted successfully!"
+
+        return "✅ Agenda generated. Announcement sent successfully!"
+
+    if not add_poll:
+        await ctx.respond(
+            await send_agenda_and_poll(),
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
+        return
+
+    preview_options = "\n".join(f"- {option}" for option in parsed_poll_options)
+    confirmation_text = (
+        "## Confirm agenda + poll post\n"
+        f"- Date/Time: `{formatted_datetime}`\n"
+        f"- Room: `{room}`\n"
+        f"- Poll mode: `{poll_mode}`\n"
+        f"- Poll question: `{(poll_question or '').strip()}`\n"
+        f"- Poll options:\n{preview_options}\n\n"
+        "Use the buttons below to confirm or cancel."
     )
 
-    await plugin.client.rest.add_reaction(
-        channel=announce.channel_id,
-        message=announce.id,
-        emoji=hikari.CustomEmoji.parse("<:bigRed:634311607039819776>"),
-    )
-
-    # respond with success if it executes successfully
-    await ctx.respond(
-        "✅ Agenda generated. Announcement sent successfully!",
+    view = AgendaConfirmView(author_id=ctx.user.id, on_confirm=send_agenda_and_poll)
+    response = await ctx.respond(
+        confirmation_text,
         flags=hikari.MessageFlag.EPHEMERAL,
+        components=view,
     )
+    miru_client.start_view(view, bind_to=await response.retrieve_message())
     return
 
 
