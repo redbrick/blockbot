@@ -6,6 +6,7 @@ import aiohttp
 import arc
 import hikari
 import miru
+from hikari.impl.special_endpoints import PollBuilder
 
 from src.config import AGENDA_TEMPLATE_URL, CHANNEL_IDS, ROLE_IDS, UID_MAPS, Feature
 from src.hooks import restrict_to_channels, restrict_to_roles
@@ -93,8 +94,6 @@ async def post_reaction_poll(*, question: str, options: list[str]) -> None:
 
 async def post_poll(*, question: str, options: list[str]) -> None:
     """Post a native Discord poll, falling back to reactions if unavailable."""
-    from hikari.impl.special_endpoints import PollBuilder
-
     try:
         poll = PollBuilder(
             question_text=question,
@@ -140,7 +139,9 @@ class AgendaConfirmView(miru.View):
         await self.disable_all()
         self.stop()
 
-    @miru.button(label="Confirm", style=hikari.ButtonStyle.SUCCESS, custom_id="agenda_confirm")
+    @miru.button(
+        label="Confirm", style=hikari.ButtonStyle.SUCCESS, custom_id="agenda_confirm"
+    )
     async def confirm_post(self, ctx: miru.ViewContext, _: miru.Button) -> None:
         if ctx.user.id != self.author_id:
             await ctx.respond(
@@ -162,7 +163,9 @@ class AgendaConfirmView(miru.View):
         await ctx.edit_response(response_text, components=self)
         self.stop()
 
-    @miru.button(label="Cancel", style=hikari.ButtonStyle.DANGER, custom_id="agenda_cancel")
+    @miru.button(
+        label="Cancel", style=hikari.ButtonStyle.DANGER, custom_id="agenda_cancel"
+    )
     async def cancel_post(self, ctx: miru.ViewContext, _: miru.Button) -> None:
         if ctx.user.id != self.author_id:
             await ctx.respond(
@@ -192,7 +195,7 @@ class AgendaConfirmView(miru.View):
     "Generate a new agenda for committee meetings.",
     autodefer=arc.AutodeferMode.EPHEMERAL,
 )
-async def gen_agenda(
+async def gen_agenda(  # noqa: PLR0911, PLR0915
     ctx: BlockbotContext,
     date: arc.Option[
         str,
@@ -347,7 +350,7 @@ async def gen_agenda(
                 message=announce.id,
                 emoji=hikari.CustomEmoji.parse("<:bigRed:634311607039819776>"),
             )
-        except (hikari.BadRequestError, hikari.NotFoundError, hikari.ForbiddenError):
+        except hikari.BadRequestError, hikari.NotFoundError, hikari.ForbiddenError:
             await plugin.client.rest.add_reaction(
                 channel=announce.channel_id,
                 message=announce.id,
