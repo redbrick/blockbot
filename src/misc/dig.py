@@ -28,7 +28,9 @@ async def dig_command(
     result = "\n".join(str(rdata) for rdata in response)
     embed = hikari.Embed(
         title=f"{record_type} records for `{domain}`:",
-        description=f"""```{result}```""",
+        description=f"""```
+{result}
+```"""
     )
     await ctx.respond(embed=embed)
 
