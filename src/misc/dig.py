@@ -30,7 +30,7 @@ async def dig_command(
         title=f"{record_type} records for `{domain}`:",
         description=f"""```
 {result}
-```"""
+```""",
     )
     await ctx.respond(embed=embed)
 
