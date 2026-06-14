@@ -134,6 +134,18 @@ CHANNEL_IDS: dict[str, int] = {
     "waiting-room": 627548568613552138,
 }
 
+CATEGORY_IDS: dict[str, int] = {
+    "official": 568810044309766151,
+    "administration": 568810044309766151,
+    "technical": 1202325296133701723,
+    "general": 627868752310042627,
+    "general-bots": 1202319516407697438,
+    "webgroup": 1202321207811395624,
+    "voice-channels": 568403964098248723,
+    "archive": 958448000496173056,
+    "test-category": 1515768461043961967,
+}
+
 # TODO: query API/LDAP for these
 ROLE_IDS: dict[str, int] = {
     "all": 568762266992902179,

@@ -13,7 +13,7 @@ dependencies = [
     "asyncpg>=0.31.0",
     "dnspython>=2.8.0",
     "fortune-python>=1.1.2",
-    "hikari>=2.5.0",
+    "hikari",
     "hikari-arc>=2.2.0",
     "hikari-miru>=4.2.0",
     "pyfiglet>=1.0.4",
@@ -88,3 +88,6 @@ required-version = "~=0.11"
 [tool.pyright]
 pythonVersion = "3.14"
 typeCheckingMode = "strict"
+
+[tool.uv.sources]
+hikari = { git = "https://github.com/mplatypus/hikari.git", branch = "feature/modals-v2" }
