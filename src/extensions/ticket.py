@@ -11,6 +11,7 @@ from src.models import Blockbot, BlockbotContext, BlockbotPlugin
 
 plugin = BlockbotPlugin("Ticketing System")
 
+
 @plugin.include
 @arc.slash_command("create_ticket_message", "Create Ticket Message")
 async def options(
@@ -22,7 +23,10 @@ async def options(
 ) -> None:
     assert ctx.member is not None
     if ROLE_IDS["admins"] not in ctx.member.role_ids:
-        await ctx.respond("You don't have permission to use this command!", flags=hikari.MessageFlag.EPHEMERAL)
+        await ctx.respond(
+            "You don't have permission to use this command!",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
         return
     embed = hikari.Embed(title="Tickets", description="Create a ticket here!")
     row = se.MessageActionRowBuilder()
