@@ -81,14 +81,25 @@ async def modal_submit(event: hikari.InteractionCreateEvent) -> None:
     assert isinstance(question_choice, TextInputInteractionComponent)
     selected_question = question_choice.value
 
-    # TODO: Make channel name work with multiple tickets per user
-    channel_name = f"ticket-{event.interaction.user.username}"
     assert event.interaction.guild_id is not None
+    channels = await event.app.rest.fetch_guild_channels(event.interaction.guild_id)
+    existing_names = {
+        channel.name
+        for channel in channels
+        if hasattr(channel, "parent_id")
+        and channel.parent_id == CATEGORY_IDS["technical"]
+    }
+    ticket_number = 1
+    channel_name = f"ticket-{event.interaction.user.username}"
+    while channel_name in existing_names:
+        channel_name = f"ticket-{event.interaction.user.username}-{ticket_number}"
+        ticket_number += 1
+
     permission_role = ROLE_IDS[selected_committee]
     created_channel = await event.app.rest.create_guild_text_channel(
         event.interaction.guild_id,
         channel_name,
-        category=CATEGORY_IDS["test-category"],
+        category=CATEGORY_IDS["technical"],
         permission_overwrites=[
             hikari.PermissionOverwrite(
                 id=permission_role,
@@ -119,6 +130,36 @@ async def modal_submit(event: hikari.InteractionCreateEvent) -> None:
         f"Ticket Created here: <#{created_channel.id}>!",
         flags=hikari.MessageFlag.EPHEMERAL,
     )
+    await event.app.rest.create_message(created_channel.id, f"<@&{permission_role}> <@{event.interaction.user.id}>")
+
+
+@plugin.listen()
+async def close_ticket(event: hikari.InteractionCreateEvent) -> None:
+    if not isinstance(event.interaction, hikari.ComponentInteraction):
+        return
+    if event.interaction.custom_id != "honkhonk1":
+        return
+
+    embed = hikari.Embed(title="Close Ticket?", description="Are you sure you want to close the ticket?")
+    row = se.MessageActionRowBuilder()
+    row.add_interactive_button(
+        hikari.ButtonStyle.PRIMARY, "moomoo1", emoji="⛔", label="Close Ticket"
+    )
+    await event.interaction.create_initial_response(hikari.ResponseType.MESSAGE_CREATE, embed=embed, components=[row], flags=hikari.MessageFlag.EPHEMERAL)
+
+@plugin.listen()
+async def delete_channel(event: hikari.InteractionCreateEvent) -> None:
+    if not isinstance(event.interaction, hikari.ComponentInteraction):
+        return
+    if event.interaction.custom_id != "moomoo1":
+        return
+
+    await event.interaction.create_initial_response(
+            hikari.ResponseType.MESSAGE_CREATE,
+            "Closing ticket...",
+            flags=hikari.MessageFlag.EPHEMERAL,
+            )
+    await event.app.rest.delete_channel(event.interaction.channel_id)
 
 
 @arc.loader

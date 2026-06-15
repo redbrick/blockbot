@@ -143,7 +143,6 @@ CATEGORY_IDS: dict[str, int] = {
     "webgroup": 1202321207811395624,
     "voice-channels": 568403964098248723,
     "archive": 958448000496173056,
-    "test-category": 1515768461043961967,
 }
 
 # TODO: query API/LDAP for these
