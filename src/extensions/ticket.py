@@ -130,7 +130,9 @@ async def modal_submit(event: hikari.InteractionCreateEvent) -> None:
         f"Ticket Created here: <#{created_channel.id}>!",
         flags=hikari.MessageFlag.EPHEMERAL,
     )
-    await event.app.rest.create_message(created_channel.id, f"<@&{permission_role}> <@{event.interaction.user.id}>")
+    await event.app.rest.create_message(
+        created_channel.id, f"<@&{permission_role}> <@{event.interaction.user.id}>"
+    )
 
 
 @plugin.listen()
@@ -140,12 +142,20 @@ async def close_ticket(event: hikari.InteractionCreateEvent) -> None:
     if event.interaction.custom_id != "honkhonk1":
         return
 
-    embed = hikari.Embed(title="Close Ticket?", description="Are you sure you want to close the ticket?")
+    embed = hikari.Embed(
+        title="Close Ticket?", description="Are you sure you want to close the ticket?"
+    )
     row = se.MessageActionRowBuilder()
     row.add_interactive_button(
         hikari.ButtonStyle.PRIMARY, "moomoo1", emoji="⛔", label="Close Ticket"
     )
-    await event.interaction.create_initial_response(hikari.ResponseType.MESSAGE_CREATE, embed=embed, components=[row], flags=hikari.MessageFlag.EPHEMERAL)
+    await event.interaction.create_initial_response(
+        hikari.ResponseType.MESSAGE_CREATE,
+        embed=embed,
+        components=[row],
+        flags=hikari.MessageFlag.EPHEMERAL,
+    )
+
 
 @plugin.listen()
 async def delete_channel(event: hikari.InteractionCreateEvent) -> None:
@@ -155,10 +165,10 @@ async def delete_channel(event: hikari.InteractionCreateEvent) -> None:
         return
 
     await event.interaction.create_initial_response(
-            hikari.ResponseType.MESSAGE_CREATE,
-            "Closing ticket...",
-            flags=hikari.MessageFlag.EPHEMERAL,
-            )
+        hikari.ResponseType.MESSAGE_CREATE,
+        "Closing ticket...",
+        flags=hikari.MessageFlag.EPHEMERAL,
+    )
     await event.app.rest.delete_channel(event.interaction.channel_id)
 
 
