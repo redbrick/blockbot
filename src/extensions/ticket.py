@@ -25,13 +25,20 @@ async def options(
         arc.ChannelParams("Ticket message channel name"),
     ],
 ) -> None:
-    embed = hikari.Embed(title="Tickets", description="If you need to contact the admins, helpdesk or committee, create a ticket here!")
+    embed = hikari.Embed(
+        title="Tickets",
+        description="If you need to contact the admins, helpdesk or committee, create a ticket here!",
+    )
     row = se.MessageActionRowBuilder()
     row.add_interactive_button(
-        hikari.ButtonStyle.PRIMARY, "meowmeow-create-ticket", emoji="✉️", label="Create Ticket"
+        hikari.ButtonStyle.PRIMARY,
+        "meowmeow-create-ticket",
+        emoji="✉️",
+        label="Create Ticket",
     )
     await ctx.client.rest.create_message(channel, embed=embed, components=[row])
     await ctx.respond("Sent Message")
+
 
 @plugin.listen()
 async def component_interaction(event: hikari.InteractionCreateEvent) -> None:
@@ -39,15 +46,14 @@ async def component_interaction(event: hikari.InteractionCreateEvent) -> None:
     if isinstance(event.interaction, hikari.ComponentInteraction):
         if event.interaction.custom_id == "meowmeow-create-ticket":
             await button_click(event.interaction)
-        if event.interaction.custom_id == "honkhonk-close-ticket":
+        elif event.interaction.custom_id == "honkhonk-close-ticket":
             await close_ticket(event.interaction)
-        if event.interaction.custom_id == "moomoo-close-ticket-confirm":
+        elif event.interaction.custom_id == "moomoo-close-ticket-confirm":
             await delete_channel(event.interaction)
 
-    if isinstance(event.interaction, hikari.ModalInteraction):
+    elif isinstance(event.interaction, hikari.ModalInteraction):
         if event.interaction.custom_id == "chirpchirp-ticket-channel":
             await modal_submit(event.interaction)
-
 
 
 async def button_click(interaction: hikari.ComponentInteraction) -> None:
@@ -131,14 +137,25 @@ async def modal_submit(interaction: hikari.ModalInteraction) -> None:
     embed = hikari.Embed(title="Ticket", description=selected_question)
     row = se.MessageActionRowBuilder()
     row.add_interactive_button(
-        hikari.ButtonStyle.PRIMARY, "honkhonk-close-ticket", emoji="⛔", label="Close Ticket"
+        hikari.ButtonStyle.PRIMARY,
+        "honkhonk-close-ticket",
+        emoji="⛔",
+        label="Close Ticket",
     )
-    await plugin.client.rest.create_message(created_channel, f"<@&{permission_role}> <@{interaction.user.id}>", embed=embed, components=[row], user_mentions=True, role_mentions=True)
+    await plugin.client.rest.create_message(
+        created_channel,
+        f"<@&{permission_role}> <@{interaction.user.id}>",
+        embed=embed,
+        components=[row],
+        user_mentions=True,
+        role_mentions=True,
+    )
     await interaction.create_initial_response(
         hikari.ResponseType.MESSAGE_CREATE,
         f"Ticket Created here: <#{created_channel.id}>!",
         flags=hikari.MessageFlag.EPHEMERAL,
     )
+
 
 async def close_ticket(interaction: hikari.ComponentInteraction) -> None:
 
@@ -147,7 +164,10 @@ async def close_ticket(interaction: hikari.ComponentInteraction) -> None:
     )
     row = se.MessageActionRowBuilder()
     row.add_interactive_button(
-        hikari.ButtonStyle.PRIMARY, "moomoo-close-ticket-confirm", emoji="⛔", label="Close Ticket"
+        hikari.ButtonStyle.PRIMARY,
+        "moomoo-close-ticket-confirm",
+        emoji="⛔",
+        label="Close Ticket",
     )
     await interaction.create_initial_response(
         hikari.ResponseType.MESSAGE_CREATE,

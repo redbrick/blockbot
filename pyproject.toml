@@ -77,6 +77,7 @@ ignore = [
     "PLR0913", # too-many-arguments
     "COM812", # missing-trailing-comma
     "TC002", # typing-only-third-party-import
+    "SIM102", # collapsible-if
 ]
 
 [tool.ruff.lint.pydocstyle]
