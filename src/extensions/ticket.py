@@ -42,7 +42,6 @@ async def options(
 
 @plugin.listen()
 async def component_interaction(event: hikari.InteractionCreateEvent) -> None:
-
     if isinstance(event.interaction, hikari.ComponentInteraction):
         if event.interaction.custom_id == "meowmeow-create-ticket":
             await button_click(event.interaction)
@@ -158,7 +157,6 @@ async def modal_submit(interaction: hikari.ModalInteraction) -> None:
 
 
 async def close_ticket(interaction: hikari.ComponentInteraction) -> None:
-
     embed = hikari.Embed(
         title="Close Ticket?", description="Are you sure you want to close the ticket?"
     )
