@@ -1,3 +1,5 @@
+import asyncio
+
 import arc
 import hikari
 from hikari.impl import special_endpoints as se
@@ -18,31 +20,42 @@ plugin = BlockbotPlugin("Ticketing System")
 @arc.slash_command("create_ticket_message", "Create Ticket Message")
 async def options(
     ctx: BlockbotContext,
-    channel_option: arc.Option[
+    channel: arc.Option[
         hikari.TextableChannel,
-        arc.ChannelParams("A textable channel option.", name="channel"),
+        arc.ChannelParams("Ticket message channel name"),
     ],
 ) -> None:
-    embed = hikari.Embed(title="Tickets", description="Create a ticket here!")
+    embed = hikari.Embed(title="Tickets", description="If you need to contact the admins, helpdesk or committee, create a ticket here!")
     row = se.MessageActionRowBuilder()
     row.add_interactive_button(
-        hikari.ButtonStyle.PRIMARY, "meowmeow1", emoji="✉️", label="Create Ticket"
+        hikari.ButtonStyle.PRIMARY, "meowmeow-create-ticket", emoji="✉️", label="Create Ticket"
     )
-    await ctx.client.rest.create_message(channel_option, embed=embed, components=[row])
+    await ctx.client.rest.create_message(channel, embed=embed, components=[row])
     await ctx.respond("Sent Message")
 
-
 @plugin.listen()
-async def button_click(event: hikari.InteractionCreateEvent) -> None:
-    if not isinstance(event.interaction, hikari.ComponentInteraction):
-        return
-    if event.interaction.custom_id != "meowmeow1":
-        return
+async def component_interaction(event: hikari.InteractionCreateEvent) -> None:
 
+    if isinstance(event.interaction, hikari.ComponentInteraction):
+        if event.interaction.custom_id == "meowmeow-create-ticket":
+            await button_click(event.interaction)
+        if event.interaction.custom_id == "honkhonk-close-ticket":
+            await close_ticket(event.interaction)
+        if event.interaction.custom_id == "moomoo-close-ticket-confirm":
+            await delete_channel(event.interaction)
+
+    if isinstance(event.interaction, hikari.ModalInteraction):
+        if event.interaction.custom_id == "chirpchirp-ticket-channel":
+            await modal_submit(event.interaction)
+
+
+
+async def button_click(interaction: hikari.ComponentInteraction) -> None:
     text_label = se.LabelComponentBuilder(
         label="Question",
         component=se.TextInputBuilder(
-            custom_id="hophop1",
+            custom_id="hophop-ticket-question",
+            placeholder="Ask your question here!",
             style=hikari.TextInputStyle.PARAGRAPH,
             required=True,
             max_length=1000,
@@ -50,8 +63,8 @@ async def button_click(event: hikari.InteractionCreateEvent) -> None:
     )
 
     committee_select = se.TextSelectMenuBuilder(
-        custom_id="ruffruff1",
-        placeholder="Choose Committee Position",
+        custom_id="ruffruff-committee-select",
+        placeholder="Choose Committee Position to Contact",
         min_values=1,
         max_values=1,
     )
@@ -61,30 +74,24 @@ async def button_click(event: hikari.InteractionCreateEvent) -> None:
         label="Committee", component=committee_select
     )
 
-    await event.interaction.create_modal_response(
+    await interaction.create_modal_response(
         title="Ticket",
-        custom_id="chirpchirp1",
+        custom_id="chirpchirp-ticket-channel",
         components=[committee_label, text_label],
     )
 
 
-@plugin.listen()
-async def modal_submit(event: hikari.InteractionCreateEvent) -> None:
-    if not isinstance(event.interaction, hikari.ModalInteraction):
-        return
-    if event.interaction.custom_id != "chirpchirp1":
-        return
-
-    committee_choice = event.interaction.components[0].component
+async def modal_submit(interaction: hikari.ModalInteraction) -> None:
+    committee_choice = interaction.components[0].component
     assert isinstance(committee_choice, TextSelectMenuInteractionComponent)
     selected_committee = committee_choice.values[0]
 
-    question_choice = event.interaction.components[1].component
+    question_choice = interaction.components[1].component
     assert isinstance(question_choice, TextInputInteractionComponent)
     selected_question = question_choice.value
 
-    assert event.interaction.guild_id is not None
-    channels = await event.app.rest.fetch_guild_channels(event.interaction.guild_id)
+    assert interaction.guild_id is not None
+    channels = await plugin.client.rest.fetch_guild_channels(interaction.guild_id)
     existing_names = {
         channel.name
         for channel in channels
@@ -92,14 +99,14 @@ async def modal_submit(event: hikari.InteractionCreateEvent) -> None:
         and channel.parent_id == CATEGORY_IDS["technical"]
     }
     ticket_number = 1
-    channel_name = f"ticket-{event.interaction.user.username}"
+    channel_name = f"ticket-{interaction.user.username}"
     while channel_name in existing_names:
-        channel_name = f"ticket-{event.interaction.user.username}-{ticket_number}"
+        channel_name = f"ticket-{interaction.user.username}-{ticket_number}"
         ticket_number += 1
 
     permission_role = ROLE_IDS[selected_committee]
-    created_channel = await event.app.rest.create_guild_text_channel(
-        event.interaction.guild_id,
+    created_channel = await plugin.client.rest.create_guild_text_channel(
+        interaction.guild_id,
         channel_name,
         category=CATEGORY_IDS["technical"],
         permission_overwrites=[
@@ -109,12 +116,12 @@ async def modal_submit(event: hikari.InteractionCreateEvent) -> None:
                 allow=hikari.Permissions.VIEW_CHANNEL,
             ),
             hikari.PermissionOverwrite(
-                id=event.interaction.user.id,
+                id=interaction.user.id,
                 type=hikari.PermissionOverwriteType.MEMBER,
                 allow=hikari.Permissions.VIEW_CHANNEL,
             ),
             hikari.PermissionOverwrite(
-                id=event.interaction.guild_id,
+                id=interaction.guild_id,
                 type=hikari.PermissionOverwriteType.ROLE,
                 deny=hikari.Permissions.VIEW_CHANNEL,
             ),
@@ -124,34 +131,25 @@ async def modal_submit(event: hikari.InteractionCreateEvent) -> None:
     embed = hikari.Embed(title="Ticket", description=selected_question)
     row = se.MessageActionRowBuilder()
     row.add_interactive_button(
-        hikari.ButtonStyle.PRIMARY, "honkhonk1", emoji="⛔", label="Close Ticket"
+        hikari.ButtonStyle.PRIMARY, "honkhonk-close-ticket", emoji="⛔", label="Close Ticket"
     )
-    await event.app.rest.create_message(created_channel, embed=embed, components=[row])
-    await event.interaction.create_initial_response(
+    await plugin.client.rest.create_message(created_channel, f"<@&{permission_role}> <@{interaction.user.id}>", embed=embed, components=[row], user_mentions=True, role_mentions=True)
+    await interaction.create_initial_response(
         hikari.ResponseType.MESSAGE_CREATE,
         f"Ticket Created here: <#{created_channel.id}>!",
         flags=hikari.MessageFlag.EPHEMERAL,
     )
-    await event.app.rest.create_message(
-        created_channel.id, f"<@&{permission_role}> <@{event.interaction.user.id}>"
-    )
 
-
-@plugin.listen()
-async def close_ticket(event: hikari.InteractionCreateEvent) -> None:
-    if not isinstance(event.interaction, hikari.ComponentInteraction):
-        return
-    if event.interaction.custom_id != "honkhonk1":
-        return
+async def close_ticket(interaction: hikari.ComponentInteraction) -> None:
 
     embed = hikari.Embed(
         title="Close Ticket?", description="Are you sure you want to close the ticket?"
     )
     row = se.MessageActionRowBuilder()
     row.add_interactive_button(
-        hikari.ButtonStyle.PRIMARY, "moomoo1", emoji="⛔", label="Close Ticket"
+        hikari.ButtonStyle.PRIMARY, "moomoo-close-ticket-confirm", emoji="⛔", label="Close Ticket"
     )
-    await event.interaction.create_initial_response(
+    await interaction.create_initial_response(
         hikari.ResponseType.MESSAGE_CREATE,
         embed=embed,
         components=[row],
@@ -159,19 +157,14 @@ async def close_ticket(event: hikari.InteractionCreateEvent) -> None:
     )
 
 
-@plugin.listen()
-async def delete_channel(event: hikari.InteractionCreateEvent) -> None:
-    if not isinstance(event.interaction, hikari.ComponentInteraction):
-        return
-    if event.interaction.custom_id != "moomoo1":
-        return
-
-    await event.interaction.create_initial_response(
+async def delete_channel(interaction: hikari.ComponentInteraction) -> None:
+    await interaction.create_initial_response(
         hikari.ResponseType.MESSAGE_CREATE,
         "Closing ticket...",
         flags=hikari.MessageFlag.EPHEMERAL,
     )
-    await event.app.rest.delete_channel(event.interaction.channel_id)
+    await asyncio.sleep(3)
+    await plugin.client.rest.delete_channel(interaction.channel_id)
 
 
 @arc.loader
