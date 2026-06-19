@@ -22,7 +22,7 @@ bot = hikari.GatewayBot(
 )
 
 client = Blockbot(bot, invocation_contexts=[hikari.ApplicationContextType.GUILD])
-miru_client = miru.Client.from_arc(client)
+miru_client = miru.Client.from_arc(client, ignore_unknown_interactions=True)
 
 client.set_type_dependency(miru.Client, miru_client)
 
