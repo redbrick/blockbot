@@ -8,7 +8,7 @@ from hikari.interactions.interaction_components import (
     TextSelectMenuInteractionComponent,
 )
 
-from src.config import CATEGORY_IDS, ROLE_IDS
+from src.config import CATEGORY_IDS, ROLE_IDS, UID_MAPS
 from src.hooks import restrict_to_roles
 from src.models import Blockbot, BlockbotContext, BlockbotPlugin
 
@@ -42,6 +42,7 @@ async def options(
 
 @plugin.listen()
 async def component_interaction(event: hikari.InteractionCreateEvent) -> None:
+
     if isinstance(event.interaction, hikari.ComponentInteraction):
         if event.interaction.custom_id == "meowmeow-create-ticket":
             await button_click(event.interaction)
@@ -116,6 +117,11 @@ async def modal_submit(interaction: hikari.ModalInteraction) -> None:
         category=CATEGORY_IDS["technical"],
         permission_overwrites=[
             hikari.PermissionOverwrite(
+                id=int(UID_MAPS["chair"]),
+                type=hikari.PermissionOverwriteType.MEMBER,
+                allow=hikari.Permissions.VIEW_CHANNEL,
+            ),
+            hikari.PermissionOverwrite(
                 id=permission_role,
                 type=hikari.PermissionOverwriteType.ROLE,
                 allow=hikari.Permissions.VIEW_CHANNEL,
@@ -157,6 +163,7 @@ async def modal_submit(interaction: hikari.ModalInteraction) -> None:
 
 
 async def close_ticket(interaction: hikari.ComponentInteraction) -> None:
+
     embed = hikari.Embed(
         title="Close Ticket?", description="Are you sure you want to close the ticket?"
     )
