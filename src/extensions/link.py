@@ -9,7 +9,7 @@ import asyncio
 from src.config import ROLE_IDS, Feature
 from src.models import Blockbot, BlockbotContext, BlockbotPlugin
 from src.hooks import restrict_to_roles
-from src.utils import get_ldap_user_by_discord_id, is_uid_ldap_available
+from src.utils import get_ldap_user_by_discord_id, is_uid_ldap_available, link_discord_to_ldap, get_ldap_user_by_uid
 
 plugin = BlockbotPlugin(name="Link Command Plugin", required_features=[Feature.ADMIN_API])
 
@@ -52,8 +52,15 @@ async def link_command(
 ) -> None:
 
     ldap_user = await get_ldap_user_by_discord_id(ctx.author.id, aiohttp_client)
+    # Check if the user is already linked
     if ldap_user:
         await ctx.respond("Your account is already linked! If you are experiencing issues, please create a ticket.", flags=hikari.MessageFlag.EPHEMERAL)
+        return
+
+    ldap_user = await get_ldap_user_by_uid(username, aiohttp_client)
+    # Check if the username is already linked to another Discord account
+    if ldap_user and ldap_user.get("user") and ldap_user["user"].get("discord") is not None:
+        await ctx.respond("This username is already linked to another Discord account. If you believe this is wrong please create a ticket.", flags=hikari.MessageFlag.EPHEMERAL)
         return
 
     if not USERNAME_REGEX.match(username):
@@ -82,7 +89,9 @@ async def link_command(
             return
 
         # SUCCESS: Code matches!
-        # await link_discord_to_ldap(ctx.author.id, username, aiohttp_client)
+        if not await link_discord_to_ldap(ctx.author.id, username, aiohttp_client):
+            await ctx.respond("❌ Failed to link your Discord account. Please try again.", flags=hikari.MessageFlag.EPHEMERAL)
+            return
 
         PENDING_LINKS.pop(ctx.author.id, None)  # Explicitly clear out memory
         await ctx.respond(f"✅ Success! Your Discord account has been successfully linked to Redbrick user `{username}`.", flags=hikari.MessageFlag.EPHEMERAL)
