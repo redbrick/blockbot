@@ -1,5 +1,6 @@
 import logging
 import traceback
+import asyncio
 
 import aiohttp
 import arc
@@ -8,6 +9,7 @@ import miru
 
 from src.config import DEBUG, TOKEN, Feature
 from src.database import init_db
+from src.extensions.link import clean_expired_links
 from src.models import Blockbot, BlockbotContext
 
 logger = logging.getLogger(__name__)
@@ -71,3 +73,6 @@ async def startup_hook(_: arc.GatewayClient) -> None:
     if Feature.DATABASE.enabled:
         logger.info("Initialising database")
         await init_db()
+    if Feature.ADMIN_API.enabled:
+        logger.info("Initialising clearing for linking to LDAP")
+        asyncio.create_task(clean_expired_links())
