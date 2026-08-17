@@ -1,13 +1,14 @@
 import datetime
 import typing
 from urllib.parse import urlparse
+import logging
 
 import aiohttp
 import arc
 import hikari
 
-from src.config import LDAP_PASSWORD, LDAP_USERNAME
-
+from src.config import LDAP_PASSWORD, LDAP_USERNAME, ADMIN_API_PASSWORD, ADMIN_API_USERNAME
+logger = logging.getLogger(__name__)
 
 class EventWithGuildAttributes(typing.Protocol):
     @property
@@ -77,3 +78,17 @@ async def post_new_md_content(
 
 def utcnow() -> datetime.datetime:
     return datetime.datetime.now(datetime.timezone.utc)
+
+async def get_ldap_user_by_discord_id(discord_id: int, aiohttp_client: aiohttp.ClientSession) -> dict | None:
+    """
+    Get the LDAP user associated with a Discord ID.
+    Returns None if no user is found.
+    """
+    url = f"https://api-multi-account.redbrick.dcu.ie/admin/users/discord/{discord_id}"
+    auth = aiohttp.BasicAuth(login=ADMIN_API_USERNAME, password=ADMIN_API_PASSWORD)
+    async with aiohttp_client.get(url, auth=auth) as response:
+        logger.error(f"Fetching LDAP user for Discord ID: {discord_id}")
+        if response.status == 404:
+            return None
+        response.raise_for_status()
+        return await response.json()
