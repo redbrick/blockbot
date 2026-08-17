@@ -3,11 +3,15 @@ import typing
 from urllib.parse import urlparse
 import logging
 
+from sqlalchemy import String
+
 import aiohttp
 import arc
 import hikari
 
 from src.config import LDAP_PASSWORD, LDAP_USERNAME, ADMIN_API_PASSWORD, ADMIN_API_USERNAME
+from src.models import BlockbotContext
+
 logger = logging.getLogger(__name__)
 
 class EventWithGuildAttributes(typing.Protocol):
@@ -84,7 +88,7 @@ async def get_ldap_user_by_discord_id(discord_id: int, aiohttp_client: aiohttp.C
     Get the LDAP user associated with a Discord ID.
     Returns None if no user is found.
     """
-    url = f"https://api-multi-account.redbrick.dcu.ie/admin/users/discord/{discord_id}"
+    url = f"https://api.redbrick.dcu.ie/admin/users/discord/{discord_id}"
     auth = aiohttp.BasicAuth(login=ADMIN_API_USERNAME, password=ADMIN_API_PASSWORD)
     async with aiohttp_client.get(url, auth=auth) as response:
         logger.error(f"Fetching LDAP user for Discord ID: {discord_id}")
@@ -92,3 +96,17 @@ async def get_ldap_user_by_discord_id(discord_id: int, aiohttp_client: aiohttp.C
             return None
         response.raise_for_status()
         return await response.json()
+
+async def is_uid_ldap_available(aiohttp_client: aiohttp.ClientSession, uid: String) -> bool:
+    """
+    Check if LDAP user exists with that username.
+    """
+    url = f"https://api.redbrick.dcu.ie/users/{uid}"
+    async with aiohttp_client.get(url) as response:
+        if response.status == 404:
+            return True
+        elif response.status == 200:
+            return False
+        response.raise_for_status()
+        return False
+
