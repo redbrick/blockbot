@@ -1,18 +1,21 @@
 import datetime
+import logging
 import typing
 from urllib.parse import urlparse
-import logging
-
-from sqlalchemy import String
 
 import aiohttp
 import arc
 import hikari
 
-from src.config import LDAP_PASSWORD, LDAP_USERNAME, ADMIN_API_PASSWORD, ADMIN_API_USERNAME
-from src.models import BlockbotContext
+from src.config import (
+    ADMIN_API_PASSWORD,
+    ADMIN_API_USERNAME,
+    LDAP_PASSWORD,
+    LDAP_USERNAME,
+)
 
 logger = logging.getLogger(__name__)
+
 
 class EventWithGuildAttributes(typing.Protocol):
     @property
@@ -83,13 +86,16 @@ async def post_new_md_content(
 def utcnow() -> datetime.datetime:
     return datetime.datetime.now(datetime.timezone.utc)
 
-async def get_ldap_user_by_discord_id(discord_id: int, aiohttp_client: aiohttp.ClientSession) -> dict | None:
+
+async def get_ldap_user_by_discord_id(
+    discord_id: int, aiohttp_client: aiohttp.ClientSession
+) -> dict[str, typing.Any] | None:
     """
     Get the LDAP user associated with a Discord ID.
     Returns None if no user is found.
     """
     url = f"https://api.redbrick.dcu.ie/admin/users/discord/{discord_id}"
-    auth = aiohttp.BasicAuth(login=ADMIN_API_USERNAME, password=ADMIN_API_PASSWORD)
+    auth = aiohttp.BasicAuth(login=ADMIN_API_USERNAME or "", password=ADMIN_API_PASSWORD or "")
     async with aiohttp_client.get(url, auth=auth) as response:
         logger.error(f"Fetching LDAP user for Discord ID: {discord_id}")
         if response.status == 404:
@@ -97,13 +103,16 @@ async def get_ldap_user_by_discord_id(discord_id: int, aiohttp_client: aiohttp.C
         response.raise_for_status()
         return await response.json()
 
-async def get_ldap_user_by_uid(uid: String, aiohttp_client: aiohttp.ClientSession) -> dict | None:
+
+async def get_ldap_user_by_uid(
+    uid: str, aiohttp_client: aiohttp.ClientSession
+) -> dict[str, typing.Any] | None:
     """
     Get the LDAP user associated with a UID.
     Returns None if no user is found.
     """
     url = f"https://api.redbrick.dcu.ie/admin/users/{uid}"
-    auth = aiohttp.BasicAuth(login=ADMIN_API_USERNAME, password=ADMIN_API_PASSWORD)
+    auth = aiohttp.BasicAuth(login=ADMIN_API_USERNAME or "", password=ADMIN_API_PASSWORD or "")
     async with aiohttp_client.get(url, auth=auth) as response:
         logger.error(f"Fetching LDAP user for UID: {uid}")
         if response.status == 404:
@@ -111,7 +120,10 @@ async def get_ldap_user_by_uid(uid: String, aiohttp_client: aiohttp.ClientSessio
         response.raise_for_status()
         return await response.json()
 
-async def is_uid_ldap_available(aiohttp_client: aiohttp.ClientSession, uid: String) -> bool:
+
+async def is_uid_ldap_available(
+    aiohttp_client: aiohttp.ClientSession, uid: str
+) -> bool:
     """
     Check if LDAP user exists with that username.
     """
@@ -119,24 +131,26 @@ async def is_uid_ldap_available(aiohttp_client: aiohttp.ClientSession, uid: Stri
     async with aiohttp_client.get(url) as response:
         if response.status == 404:
             return True
-        elif response.status == 200:
+        if response.status == 200:
             return False
         response.raise_for_status()
         return False
 
-async def link_discord_to_ldap(discord_id: int, uid: String, aiohttp_client: aiohttp.ClientSession) -> bool:
+
+async def link_discord_to_ldap(
+    discord_id: int, uid: str, aiohttp_client: aiohttp.ClientSession
+) -> bool:
     """
     Link a Discord ID to an LDAP user.
     """
     url = f"https://api.redbrick.dcu.ie/admin/users/{uid}"
-    auth = aiohttp.BasicAuth(login=ADMIN_API_USERNAME, password=ADMIN_API_PASSWORD)
-    data = {
-        "ldap_key": "discord",
-        "ldap_value": discord_id
-        }
+    auth = aiohttp.BasicAuth(login=ADMIN_API_USERNAME or "", password=ADMIN_API_PASSWORD or "")
+    data = {"ldap_key": "discord", "ldap_value": discord_id}
     async with aiohttp_client.put(url, data=data, auth=auth) as response:
         if response.status != 200:
-            logger.error(f"Failed to link Discord ID {discord_id} to LDAP user {uid}. Status code: {response.status}")
+            logger.error(
+                f"Failed to link Discord ID {discord_id} to LDAP user {uid}. Status code: {response.status}"
+            )
             return False
         response.raise_for_status()
         return True

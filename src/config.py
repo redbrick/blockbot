@@ -194,8 +194,12 @@ UID_MAPS: dict[str, str] = dict(item.split("=") for item in DISCORD_UID_MAP.spli
 LDAP_USERNAME = get_env_var("LDAP_USERNAME", required_features=[Feature.LDAP])
 LDAP_PASSWORD = get_env_var("LDAP_PASSWORD", required_features=[Feature.LDAP])
 
-ADMIN_API_USERNAME = get_env_var("ADMIN_API_USERNAME", required_features=[Feature.ADMIN_API])
-ADMIN_API_PASSWORD = get_env_var("ADMIN_API_PASSWORD", required_features=[Feature.ADMIN_API])
+ADMIN_API_USERNAME = get_env_var(
+    "ADMIN_API_USERNAME", required_features=[Feature.ADMIN_API]
+)
+ADMIN_API_PASSWORD = get_env_var(
+    "ADMIN_API_PASSWORD", required_features=[Feature.ADMIN_API]
+)
 
 AGENDA_TEMPLATE_URL = get_env_var(
     "AGENDA_TEMPLATE_URL", required_features=[Feature.LDAP]

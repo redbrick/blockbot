@@ -1,6 +1,7 @@
+import asyncio
 import logging
 import traceback
-import asyncio
+from typing import Any
 
 import aiohttp
 import arc
@@ -13,6 +14,8 @@ from src.extensions.link import clean_expired_links
 from src.models import Blockbot, BlockbotContext
 
 logger = logging.getLogger(__name__)
+
+BACKGROUND_TASKS: set[asyncio.Task[Any]] = set()
 
 bot = hikari.GatewayBot(
     token=TOKEN,
@@ -67,12 +70,14 @@ async def error_handler(ctx: BlockbotContext, exc: Exception) -> None:  # noqa: 
     await ctx.respond(f"❌ Blockbot encountered an unhandled exception. {message}")
     logger.error(traceback_str)
 
-
 @client.add_startup_hook
 async def startup_hook(_: arc.GatewayClient) -> None:
     if Feature.DATABASE.enabled:
         logger.info("Initialising database")
         await init_db()
-    if Feature.ADMIN_API.enabled:
-        logger.info("Initialising clearing for linking to LDAP")
-        asyncio.create_task(clean_expired_links())
+        if Feature.ADMIN_API.enabled:
+            logger.info("Initialising clearing for linking to LDAP")
+
+        task = asyncio.create_task(clean_expired_links())
+        BACKGROUND_TASKS.add(task)
+        task.add_done_callback(BACKGROUND_TASKS.discard)

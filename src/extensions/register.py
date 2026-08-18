@@ -10,7 +10,7 @@ import miru
 from src.config import CHANNEL_IDS, ROLE_IDS, Feature
 from src.hooks import restrict_to_channels
 from src.models import Blockbot, BlockbotContext, BlockbotPlugin
-from src.utils import role_mention, is_uid_ldap_available
+from src.utils import is_uid_ldap_available, role_mention
 
 plugin = BlockbotPlugin(name="Register")
 
@@ -144,7 +144,9 @@ async def register_command(
         error_message = (
             "Invalid email format. Please make sure it's a DCU email address."
         )
-    elif Feature.ADMIN_API.enabled and not await is_uid_ldap_available(aiohttp_client, desired_uid):
+    elif Feature.ADMIN_API.enabled and not await is_uid_ldap_available(
+        aiohttp_client, desired_uid
+    ):
         error_message = "This Username is already taken. Please try another one."
 
     if error_message is not None:
