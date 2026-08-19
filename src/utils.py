@@ -206,7 +206,7 @@ async def register_ldap_user(
         "discord": str(discord_id),
     }
     async with aiohttp_client.post(url, json=data, auth=auth) as response:
-        if response.status != 200 and response.status != 201:
+        if response.status not in {200, 201}:
             logger.error(
                 f"Failed to register LDAP user {uid}. Status: {response.status}"
             )

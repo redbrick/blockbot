@@ -9,7 +9,7 @@ import arc
 import hikari
 
 from src.config import ROLE_IDS, Feature
-from src.hooks import restrict_to_roles, restrict_to_ldap_users
+from src.hooks import restrict_to_ldap_users, restrict_to_roles
 from src.models import Blockbot, BlockbotContext, BlockbotPlugin
 from src.utils import (
     get_ldap_user_by_discord_id,
@@ -20,7 +20,8 @@ from src.utils import (
 )
 
 plugin = BlockbotPlugin(
-    name="Redbrick Account Management Command Plugin", required_features=[Feature.ADMIN_API]
+    name="Redbrick Account Management Command Plugin",
+    required_features=[Feature.ADMIN_API],
 )
 
 
@@ -28,6 +29,7 @@ group = plugin.include_slash_group(
     "account",
     "Redbrick Account Management Command",
 )
+
 
 class LinkSession(TypedDict):
     username: str
@@ -210,16 +212,15 @@ async def link_command(
         flags=hikari.MessageFlag.EPHEMERAL,
     )
 
+
 @group.include
 @arc.with_hook(restrict_to_roles(role_ids=[ROLE_IDS["brickie"]]))
 @arc.with_hook(restrict_to_ldap_users())
 @arc.slash_subcommand("pubkey", "Set your Redbrick Account's SSH Public Key")
 async def pubkey_command(
-        ctx: BlockbotContext,
-        key: arc.Option[
-            str, arc.StrParams("Your SSH Public Key.")
-        ],
-        aiohttp_client: aiohttp.ClientSession = arc.inject(),
+    ctx: BlockbotContext,
+    key: arc.Option[str, arc.StrParams("Your SSH Public Key.")],
+    aiohttp_client: aiohttp.ClientSession = arc.inject(),
 ) -> None:
 
     # Check if its a valid SSH key format
@@ -242,7 +243,7 @@ async def pubkey_command(
         uid=ldap_user["user"]["uid"],
         key="sshPublicKey",
         value=key,
-        aiohttp_client=aiohttp_client
+        aiohttp_client=aiohttp_client,
     )
     if not email_send:
         await ctx.respond(
@@ -255,7 +256,6 @@ async def pubkey_command(
         "✅ Your SSH public key has been successfully updated in your Redbrick account.",
         flags=hikari.MessageFlag.EPHEMERAL,
     )
-
 
 
 @arc.loader

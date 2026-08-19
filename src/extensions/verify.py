@@ -41,12 +41,12 @@ async def verify_command(
     assert ctx.guild_id is not None
 
     if not await register_ldap_user(
-            uid=username,
-            student_id=student_id,
-            mod_code=mod_code,
-            mail=mail,
-            discord_id=member.id,
-            aiohttp_client=aiohttp_client,
+        uid=username,
+        student_id=student_id,
+        mod_code=mod_code,
+        mail=mail,
+        discord_id=member.id,
+        aiohttp_client=aiohttp_client,
     ):
         await ctx.respond(
             f"Failed to register user {username} with Redbrick API. Please check the logs for more information.",
@@ -91,8 +91,6 @@ async def verify_command(
     await ctx.respond(
         embed=admin_embed,
     )
-
-
 
 
 @arc.loader
