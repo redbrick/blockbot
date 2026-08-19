@@ -34,11 +34,25 @@ async def verify_command(
         hikari.Member,
         arc.MemberParams("The member to verify."),
     ],
-    aiohttp_client: aiohttp.ClientSession,
+    aiohttp_client: aiohttp.ClientSession = arc.inject(),
 ) -> None:
     """Verify a Discord member against a Redbrick account."""
 
     assert ctx.guild_id is not None
+
+    if not await register_ldap_user(
+            uid=username,
+            student_id=student_id,
+            mod_code=mod_code,
+            mail=mail,
+            discord_id=member.id,
+            aiohttp_client=aiohttp_client,
+    ):
+        await ctx.respond(
+            f"Failed to register user {username} with Redbrick API. Please check the logs for more information.",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
+        return
 
     final_role_ids = list(set(member.role_ids) | DEFAULT_ROLES)
 
@@ -78,14 +92,7 @@ async def verify_command(
         embed=admin_embed,
     )
 
-    await register_ldap_user(
-        uid=username,
-        student_id=student_id,
-        mod_code=mod_code,
-        mail=mail,
-        discord_id=member.id,
-        aiohttp_client=aiohttp_client,
-    )
+
 
 
 @arc.loader
