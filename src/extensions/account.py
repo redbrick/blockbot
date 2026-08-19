@@ -9,7 +9,7 @@ import arc
 import hikari
 
 from src.config import ROLE_IDS, Feature
-from src.hooks import restrict_to_roles
+from src.hooks import restrict_to_roles, restrict_to_ldap_users
 from src.models import Blockbot, BlockbotContext, BlockbotPlugin
 from src.utils import (
     get_ldap_user_by_discord_id,
@@ -20,9 +20,14 @@ from src.utils import (
 )
 
 plugin = BlockbotPlugin(
-    name="Link Command Plugin", required_features=[Feature.ADMIN_API]
+    name="Redbrick Account Management Command Plugin", required_features=[Feature.ADMIN_API]
 )
 
+
+group = plugin.include_slash_group(
+    "account",
+    "Redbrick Account Management Command",
+)
 
 class LinkSession(TypedDict):
     username: str
@@ -161,9 +166,9 @@ async def code_handler(
     return
 
 
-@plugin.include
+@group.include
 @arc.with_hook(restrict_to_roles(role_ids=[ROLE_IDS["brickie"]]))
-@arc.slash_command("link", "Link your Redbrick Account to your Discord")
+@arc.slash_subcommand("link", "Link your Redbrick Account to your Discord")
 async def link_command(
     ctx: BlockbotContext,
     username: arc.Option[
@@ -201,9 +206,56 @@ async def link_command(
 
     await ctx.respond(
         f"Let's get you linked! A verification code has been generated for `{username}`.\n"
-        f"Once you receive it, run `/link username: {username} code: <code>` to complete the process.",
+        f"Once you receive it, run `/account link username: {username} code: <code>` to complete the process.",
         flags=hikari.MessageFlag.EPHEMERAL,
     )
+
+@group.include
+@arc.with_hook(restrict_to_roles(role_ids=[ROLE_IDS["brickie"]]))
+@arc.with_hook(restrict_to_ldap_users())
+@arc.slash_subcommand("pubkey", "Set your Redbrick Account's SSH Public Key")
+async def pubkey_command(
+        ctx: BlockbotContext,
+        key: arc.Option[
+            str, arc.StrParams("Your SSH Public Key.")
+        ],
+        aiohttp_client: aiohttp.ClientSession = arc.inject(),
+) -> None:
+
+    # Check if its a valid SSH key format
+    if not key.startswith("ssh-"):
+        await ctx.respond(
+            "❌ Invalid SSH key format. Please ensure your key starts with `ssh-`.",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
+        return
+
+    ldap_user = await get_ldap_user_by_discord_id(ctx.author.id, aiohttp_client)
+    if not ldap_user or not ldap_user.get("user") or not ldap_user["user"].get("uid"):
+        await ctx.respond(
+            "❌ Could not retrieve your Redbrick account information. Please ensure your account is linked and try again.",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
+        return
+
+    email_send = await update_user_ldap_attribute(
+        uid=ldap_user["user"]["uid"],
+        key="sshPublicKey",
+        value=key,
+        aiohttp_client=aiohttp_client
+    )
+    if not email_send:
+        await ctx.respond(
+            "❌ Failed to update SSH public key. Please ensure it is correct and try again.",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
+        return
+
+    await ctx.respond(
+        "✅ Your SSH public key has been successfully updated in your Redbrick account.",
+        flags=hikari.MessageFlag.EPHEMERAL,
+    )
+
 
 
 @arc.loader

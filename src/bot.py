@@ -10,7 +10,7 @@ import miru
 
 from src.config import DEBUG, TOKEN, Feature
 from src.database import init_db
-from src.extensions.link import clean_expired_links
+from src.extensions.account import clean_expired_links
 from src.models import Blockbot, BlockbotContext
 
 logger = logging.getLogger(__name__)

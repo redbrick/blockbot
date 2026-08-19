@@ -101,7 +101,7 @@ async def _restrict_to_ldap_users(
 ) -> arc.HookResult:
     if not await get_ldap_user_by_discord_id(ctx.author.id, aiohttp_client):
         await ctx.respond(
-            "❌ This command is restricted. Only users with a valid Redbrick account are permitted to use this command. Please use /link to link your Redbrick account.",
+            "❌ This command is restricted. Only users with a valid Redbrick account are permitted to use this command. Please use /account link to link your Redbrick account.",
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return arc.HookResult(abort=True)
