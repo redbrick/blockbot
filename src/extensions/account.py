@@ -168,6 +168,27 @@ async def code_handler(
     return
 
 
+def valid_ssh_key(key: str) -> bool:
+    """Check if the provided SSH key is valid."""
+    valid_ssh_keys = [
+        "ssh-ed25519",
+        "ssh-ed25519-cert-v01@openssh.com",
+        "sk-ssh-ed25519@openssh.com",
+        "sk-ssh-ed25519-cert-v01@openssh.com",
+        "ecdsa-sha2-nistp256",
+        "ecdsa-sha2-nistp256-cert-v01@openssh.com",
+        "ecdsa-sha2-nistp384",
+        "ecdsa-sha2-nistp384-cert-v01@openssh.com",
+        "ecdsa-sha2-nistp521",
+        "ecdsa-sha2-nistp521-cert-v01@openssh.com",
+        "sk-ecdsa-sha2-nistp256@openssh.com",
+        "sk-ecdsa-sha2-nistp256-cert-v01@openssh.com",
+        "ssh-rsa",
+        "ssh-rsa-cert-v01@openssh.com",
+    ]
+    return any(key.startswith(valid_key) for valid_key in valid_ssh_keys)
+
+
 @group.include
 @arc.with_hook(restrict_to_roles(role_ids=[ROLE_IDS["brickie"]]))
 @arc.slash_subcommand("link", "Link your Redbrick Account to your Discord")
@@ -224,9 +245,9 @@ async def pubkey_command(
 ) -> None:
 
     # Check if its a valid SSH key format
-    if not key.startswith("ssh-"):
+    if not valid_ssh_key(key):
         await ctx.respond(
-            "❌ Invalid SSH key format. Please ensure your key starts with `ssh-`.",
+            "❌ Invalid SSH key format. Please ensure your key starts with a valid SSH key type.",
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return
