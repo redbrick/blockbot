@@ -180,8 +180,9 @@ async def link_command(
 
     # VERIFICATION MODE (Code provided)
     if code is not None:
-        return await code_handler(ctx, username, code, aiohttp_client)
-    # No Code provided
+        await code_handler(ctx, username, code, aiohttp_client)
+        return
+        # No Code provided
     otp_code = f"{secrets.randbelow(1000000):06d}"
 
     PENDING_LINKS[ctx.author.id] = LinkSession(

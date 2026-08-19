@@ -1,9 +1,11 @@
+import aiohttp
 import arc
 import hikari
 
 from src.config import CHANNEL_IDS, DEFAULT_ROLES, ROLE_IDS, Colour
 from src.hooks import restrict_to_channels, restrict_to_roles
 from src.models import Blockbot, BlockbotContext, BlockbotPlugin
+from src.utils import register_ldap_user
 
 plugin = BlockbotPlugin(name="Verify")
 
@@ -19,14 +21,20 @@ plugin = BlockbotPlugin(name="Verify")
 )
 async def verify_command(
     ctx: BlockbotContext,
+    student_id: arc.Option[
+        str, arc.StrParams(description="student ID.", min_length=5, max_length=9)
+    ],
     username: arc.Option[
         str,
         arc.StrParams("Redbrick username.", min_length=3, max_length=8),
     ],
+    mod_code: arc.Option[str, arc.StrParams("Course code. (e.g. COMSCI1, ECE1)")],
+    mail: arc.Option[str, arc.StrParams("DCU email address.")],
     member: arc.Option[
         hikari.Member,
         arc.MemberParams("The member to verify."),
     ],
+    aiohttp_client: aiohttp.ClientSession,
 ) -> None:
     """Verify a Discord member against a Redbrick account."""
 
@@ -68,6 +76,15 @@ async def verify_command(
 
     await ctx.respond(
         embed=admin_embed,
+    )
+
+    await register_ldap_user(
+        uid=username,
+        student_id=student_id,
+        mod_code=mod_code,
+        mail=mail,
+        discord_id=member.id,
+        aiohttp_client=aiohttp_client,
     )
 
 

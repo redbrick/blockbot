@@ -181,3 +181,35 @@ async def send_verification_email(
             return False
         response.raise_for_status()
         return True
+
+
+async def register_ldap_user(
+    uid: str,
+    student_id: str,
+    mod_code: str,
+    mail: str,
+    discord_id: int,
+    aiohttp_client: aiohttp.ClientSession,
+) -> bool:
+    """
+    Register a new LDAP user.
+    """
+    url = "https://api.redbrick.dcu.ie/admin/users/register/"
+    auth = aiohttp.BasicAuth(
+        login=ADMIN_API_USERNAME or "", password=ADMIN_API_PASSWORD or ""
+    )
+    data = {
+        "uid": uid,
+        "studentNo": student_id,
+        "courseCode": mod_code,
+        "altmail": mail,
+        "discord": discord_id,
+    }
+    async with aiohttp_client.post(url, json=data, auth=auth) as response:
+        if response.status != 200:
+            logger.error(
+                f"Failed to register LDAP user {uid}. Status code: {response.status}"
+            )
+            return False
+        response.raise_for_status()
+        return True
