@@ -95,7 +95,9 @@ async def get_ldap_user_by_discord_id(
     Returns None if no user is found.
     """
     url = f"https://api.redbrick.dcu.ie/admin/users/discord/{discord_id}"
-    auth = aiohttp.BasicAuth(login=ADMIN_API_USERNAME or "", password=ADMIN_API_PASSWORD or "")
+    auth = aiohttp.BasicAuth(
+        login=ADMIN_API_USERNAME or "", password=ADMIN_API_PASSWORD or ""
+    )
     async with aiohttp_client.get(url, auth=auth) as response:
         logger.error(f"Fetching LDAP user for Discord ID: {discord_id}")
         if response.status == 404:
@@ -112,7 +114,9 @@ async def get_ldap_user_by_uid(
     Returns None if no user is found.
     """
     url = f"https://api.redbrick.dcu.ie/admin/users/{uid}"
-    auth = aiohttp.BasicAuth(login=ADMIN_API_USERNAME or "", password=ADMIN_API_PASSWORD or "")
+    auth = aiohttp.BasicAuth(
+        login=ADMIN_API_USERNAME or "", password=ADMIN_API_PASSWORD or ""
+    )
     async with aiohttp_client.get(url, auth=auth) as response:
         logger.error(f"Fetching LDAP user for UID: {uid}")
         if response.status == 404:
@@ -137,19 +141,42 @@ async def is_uid_ldap_available(
         return False
 
 
-async def link_discord_to_ldap(
-    discord_id: int, uid: str, aiohttp_client: aiohttp.ClientSession
+async def update_user_ldap_attribute(
+    uid: str, key: str, value: str, aiohttp_client: aiohttp.ClientSession
 ) -> bool:
     """
-    Link a Discord ID to an LDAP user.
+    Update an LDAP user's attribute.
     """
     url = f"https://api.redbrick.dcu.ie/admin/users/{uid}"
-    auth = aiohttp.BasicAuth(login=ADMIN_API_USERNAME or "", password=ADMIN_API_PASSWORD or "")
-    data = {"ldap_key": "discord", "ldap_value": discord_id}
+    auth = aiohttp.BasicAuth(
+        login=ADMIN_API_USERNAME or "", password=ADMIN_API_PASSWORD or ""
+    )
+    data = {"ldap_key": key, "ldap_value": value}
     async with aiohttp_client.put(url, data=data, auth=auth) as response:
         if response.status != 200:
             logger.error(
-                f"Failed to link Discord ID {discord_id} to LDAP user {uid}. Status code: {response.status}"
+                f"Failed to update LDAP user {uid}. Status code: {response.status}"
+            )
+            return False
+        response.raise_for_status()
+        return True
+
+
+async def send_verification_email(
+    uid: str, code: str, aiohttp_client: aiohttp.ClientSession
+) -> bool:
+    """
+    Send a verification email to the user.
+    """
+    url = "https://api.redbrick.dcu.ie/admin/users/verify/"
+    auth = aiohttp.BasicAuth(
+        login=ADMIN_API_USERNAME or "", password=ADMIN_API_PASSWORD or ""
+    )
+    data = {"username": uid, "verification_code": code}
+    async with aiohttp_client.post(url, json=data, auth=auth) as response:
+        if response.status != 200:
+            logger.error(
+                f"Failed to send verification email for LDAP user {uid}. Status code: {response.status}"
             )
             return False
         response.raise_for_status()

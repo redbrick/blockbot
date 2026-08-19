@@ -15,12 +15,14 @@ from src.utils import (
     get_ldap_user_by_discord_id,
     get_ldap_user_by_uid,
     is_uid_ldap_available,
-    link_discord_to_ldap,
+    send_verification_email,
+    update_user_ldap_attribute,
 )
 
 plugin = BlockbotPlugin(
     name="Link Command Plugin", required_features=[Feature.ADMIN_API]
 )
+
 
 class LinkSession(TypedDict):
     username: str
@@ -28,13 +30,10 @@ class LinkSession(TypedDict):
     expires_at: float
 
 
-
 USERNAME_REGEX = re.compile(r"^[a-z0-9][a-z0-9_]{1,6}[a-z0-9]$")
 
 CODE_EXPIRATION_SECONDS = 300  # Code expires after 5 minutes
 PENDING_LINKS: dict[hikari.Snowflake, LinkSession] = {}
-
-
 
 
 async def clean_expired_links() -> None:
@@ -59,7 +58,10 @@ async def clean_expired_links() -> None:
         except Exception:
             pass
 
-async def user_check(ctx: BlockbotContext, username: str, aiohttp_client: aiohttp.ClientSession) -> bool:
+
+async def user_check(
+    ctx: BlockbotContext, username: str, aiohttp_client: aiohttp.ClientSession
+) -> bool:
     ldap_user = await get_ldap_user_by_discord_id(ctx.author.id, aiohttp_client)
     # Check if the user is already linked
     if ldap_user:
@@ -73,10 +75,10 @@ async def user_check(ctx: BlockbotContext, username: str, aiohttp_client: aiohtt
     # Check if user is expired
     current_time_str = time.strftime("%Y%m%d%H%M%SZ", time.gmtime())
     if (
-            ldap_user
-            and ldap_user.get("user")
-            and ldap_user["user"].get("expiryDate")
-            and ldap_user["user"].get("expiryDate") < current_time_str
+        ldap_user
+        and ldap_user.get("user")
+        and ldap_user["user"].get("expiryDate")
+        and ldap_user["user"].get("expiryDate") < current_time_str
     ):
         await ctx.respond(
             "This account has expired. Please contact the Redbrick committee for assistance.",
@@ -86,9 +88,9 @@ async def user_check(ctx: BlockbotContext, username: str, aiohttp_client: aiohtt
 
     # Check if the username is already linked to another Discord account
     if (
-            ldap_user
-            and ldap_user.get("user")
-            and ldap_user["user"].get("discord") is not None
+        ldap_user
+        and ldap_user.get("user")
+        and ldap_user["user"].get("discord") is not None
     ):
         await ctx.respond(
             "This username is already linked to another Discord account. If you believe this is wrong please create a ticket.",
@@ -112,6 +114,53 @@ async def user_check(ctx: BlockbotContext, username: str, aiohttp_client: aiohtt
     return True
 
 
+async def code_handler(
+    ctx: BlockbotContext,
+    username: str,
+    code: str | None,
+    aiohttp_client: aiohttp.ClientSession,
+) -> None:
+    session = PENDING_LINKS.get(ctx.author.id)
+    if not session or session["username"] != username:
+        await ctx.respond(
+            "No active linking session found for this username. Please run `/link` without a code first.",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
+        return
+
+    if time.time() > session["expires_at"]:
+        PENDING_LINKS.pop(ctx.author.id, None)  # Clean session safely
+        await ctx.respond(
+            "Your verification code has expired. Please run `/link` again to get a new one.",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
+        return
+
+    if code != session["code"]:
+        await ctx.respond(
+            "❌ Invalid verification code. Please try again.",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
+        return
+
+    # SUCCESS: Code matches!
+    if not await update_user_ldap_attribute(
+        username, "discord", str(ctx.author.id), aiohttp_client
+    ):
+        await ctx.respond(
+            "❌ Failed to link your Discord account. Please try again.",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
+        return
+
+    PENDING_LINKS.pop(ctx.author.id, None)  # Explicitly clear out memory
+    await ctx.respond(
+        f"✅ Success! Your Discord account has been successfully linked to Redbrick user `{username}`.",
+        flags=hikari.MessageFlag.EPHEMERAL,
+    )
+    return
+
+
 @plugin.include
 @arc.with_hook(restrict_to_roles(role_ids=[ROLE_IDS["brickie"]]))
 @arc.slash_command("link", "Link your Redbrick Account to your Discord")
@@ -131,45 +180,7 @@ async def link_command(
 
     # VERIFICATION MODE (Code provided)
     if code is not None:
-        session = PENDING_LINKS.get(ctx.author.id)
-
-        if not session or session["username"] != username:
-            await ctx.respond(
-                "No active linking session found for this username. Please run `/link` without a code first.",
-                flags=hikari.MessageFlag.EPHEMERAL,
-            )
-            return
-
-        if time.time() > session["expires_at"]:
-            PENDING_LINKS.pop(ctx.author.id, None)  # Clean session safely
-            await ctx.respond(
-                "Your verification code has expired. Please run `/link` again to get a new one.",
-                flags=hikari.MessageFlag.EPHEMERAL,
-            )
-            return
-
-        if code != session["code"]:
-            await ctx.respond(
-                "❌ Invalid verification code. Please try again.",
-                flags=hikari.MessageFlag.EPHEMERAL,
-            )
-            return
-
-        # SUCCESS: Code matches!
-        if not await link_discord_to_ldap(ctx.author.id, username, aiohttp_client):
-            await ctx.respond(
-                "❌ Failed to link your Discord account. Please try again.",
-                flags=hikari.MessageFlag.EPHEMERAL,
-            )
-            return
-
-        PENDING_LINKS.pop(ctx.author.id, None)  # Explicitly clear out memory
-        await ctx.respond(
-            f"✅ Success! Your Discord account has been successfully linked to Redbrick user `{username}`.",
-            flags=hikari.MessageFlag.EPHEMERAL,
-        )
-        return
-
+        return await code_handler(ctx, username, code, aiohttp_client)
     # No Code provided
     otp_code = f"{secrets.randbelow(1000000):06d}"
 
@@ -179,7 +190,13 @@ async def link_command(
         expires_at=time.time() + CODE_EXPIRATION_SECONDS,
     )
 
-    # await send_verification_email(username, otp_code)
+    email_send = await send_verification_email(username, otp_code, aiohttp_client)
+    if not email_send:
+        await ctx.respond(
+            "❌ Failed to send verification email. Please ensure your email is correct and try again.",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
+        return
 
     await ctx.respond(
         f"Let's get you linked! A verification code has been generated for `{username}`.\n"
@@ -188,7 +205,6 @@ async def link_command(
     )
 
 
-# 5. Loader Setup
 @arc.loader
 def load(client: Blockbot) -> None:
     client.add_plugin(plugin)

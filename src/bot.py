@@ -70,6 +70,7 @@ async def error_handler(ctx: BlockbotContext, exc: Exception) -> None:  # noqa: 
     await ctx.respond(f"❌ Blockbot encountered an unhandled exception. {message}")
     logger.error(traceback_str)
 
+
 @client.add_startup_hook
 async def startup_hook(_: arc.GatewayClient) -> None:
     if Feature.DATABASE.enabled:
