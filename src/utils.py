@@ -1,4 +1,5 @@
 import datetime
+import logging
 import typing
 from urllib.parse import urlparse
 
@@ -6,7 +7,15 @@ import aiohttp
 import arc
 import hikari
 
-from src.config import LDAP_PASSWORD, LDAP_USERNAME
+from src.config import (
+    ADMIN_API_PASSWORD,
+    ADMIN_API_URL,
+    ADMIN_API_USERNAME,
+    LDAP_PASSWORD,
+    LDAP_USERNAME,
+)
+
+logger = logging.getLogger(__name__)
 
 
 class EventWithGuildAttributes(typing.Protocol):
@@ -77,3 +86,131 @@ async def post_new_md_content(
 
 def utcnow() -> datetime.datetime:
     return datetime.datetime.now(datetime.timezone.utc)
+
+
+async def get_ldap_user_by_discord_id(
+    discord_id: int, aiohttp_client: aiohttp.ClientSession
+) -> dict[str, typing.Any] | None:
+    """
+    Get the LDAP user associated with a Discord ID.
+    Returns None if no user is found.
+    """
+    url = f"{ADMIN_API_URL}/admin/users/discord/{discord_id}"
+    auth = aiohttp.BasicAuth(
+        login=ADMIN_API_USERNAME or "", password=ADMIN_API_PASSWORD or ""
+    )
+    async with aiohttp_client.get(url, auth=auth) as response:
+        logger.error(f"Fetching LDAP user for Discord ID: {discord_id}")
+        if response.status == 404:
+            return None
+        response.raise_for_status()
+        return await response.json()
+
+
+async def get_ldap_user_by_uid(
+    uid: str, aiohttp_client: aiohttp.ClientSession
+) -> dict[str, typing.Any] | None:
+    """
+    Get the LDAP user associated with a UID.
+    Returns None if no user is found.
+    """
+    url = f"{ADMIN_API_URL}/admin/users/{uid}"
+    auth = aiohttp.BasicAuth(
+        login=ADMIN_API_USERNAME or "", password=ADMIN_API_PASSWORD or ""
+    )
+    async with aiohttp_client.get(url, auth=auth) as response:
+        logger.error(f"Fetching LDAP user for UID: {uid}")
+        if response.status == 404:
+            return None
+        response.raise_for_status()
+        return await response.json()
+
+
+async def is_uid_ldap_available(
+    aiohttp_client: aiohttp.ClientSession, uid: str
+) -> bool:
+    """
+    Check if LDAP user exists with that username.
+    """
+    url = f"{ADMIN_API_URL}/users/{uid}"
+    async with aiohttp_client.get(url) as response:
+        if response.status == 404:
+            return True
+        if response.status == 200:
+            return False
+        response.raise_for_status()
+        return False
+
+
+async def update_user_ldap_attribute(
+    uid: str, key: str, value: str, aiohttp_client: aiohttp.ClientSession
+) -> bool:
+    """
+    Update an LDAP user's attribute.
+    """
+    url = f"{ADMIN_API_URL}/admin/users/{uid}"
+    auth = aiohttp.BasicAuth(
+        login=ADMIN_API_USERNAME or "", password=ADMIN_API_PASSWORD or ""
+    )
+    data = {"ldap_key": key, "ldap_value": value}
+    async with aiohttp_client.put(url, data=data, auth=auth) as response:
+        if response.status != 200:
+            logger.error(
+                f"Failed to update LDAP user {uid}. Status code: {response.status}"
+            )
+            return False
+        response.raise_for_status()
+        return True
+
+
+async def send_verification_email(
+    uid: str, code: str, aiohttp_client: aiohttp.ClientSession
+) -> bool:
+    """
+    Send a verification email to the user.
+    """
+    url = f"{ADMIN_API_URL}/admin/users/verify/"
+    auth = aiohttp.BasicAuth(
+        login=ADMIN_API_USERNAME or "", password=ADMIN_API_PASSWORD or ""
+    )
+    data = {"username": uid, "verification_code": code}
+    async with aiohttp_client.post(url, json=data, auth=auth) as response:
+        if response.status != 200:
+            logger.error(
+                f"Failed to send verification email for LDAP user {uid}. Status code: {response.status}"
+            )
+            return False
+        response.raise_for_status()
+        return True
+
+
+async def register_ldap_user(
+    uid: str,
+    student_id: str,
+    mod_code: str,
+    mail: str,
+    discord_id: int,
+    aiohttp_client: aiohttp.ClientSession,
+) -> bool:
+    """
+    Register a new LDAP user.
+    """
+    url = f"{ADMIN_API_URL}/admin/users/register"
+    auth = aiohttp.BasicAuth(
+        login=ADMIN_API_USERNAME or "", password=ADMIN_API_PASSWORD or ""
+    )
+    data = {
+        "studentNo": student_id,
+        "uid": uid,
+        "courseCode": mod_code,
+        "altmail": mail,
+        "discord": str(discord_id),
+    }
+    async with aiohttp_client.post(url, json=data, auth=auth) as response:
+        if response.status not in {200, 201}:
+            logger.error(
+                f"Failed to register LDAP user {uid}. Status: {response.status}"
+            )
+            return False
+        response.raise_for_status()
+        return True

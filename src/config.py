@@ -20,6 +20,7 @@ class Feature(StrEnum):
     PERMISSION_HOOKS = "PERMS_ENABLED"
     RCON = "RCON_ENABLED"
     MINIO = "MINIO_ENABLED"
+    ADMIN_API = "ADMIN_API_ENABLED"
 
     @property
     def enabled(self) -> bool:
@@ -132,6 +133,7 @@ CHANNEL_IDS: dict[str, int] = {
     "instructions": 892521597276139603,
     "rules": 578713759263096842,
     "waiting-room": 627548568613552138,
+    "tickets": 1517611430126555298,
 }
 
 CATEGORY_IDS: dict[str, int] = {
@@ -160,6 +162,23 @@ ROLE_IDS: dict[str, int] = {
     "admins": 585512338728419341,
     "helpdesk": 1194683307921772594,
 }
+
+VALID_SSH_KEYS = [
+    "ssh-ed25519",
+    "ssh-ed25519-cert-v01@openssh.com",
+    "sk-ssh-ed25519@openssh.com",
+    "sk-ssh-ed25519-cert-v01@openssh.com",
+    "ecdsa-sha2-nistp256",
+    "ecdsa-sha2-nistp256-cert-v01@openssh.com",
+    "ecdsa-sha2-nistp384",
+    "ecdsa-sha2-nistp384-cert-v01@openssh.com",
+    "ecdsa-sha2-nistp521",
+    "ecdsa-sha2-nistp521-cert-v01@openssh.com",
+    "sk-ecdsa-sha2-nistp256@openssh.com",
+    "sk-ecdsa-sha2-nistp256-cert-v01@openssh.com",
+    "ssh-rsa",
+    "ssh-rsa-cert-v01@openssh.com",
+]
 
 ASSIGNABLE_ROLES: dict[str, int] = {
     role: role_id
@@ -192,6 +211,15 @@ UID_MAPS: dict[str, str] = dict(item.split("=") for item in DISCORD_UID_MAP.spli
 
 LDAP_USERNAME = get_env_var("LDAP_USERNAME", required_features=[Feature.LDAP])
 LDAP_PASSWORD = get_env_var("LDAP_PASSWORD", required_features=[Feature.LDAP])
+
+ADMIN_API_USERNAME = get_env_var(
+    "ADMIN_API_USERNAME", required_features=[Feature.ADMIN_API]
+)
+ADMIN_API_PASSWORD = get_env_var(
+    "ADMIN_API_PASSWORD", required_features=[Feature.ADMIN_API]
+)
+
+ADMIN_API_URL = get_env_var("ADMIN_API_URL", required_features=[Feature.ADMIN_API])
 
 AGENDA_TEMPLATE_URL = get_env_var(
     "AGENDA_TEMPLATE_URL", required_features=[Feature.LDAP]

@@ -2,11 +2,13 @@ import logging
 import typing
 from typing import Awaitable, Callable
 
+import aiohttp
 import arc
 import hikari
 
 from src.config import Feature
 from src.models import BlockbotContext
+from src.utils import get_ldap_user_by_discord_id
 
 type WrappedHookResult = typing.Callable[
     [BlockbotContext], typing.Awaitable[arc.HookResult]
@@ -90,5 +92,30 @@ def restrict_to_channels(
     @can_be_disabled
     async def func(ctx: BlockbotContext) -> arc.HookResult:
         return await _restrict_to_channels(ctx, channel_ids)
+
+    return func
+
+
+async def _restrict_to_ldap_users(
+    ctx: BlockbotContext, aiohttp_client: aiohttp.ClientSession
+) -> arc.HookResult:
+    if not await get_ldap_user_by_discord_id(ctx.author.id, aiohttp_client):
+        link_discord_command = ctx.client.find_command(
+            hikari.CommandType.SLASH, "account link discord"
+        )
+        assert isinstance(link_discord_command, arc.SlashSubCommand)
+        await ctx.respond(
+            f"❌ This command is restricted. Only users with a valid Redbrick account are permitted to use this command. Please use {link_discord_command.make_mention()} to link your Redbrick account.",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
+        return arc.HookResult(abort=True)
+    return arc.HookResult()
+
+
+def restrict_to_ldap_users() -> WrappedHookResult:
+    @can_be_disabled
+    async def func(ctx: BlockbotContext) -> arc.HookResult:
+        aiohttp_client = ctx.client.get_type_dependency(aiohttp.ClientSession)
+        return await _restrict_to_ldap_users(ctx, aiohttp_client)
 
     return func

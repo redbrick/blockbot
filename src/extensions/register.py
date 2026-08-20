@@ -2,14 +2,15 @@ import contextlib
 import json
 import re
 
+import aiohttp
 import arc
 import hikari
 import miru
 
-from src.config import CHANNEL_IDS, ROLE_IDS
+from src.config import CHANNEL_IDS, ROLE_IDS, Feature
 from src.hooks import restrict_to_channels
 from src.models import Blockbot, BlockbotContext, BlockbotPlugin
-from src.utils import role_mention
+from src.utils import is_uid_ldap_available, role_mention
 
 plugin = BlockbotPlugin(name="Register")
 
@@ -64,10 +65,11 @@ class RegisterView(miru.View):
             return
 
         user_data = {
-            "student_id": self.student_id,
-            "desired_uid": self.desired_uid,
-            "mod_code": self.mod_code,
-            "mail": self.mail,
+            "studentNo": self.student_id,
+            "gecos": self.desired_uid,
+            "courseCode": self.mod_code,
+            "altmail": self.mail,
+            "discord": ctx.author.id,
         }
 
         admin_message = f"""
@@ -77,6 +79,7 @@ class RegisterView(miru.View):
 - Desired Username: `{self.desired_uid}`
 - Course Code: `{self.mod_code}`
 - Email: `{self.mail}`
+- Discord ID `{ctx.author.id}`
 ### JSON:
 ```json
 {json.dumps(user_data)}
@@ -120,6 +123,7 @@ async def register_command(
     mod_code: arc.Option[str, arc.StrParams("Your course code. (e.g. COMSCI1, ECE1)")],
     mail: arc.Option[str, arc.StrParams("Your DCU email address.")],
     miru_client: miru.Client = arc.inject(),
+    aiohttp_client: aiohttp.ClientSession = arc.inject(),
 ) -> None:
     """Register a Redbrick account."""
 
@@ -140,6 +144,10 @@ async def register_command(
         error_message = (
             "Invalid email format. Please make sure it's a DCU email address."
         )
+    elif Feature.ADMIN_API.enabled and not await is_uid_ldap_available(
+        aiohttp_client, desired_uid
+    ):
+        error_message = "This username is already taken. Please try another one."
 
     if error_message is not None:
         await ctx.respond(error_message, flags=hikari.MessageFlag.EPHEMERAL)

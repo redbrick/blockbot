@@ -37,6 +37,10 @@ LDAP_USERNAME={{ key "blockbot/ldap/username" }}
 LDAP_PASSWORD={{ key "blockbot/ldap/password" }}
 DISCORD_UID_MAP={{ key "blockbot/discord/uid_map" }}
 
+ADMIN_API_USERNAME={{ key "blockbot/admin_api/username" }}
+ADMIN_API_PASSWORD={{ key "blockbot/admin_api/password" }}
+ADMIN_API_URL={{ key "blockbot/admin_api/url" }}
+
 AGENDA_TEMPLATE_URL={{ key "blockbot/agenda/template_url" }}
 
 DB_HOST={{ env "NOMAD_ADDR_db" }} # address and port
