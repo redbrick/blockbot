@@ -7,7 +7,7 @@ import aiohttp
 import arc
 import hikari
 
-from src.config import CHANNEL_IDS, ROLE_IDS, Feature, VALID_SSH_KEYS
+from src.config import CHANNEL_IDS, ROLE_IDS, VALID_SSH_KEYS, Feature
 from src.hooks import restrict_to_ldap_users, restrict_to_roles
 from src.models import Blockbot, BlockbotContext, BlockbotPlugin
 from src.utils import (
