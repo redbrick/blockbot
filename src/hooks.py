@@ -100,8 +100,12 @@ async def _restrict_to_ldap_users(
     ctx: BlockbotContext, aiohttp_client: aiohttp.ClientSession
 ) -> arc.HookResult:
     if not await get_ldap_user_by_discord_id(ctx.author.id, aiohttp_client):
+        link_discord_command = ctx.client.find_command(
+            hikari.CommandType.SLASH, "account link discord"
+        )
+        assert isinstance(link_discord_command, arc.SlashSubCommand)
         await ctx.respond(
-            "❌ This command is restricted. Only users with a valid Redbrick account are permitted to use this command. Please use `/account link discord` to link your Redbrick account.",
+            f"❌ This command is restricted. Only users with a valid Redbrick account are permitted to use this command. Please use {link_discord_command.make_mention()} to link your Redbrick account.",
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return arc.HookResult(abort=True)

@@ -123,9 +123,13 @@ async def code_handler(
     aiohttp_client: aiohttp.ClientSession,
 ) -> None:
     session = PENDING_LINKS.get(ctx.author.id)
+    link_discord_command = ctx.client.find_command(
+        hikari.CommandType.SLASH, "account link discord"
+    )
+    assert isinstance(link_discord_command, arc.SlashSubCommand)
     if not session or session["username"] != username:
         await ctx.respond(
-            "No active linking session found for this username. Please run `/account link discord` without a code first.",
+            f"No active linking session found for this username. Please run {link_discord_command.make_mention()} without a code first.",
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return
@@ -133,7 +137,7 @@ async def code_handler(
     if time.time() > session["expires_at"]:
         PENDING_LINKS.pop(ctx.author.id, None)  # Clean session safely
         await ctx.respond(
-            "Your verification code has expired. Please run `/account link discord` again to get a new one.",
+            f"Your verification code has expired. Please run {link_discord_command.make_mention()} again to get a new one.",
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return
