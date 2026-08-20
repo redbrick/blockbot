@@ -2,12 +2,12 @@ import aiohttp
 import arc
 import hikari
 
-from src.config import CHANNEL_IDS, DEFAULT_ROLES, ROLE_IDS, Colour
+from src.config import CHANNEL_IDS, DEFAULT_ROLES, ROLE_IDS, Colour, Feature
 from src.hooks import restrict_to_channels, restrict_to_roles
 from src.models import Blockbot, BlockbotContext, BlockbotPlugin
 from src.utils import register_ldap_user
 
-plugin = BlockbotPlugin(name="Verify")
+plugin = BlockbotPlugin(name="Verify", required_features=[Feature.ADMIN_API])
 
 
 @plugin.include
