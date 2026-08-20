@@ -147,7 +147,7 @@ async def register_command(
     elif Feature.ADMIN_API.enabled and not await is_uid_ldap_available(
         aiohttp_client, desired_uid
     ):
-        error_message = "This Username is already taken. Please try another one."
+        error_message = "This username is already taken. Please try another one."
 
     if error_message is not None:
         await ctx.respond(error_message, flags=hikari.MessageFlag.EPHEMERAL)

@@ -9,6 +9,7 @@ import hikari
 
 from src.config import (
     ADMIN_API_PASSWORD,
+    ADMIN_API_URL,
     ADMIN_API_USERNAME,
     LDAP_PASSWORD,
     LDAP_USERNAME,
@@ -94,7 +95,7 @@ async def get_ldap_user_by_discord_id(
     Get the LDAP user associated with a Discord ID.
     Returns None if no user is found.
     """
-    url = f"https://api.redbrick.dcu.ie/admin/users/discord/{discord_id}"
+    url = f"{ADMIN_API_URL}/admin/users/discord/{discord_id}"
     auth = aiohttp.BasicAuth(
         login=ADMIN_API_USERNAME or "", password=ADMIN_API_PASSWORD or ""
     )
@@ -113,7 +114,7 @@ async def get_ldap_user_by_uid(
     Get the LDAP user associated with a UID.
     Returns None if no user is found.
     """
-    url = f"https://api.redbrick.dcu.ie/admin/users/{uid}"
+    url = f"{ADMIN_API_URL}/admin/users/{uid}"
     auth = aiohttp.BasicAuth(
         login=ADMIN_API_USERNAME or "", password=ADMIN_API_PASSWORD or ""
     )
@@ -131,7 +132,7 @@ async def is_uid_ldap_available(
     """
     Check if LDAP user exists with that username.
     """
-    url = f"https://api.redbrick.dcu.ie/users/{uid}"
+    url = f"{ADMIN_API_URL}/users/{uid}"
     async with aiohttp_client.get(url) as response:
         if response.status == 404:
             return True
@@ -147,7 +148,7 @@ async def update_user_ldap_attribute(
     """
     Update an LDAP user's attribute.
     """
-    url = f"https://api.redbrick.dcu.ie/admin/users/{uid}"
+    url = f"{ADMIN_API_URL}/admin/users/{uid}"
     auth = aiohttp.BasicAuth(
         login=ADMIN_API_USERNAME or "", password=ADMIN_API_PASSWORD or ""
     )
@@ -168,7 +169,7 @@ async def send_verification_email(
     """
     Send a verification email to the user.
     """
-    url = "https://api.redbrick.dcu.ie/admin/users/verify/"
+    url = f"{ADMIN_API_URL}/admin/users/verify/"
     auth = aiohttp.BasicAuth(
         login=ADMIN_API_USERNAME or "", password=ADMIN_API_PASSWORD or ""
     )
@@ -194,7 +195,7 @@ async def register_ldap_user(
     """
     Register a new LDAP user.
     """
-    url = "https://api.redbrick.dcu.ie/admin/users/register"
+    url = f"{ADMIN_API_URL}/admin/users/register"
     auth = aiohttp.BasicAuth(
         login=ADMIN_API_USERNAME or "", password=ADMIN_API_PASSWORD or ""
     )

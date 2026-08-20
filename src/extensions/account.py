@@ -1,4 +1,3 @@
-import asyncio
 import re
 import secrets
 import time
@@ -8,7 +7,7 @@ import aiohttp
 import arc
 import hikari
 
-from src.config import ROLE_IDS, Feature
+from src.config import CHANNEL_IDS, ROLE_IDS, Feature
 from src.hooks import restrict_to_ldap_users, restrict_to_roles
 from src.models import Blockbot, BlockbotContext, BlockbotPlugin
 from src.utils import (
@@ -30,6 +29,8 @@ group = plugin.include_slash_group(
     "Redbrick Account Management Command",
 )
 
+linking = group.include_subgroup("link", "Link your Accounts to your Redbrick account")
+
 
 class LinkSession(TypedDict):
     username: str
@@ -44,36 +45,37 @@ PENDING_LINKS: dict[hikari.Snowflake, LinkSession] = {}
 
 
 async def clean_expired_links() -> None:
-    """Periodically purges expired verification sessions to prevent memory leaks."""
-    while True:
-        try:
-            await asyncio.sleep(300)  # Run every 5 minutes
-            current_time = time.time()
+    """Purge expired link sessions from the PENDING_LINKS dictionary."""
 
-            # Extract expired keys safely
-            expired_keys = [
-                user_id
-                for user_id, session in PENDING_LINKS.items()
-                if current_time > session["expires_at"]
-            ]
+    current_time = time.time()
 
-            for key in expired_keys:
-                PENDING_LINKS.pop(key, None)
+    # Extract expired keys safely
+    expired_keys = [
+        user_id
+        for user_id, session in PENDING_LINKS.items()
+        if current_time > session["expires_at"]
+    ]
 
-        except asyncio.CancelledError:
-            break
-        except Exception:
-            pass
+    for key in expired_keys:
+        PENDING_LINKS.pop(key, None)
 
 
 async def user_check(
     ctx: BlockbotContext, username: str, aiohttp_client: aiohttp.ClientSession
 ) -> bool:
+    if not USERNAME_REGEX.match(username):
+        await ctx.respond(
+            "Invalid username. Your username should be 3-8 characters long and only contain letters, numbers, and underscores.",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
+        return False
+
     ldap_user = await get_ldap_user_by_discord_id(ctx.author.id, aiohttp_client)
+
     # Check if the user is already linked
     if ldap_user:
         await ctx.respond(
-            "Your account is already linked! If you are experiencing issues, please create a ticket.",
+            f"Your account is already linked! If you are experiencing issues, please make a ticket in <#{CHANNEL_IDS['tickets']}>",
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return False
@@ -88,7 +90,7 @@ async def user_check(
         and ldap_user["user"].get("expiryDate") < current_time_str
     ):
         await ctx.respond(
-            "This account has expired. Please contact the Redbrick committee for assistance.",
+            f"This account has expired. If you believe this is wrong please make a ticket in <#{CHANNEL_IDS['tickets']}>",
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return False
@@ -100,21 +102,14 @@ async def user_check(
         and ldap_user["user"].get("discord") is not None
     ):
         await ctx.respond(
-            "This username is already linked to another Discord account. If you believe this is wrong please create a ticket.",
-            flags=hikari.MessageFlag.EPHEMERAL,
-        )
-        return False
-
-    if not USERNAME_REGEX.match(username):
-        await ctx.respond(
-            "Invalid username. Your username should be 3-8 characters long and only contain letters, numbers, and underscores.",
+            f"This username is already linked to another Discord account. If you believe this is wrong please make a ticket in <#{CHANNEL_IDS['tickets']}>",
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return False
 
     if await is_uid_ldap_available(aiohttp_client, username):
         await ctx.respond(
-            "This user doesn't exist. If you believe this is wrong please create a ticket.",
+            f"This user doesn't exist. If you believe this is wrong please make a ticket in <#{CHANNEL_IDS['tickets']}>",
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return False
@@ -130,7 +125,7 @@ async def code_handler(
     session = PENDING_LINKS.get(ctx.author.id)
     if not session or session["username"] != username:
         await ctx.respond(
-            "No active linking session found for this username. Please run `/account link` without a code first.",
+            "No active linking session found for this username. Please run `/account link discord` without a code first.",
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return
@@ -138,12 +133,11 @@ async def code_handler(
     if time.time() > session["expires_at"]:
         PENDING_LINKS.pop(ctx.author.id, None)  # Clean session safely
         await ctx.respond(
-            "Your verification code has expired. Please run `/account link` again to get a new one.",
+            "Your verification code has expired. Please run `/account link discord` again to get a new one.",
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return
-
-    if code != session["code"]:
+    if code and session["code"] and not secrets.compare_digest(code, session["code"]):
         await ctx.respond(
             "❌ Invalid verification code. Please try again.",
             flags=hikari.MessageFlag.EPHEMERAL,
@@ -189,9 +183,9 @@ def valid_ssh_key(key: str) -> bool:
     return any(key.startswith(valid_key) for valid_key in valid_ssh_keys)
 
 
-@group.include
+@linking.include
 @arc.with_hook(restrict_to_roles(role_ids=[ROLE_IDS["brickie"]]))
-@arc.slash_subcommand("link", "Link your Redbrick Account to your Discord")
+@arc.slash_subcommand("discord", "Link your Redbrick Account to your Discord")
 async def link_command(
     ctx: BlockbotContext,
     username: arc.Option[
@@ -203,6 +197,8 @@ async def link_command(
     aiohttp_client: aiohttp.ClientSession = arc.inject(),
 ) -> None:
 
+    await clean_expired_links()
+
     if not await user_check(ctx, username, aiohttp_client):
         return
 
@@ -210,7 +206,7 @@ async def link_command(
     if code is not None:
         await code_handler(ctx, username, code, aiohttp_client)
         return
-        # No Code provided
+    # No Code provided
     otp_code = f"{secrets.randbelow(1000000):06d}"
 
     PENDING_LINKS[ctx.author.id] = LinkSession(
@@ -229,7 +225,7 @@ async def link_command(
 
     await ctx.respond(
         f"Let's get you linked! A verification code has been generated for `{username}`.\n"
-        f"Once you receive it, run `/account link username: {username} code: <code>` to complete the process.",
+        f"Once you receive it, run `/account link discord username: {username} code: <code>` to complete the process.",
         flags=hikari.MessageFlag.EPHEMERAL,
     )
 

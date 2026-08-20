@@ -133,6 +133,7 @@ CHANNEL_IDS: dict[str, int] = {
     "instructions": 892521597276139603,
     "rules": 578713759263096842,
     "waiting-room": 627548568613552138,
+    "tickets": 1517611430126555298,
 }
 
 CATEGORY_IDS: dict[str, int] = {
@@ -200,6 +201,8 @@ ADMIN_API_USERNAME = get_env_var(
 ADMIN_API_PASSWORD = get_env_var(
     "ADMIN_API_PASSWORD", required_features=[Feature.ADMIN_API]
 )
+
+ADMIN_API_URL = get_env_var("ADMIN_API_URL", required_features=[Feature.ADMIN_API])
 
 AGENDA_TEMPLATE_URL = get_env_var(
     "AGENDA_TEMPLATE_URL", required_features=[Feature.LDAP]

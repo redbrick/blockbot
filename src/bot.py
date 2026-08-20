@@ -1,7 +1,5 @@
-import asyncio
 import logging
 import traceback
-from typing import Any
 
 import aiohttp
 import arc
@@ -10,12 +8,9 @@ import miru
 
 from src.config import DEBUG, TOKEN, Feature
 from src.database import init_db
-from src.extensions.account import clean_expired_links
 from src.models import Blockbot, BlockbotContext
 
 logger = logging.getLogger(__name__)
-
-BACKGROUND_TASKS: set[asyncio.Task[Any]] = set()
 
 bot = hikari.GatewayBot(
     token=TOKEN,
@@ -76,9 +71,3 @@ async def startup_hook(_: arc.GatewayClient) -> None:
     if Feature.DATABASE.enabled:
         logger.info("Initialising database")
         await init_db()
-        if Feature.ADMIN_API.enabled:
-            logger.info("Initialising clearing for linking to LDAP")
-
-        task = asyncio.create_task(clean_expired_links())
-        BACKGROUND_TASKS.add(task)
-        task.add_done_callback(BACKGROUND_TASKS.discard)

@@ -22,7 +22,7 @@ plugin = BlockbotPlugin(name="Verify")
 async def verify_command(
     ctx: BlockbotContext,
     student_id: arc.Option[
-        str, arc.StrParams(description="student ID.", min_length=5, max_length=9)
+        str, arc.StrParams(description="Student ID.", min_length=5, max_length=9)
     ],
     username: arc.Option[
         str,
