@@ -214,7 +214,7 @@ async def link_command(
         return
 
     await ctx.respond(
-        f"Let's get you linked! A verification code has been generated for `{username}`.\n"
+        f"Let's get you linked! A verification code has been generated and sent to your Redbrick email for `{username}`.\n"
         f"Once you receive it, run `/account link discord username: {username} code: <code>` to complete the process.",
         flags=hikari.MessageFlag.EPHEMERAL,
     )
