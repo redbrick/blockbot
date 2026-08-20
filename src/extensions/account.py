@@ -7,7 +7,7 @@ import aiohttp
 import arc
 import hikari
 
-from src.config import CHANNEL_IDS, ROLE_IDS, Feature
+from src.config import CHANNEL_IDS, ROLE_IDS, Feature, VALID_SSH_KEYS
 from src.hooks import restrict_to_ldap_users, restrict_to_roles
 from src.models import Blockbot, BlockbotContext, BlockbotPlugin
 from src.utils import (
@@ -53,7 +53,9 @@ async def clean_expired_links() -> None:
     expired_keys = [
         user_id
         for user_id, session in PENDING_LINKS.items()
-        if current_time > session["expires_at"]
+        # Check if the session has expired by 15 minutes (900 seconds) to ensure cleanup.
+        # Expiry is in 5 minutes so we check for 10 minutes after to ensure we don't prematurely delete active sessions.
+        if current_time > session["expires_at"] + 900
     ]
 
     for key in expired_keys:
@@ -168,23 +170,7 @@ async def code_handler(
 
 def valid_ssh_key(key: str) -> bool:
     """Check if the provided SSH key is valid."""
-    valid_ssh_keys = [
-        "ssh-ed25519",
-        "ssh-ed25519-cert-v01@openssh.com",
-        "sk-ssh-ed25519@openssh.com",
-        "sk-ssh-ed25519-cert-v01@openssh.com",
-        "ecdsa-sha2-nistp256",
-        "ecdsa-sha2-nistp256-cert-v01@openssh.com",
-        "ecdsa-sha2-nistp384",
-        "ecdsa-sha2-nistp384-cert-v01@openssh.com",
-        "ecdsa-sha2-nistp521",
-        "ecdsa-sha2-nistp521-cert-v01@openssh.com",
-        "sk-ecdsa-sha2-nistp256@openssh.com",
-        "sk-ecdsa-sha2-nistp256-cert-v01@openssh.com",
-        "ssh-rsa",
-        "ssh-rsa-cert-v01@openssh.com",
-    ]
-    return any(key.startswith(valid_key) for valid_key in valid_ssh_keys)
+    return any(key.startswith(valid_key) for valid_key in VALID_SSH_KEYS)
 
 
 @linking.include

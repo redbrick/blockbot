@@ -163,6 +163,23 @@ ROLE_IDS: dict[str, int] = {
     "helpdesk": 1194683307921772594,
 }
 
+VALID_SSH_KEYS = [
+    "ssh-ed25519",
+    "ssh-ed25519-cert-v01@openssh.com",
+    "sk-ssh-ed25519@openssh.com",
+    "sk-ssh-ed25519-cert-v01@openssh.com",
+    "ecdsa-sha2-nistp256",
+    "ecdsa-sha2-nistp256-cert-v01@openssh.com",
+    "ecdsa-sha2-nistp384",
+    "ecdsa-sha2-nistp384-cert-v01@openssh.com",
+    "ecdsa-sha2-nistp521",
+    "ecdsa-sha2-nistp521-cert-v01@openssh.com",
+    "sk-ecdsa-sha2-nistp256@openssh.com",
+    "sk-ecdsa-sha2-nistp256-cert-v01@openssh.com",
+    "ssh-rsa",
+    "ssh-rsa-cert-v01@openssh.com",
+]
+
 ASSIGNABLE_ROLES: dict[str, int] = {
     role: role_id
     for role, role_id in ROLE_IDS.items()
