@@ -8,10 +8,12 @@ import arc
 import hikari
 
 from src.config import CHANNEL_IDS, ROLE_IDS, VALID_SSH_KEYS, Feature
+from src.extensions.rcon import run_rcon_command
 from src.hooks import restrict_to_ldap_users, restrict_to_roles
 from src.models import Blockbot, BlockbotContext, BlockbotPlugin
 from src.utils import (
     get_ldap_user_by_discord_id,
+    get_ldap_user_by_minecraft_name,
     get_ldap_user_by_uid,
     is_uid_ldap_available,
     send_verification_email,
@@ -20,7 +22,7 @@ from src.utils import (
 
 plugin = BlockbotPlugin(
     name="Redbrick Account Management Command Plugin",
-    required_features=[Feature.ADMIN_API],
+    required_features=[Feature.ADMIN_API, Feature.RCON],
 )
 
 
@@ -216,6 +218,80 @@ async def link_command(
     await ctx.respond(
         f"Let's get you linked! A verification code has been generated and sent to your Redbrick email for `{username}`.\n"
         f"Once you receive it, run `/account link discord username: {username} code: <code>` to complete the process.",
+        flags=hikari.MessageFlag.EPHEMERAL,
+    )
+
+
+@linking.include
+@arc.with_hook(restrict_to_roles(role_ids=[ROLE_IDS["brickie"]]))
+@arc.with_hook(restrict_to_ldap_users())
+@arc.slash_subcommand(
+    "minecraft", "Link your Redbrick Account to your Minecraft Account"
+)
+async def minecraft_command(
+    ctx: BlockbotContext,
+    minecraft_name: arc.Option[str, arc.StrParams("Your Minecraft username.")],
+    aiohttp_client: aiohttp.ClientSession = arc.inject(),
+) -> None:
+    ldap_user = await get_ldap_user_by_discord_id(ctx.author.id, aiohttp_client)
+    if not ldap_user or not ldap_user.get("user") or not ldap_user["user"].get("uid"):
+        await ctx.respond(
+            "❌ Could not retrieve your Redbrick account information. Please ensure your account is linked and try again.",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
+        return
+    if (
+        ldap_user["user"].get("minecraft")
+        and ldap_user["user"]["minecraft"] == minecraft_name
+    ):
+        await ctx.respond(
+            "❌ This Minecraft username is already linked to your Redbrick account.",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
+        return
+
+    if await get_ldap_user_by_minecraft_name(minecraft_name, aiohttp_client):
+        await ctx.respond(
+            f"❌ This Minecraft username is already linked to another Redbrick account. If you believe this is wrong please make a ticket in <#{CHANNEL_IDS['tickets']}>",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
+        return
+
+    if ldap_user["user"].get("minecraft"):
+        # Remove the old Minecraft username from the whitelist
+        rcon_response_remove = await run_rcon_command(
+            "remove", ldap_user["user"]["minecraft"]
+        )
+        if not rcon_response_remove:
+            await ctx.respond(
+                "❌ Failed to remove old Minecraft username from whitelist.",
+                flags=hikari.MessageFlag.EPHEMERAL,
+            )
+            return
+
+    rcon_response = await run_rcon_command("add", minecraft_name)
+    if not rcon_response:
+        await ctx.respond(
+            "❌ Failed to add Minecraft username to whitelist.",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
+        return
+
+    update_ldap = await update_user_ldap_attribute(
+        uid=ldap_user["user"]["uid"],
+        key="minecraft",
+        value=minecraft_name,
+        aiohttp_client=aiohttp_client,
+    )
+    if not update_ldap:
+        await ctx.respond(
+            "❌ Failed to update Minecraft username. Please ensure it is correct and try again.",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
+        return
+
+    await ctx.respond(
+        "✅ Your Minecraft username has been successfully updated in your Redbrick account.",
         flags=hikari.MessageFlag.EPHEMERAL,
     )
 
