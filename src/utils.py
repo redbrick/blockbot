@@ -88,6 +88,25 @@ def utcnow() -> datetime.datetime:
     return datetime.datetime.now(datetime.timezone.utc)
 
 
+async def get_ldap_user_by_minecraft_name(
+    minecraft_name: str, aiohttp_client: aiohttp.ClientSession
+) -> dict[str, typing.Any] | None:
+    """
+    Get the LDAP user associated with a Minecraft name.
+    Returns None if no user is found.
+    """
+    url = f"{ADMIN_API_URL}/admin/users/minecraft/{minecraft_name}"
+    auth = aiohttp.BasicAuth(
+        login=ADMIN_API_USERNAME or "", password=ADMIN_API_PASSWORD or ""
+    )
+    async with aiohttp_client.get(url, auth=auth) as response:
+        logger.error(f"Fetching LDAP user for Minecraft name: {minecraft_name}")
+        if response.status == 404:
+            return None
+        response.raise_for_status()
+        return await response.json()
+
+
 async def get_ldap_user_by_discord_id(
     discord_id: int, aiohttp_client: aiohttp.ClientSession
 ) -> dict[str, typing.Any] | None:
