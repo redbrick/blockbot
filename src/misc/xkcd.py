@@ -4,12 +4,9 @@ import aiohttp
 import arc
 import hikari
 
-from src.models import Blockbot, BlockbotContext, BlockbotPlugin
-
-xkcd = BlockbotPlugin(name="xkcd")
+from src.models import BlockbotContext, BlockbotPlugin, command_loader
 
 
-@xkcd.include
 @arc.slash_command("xkcd", "Wisdom from xkcd!")
 async def xkcd_command(
     ctx: BlockbotContext,
@@ -62,6 +59,6 @@ async def xkcd_command(
     await ctx.respond(embed)
 
 
-@arc.loader
-def loader(client: Blockbot) -> None:
-    client.add_plugin(xkcd)
+@command_loader
+def loader(plugin: BlockbotPlugin) -> None:
+    plugin.add_command(xkcd_command)
