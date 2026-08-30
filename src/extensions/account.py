@@ -7,7 +7,7 @@ import aiohttp
 import arc
 import hikari
 
-from src.config import CHANNEL_IDS, ROLE_IDS, VALID_SSH_KEYS, Feature
+from src.config import CHANNEL_IDS, ROLE_IDS, VALID_SSH_KEYS
 from src.extensions.rcon import run_rcon_command
 from src.hooks import restrict_to_ldap_users, restrict_to_roles
 from src.models import Blockbot, BlockbotContext, BlockbotPlugin
@@ -22,7 +22,6 @@ from src.utils import (
 
 plugin = BlockbotPlugin(
     name="Redbrick Account Management Command Plugin",
-    required_features=[Feature.ADMIN_API, Feature.RCON],
 )
 
 
