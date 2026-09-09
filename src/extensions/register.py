@@ -1,180 +1,177 @@
-import contextlib
-import json
 import re
 
-import aiohttp
 import arc
 import hikari
-import miru
+from hikari.impl import special_endpoints as se
+from hikari.interactions.interaction_components import (
+    TextInputInteractionComponent,
+)
 
-from src.config import CHANNEL_IDS, ROLE_IDS, Feature
-from src.hooks import restrict_to_channels
-from src.models import Blockbot, BlockbotContext, BlockbotPlugin
-from src.utils import is_uid_ldap_available, role_mention
+from src.config import Feature
+from src.models import Blockbot, BlockbotPlugin
+from src.utils import (
+    is_uid_ldap_available,
+)
 
-plugin = BlockbotPlugin(name="Register")
+plugin = BlockbotPlugin("Registration System", required_features=[Feature.ADMIN_API])
 
 USERNAME_REGEX = re.compile(r"^[a-z0-9][a-z0-9_]{1,6}[a-z0-9]$")
 STUDENT_ID_REGEX = re.compile(r"[0-9]{5,9}")
 COURSE_CODE_REGEX = re.compile(r"^[A-Z]+\d+$")
-MAIL_REGEX = re.compile(
-    r"^[\w\.-]+@(?!redbrick\.)[\w\.-]+\.dcu\.ie$"
-)  # allow only DCU emails but not redbrick emails
+# allow only DCU emails but not redbrick emails
+EMAIL_REGEX = re.compile(r"^[\w\.-]+@(?!redbrick\.)[\w\.-]+\.dcu\.ie$")
 
 
-class RegisterView(miru.View):
-    def __init__(
-        self,
-        user_id: int,
-        student_id: str,
-        desired_uid: str,
-        mod_code: str,
-        mail: str,
-    ) -> None:
-        self.user_id = user_id
-        self.student_id = student_id
-        self.desired_uid = desired_uid
-        self.mod_code = mod_code
-        self.mail = mail
-        super().__init__(timeout=60)
+@plugin.listen()
+async def component_interaction(event: hikari.InteractionCreateEvent) -> None:
+    if isinstance(event.interaction, hikari.ComponentInteraction):
+        custom_id = event.interaction.custom_id
+        if custom_id == "registration-create-new-user-button":
+            await new_user_registration_modal(event.interaction)
+        elif custom_id == "registration-create-new-user-confirm-button":
+            await new_user_registration_confirmation_submit(event.interaction)
 
-    async def stop_view(self) -> None:
-        for item in self.children:
-            item.disabled = True
+    elif isinstance(event.interaction, hikari.ModalInteraction):
+        custom_id = event.interaction.custom_id
+        if custom_id == "registration-create-new-user-modal":
+            await new_user_registration_submit(event.interaction)
 
-        # the view is bound to the /register command response
-        assert self.message is not None
-        # the user may have dismissed the ephemeral response already
-        with contextlib.suppress(hikari.NotFoundError):
-            await self.message.edit(components=self)
 
-        return super().stop()
-
-    async def on_timeout(self) -> None:
-        await self.stop_view()
-
-    @miru.button(
-        emoji="✅", label="Confirm Registration", custom_id="confirm_registration"
+async def new_user_registration_modal(interaction: hikari.ComponentInteraction) -> None:
+    # josh: swap order to: student id, dcu email, course code, redbrick username
+    student_id = se.LabelComponentBuilder(
+        label="Student ID",
+        description="5-9 digits long. Must not contain letters.",
+        component=se.TextInputBuilder(
+            custom_id="registration-new-user-student-id",
+            placeholder="12345678",
+            style=hikari.TextInputStyle.SHORT,
+            required=True,
+            min_length=5,
+            max_length=9,
+        ),
     )
-    async def click_button(self, ctx: miru.ViewContext, _: miru.Button) -> None:
-        if ctx.user.id != self.user_id:
-            await ctx.respond(
-                "You are not allowed to confirm this registration.",
-                flags=hikari.MessageFlag.EPHEMERAL,
-            )
-            return
+    desired_uid = se.LabelComponentBuilder(
+        label="Desired Redbrick Username",
+        description="3-8 characters long. May only contain letters, numbers, and underscores.",
+        component=se.TextInputBuilder(
+            custom_id="registration-new-user-desired-uid",
+            placeholder="johnrb",
+            style=hikari.TextInputStyle.SHORT,
+            required=True,
+            min_length=3,
+            max_length=8,
+        ),
+    )
+    course_code = se.LabelComponentBuilder(
+        label="Course Code",
+        description="e.g. COMSCI1, ECE1",
+        component=se.TextInputBuilder(
+            custom_id="registration-new-user-course-code",
+            placeholder="COMSCI1",
+            style=hikari.TextInputStyle.SHORT,
+            required=True,
+        ),
+    )
+    email_address = se.LabelComponentBuilder(
+        label="DCU Email Address",
+        component=se.TextInputBuilder(
+            custom_id="registration-new-user-email-address",
+            placeholder="john.redbrick2@mail.dcu.ie",
+            style=hikari.TextInputStyle.SHORT,
+            required=True,
+        ),
+    )
 
-        user_data = {
-            "studentNo": self.student_id,
-            "gecos": self.desired_uid,
-            "courseCode": self.mod_code,
-            "altmail": self.mail,
-            "discord": ctx.author.id,
-        }
-
-        admin_message = f"""
-{role_mention(ROLE_IDS["admins"])}
-## {ctx.user.mention}'s registration details are:
-- Student ID: `{self.student_id}`
-- Desired Username: `{self.desired_uid}`
-- Course Code: `{self.mod_code}`
-- Email: `{self.mail}`
-- Discord ID `{ctx.author.id}`
-### JSON:
-```json
-{json.dumps(user_data)}
-```
-        """
-        await plugin.client.rest.create_message(
-            CHANNEL_IDS["bot-private"], content=admin_message, role_mentions=True
-        )
-
-        await ctx.edit_response(
-            "Your registration has been confirmed. Thank you!",
-            embed=None,
-            components=[],
-        )
-
-        await self.stop_view()
+    await interaction.create_modal_response(
+        title="New User Registration",
+        custom_id="registration-create-new-user-modal",
+        components=[student_id, desired_uid, course_code, email_address],
+    )
 
 
-@plugin.include
-@arc.with_hook(
-    restrict_to_channels(
-        channel_ids=[
-            CHANNEL_IDS["waiting-room"],
-        ],
-    ),
-)
-@arc.slash_command(
-    "register",
-    "Create a Redbrick account.",
-    autodefer=arc.AutodeferMode.EPHEMERAL,  # ensure all responses are ephemeral if auto defer responds first
-)
-async def register_command(
-    ctx: BlockbotContext,
-    student_id: arc.Option[
-        str, arc.StrParams(description="Your student ID.", min_length=5, max_length=9)
-    ],
-    desired_uid: arc.Option[
-        str,
-        arc.StrParams("Your desired Redbrick username.", min_length=3, max_length=8),
-    ],
-    mod_code: arc.Option[str, arc.StrParams("Your course code. (e.g. COMSCI1, ECE1)")],
-    mail: arc.Option[str, arc.StrParams("Your DCU email address.")],
-    miru_client: miru.Client = arc.inject(),
-    aiohttp_client: aiohttp.ClientSession = arc.inject(),
-) -> None:
-    """Register a Redbrick account."""
+async def new_user_registration_submit(interaction: hikari.ModalInteraction) -> None:
+    # TODO: helper for this which filters from custom id, could reuse for ticketing
+    student_id_choice = interaction.components[0].component
+    assert isinstance(student_id_choice, TextInputInteractionComponent)
+    student_id = student_id_choice.value.strip()
 
-    student_id = student_id.strip()
-    desired_uid = desired_uid.strip().lower()
-    mod_code = mod_code.strip().upper()
-    mail = mail.strip().lower()
+    desired_uid_choice = interaction.components[1].component
+    assert isinstance(desired_uid_choice, TextInputInteractionComponent)
+    desired_uid = desired_uid_choice.value.strip().lower()
+
+    course_code_choice = interaction.components[2].component
+    assert isinstance(course_code_choice, TextInputInteractionComponent)
+    course_code = course_code_choice.value.strip().upper()
+
+    email_address_choice = interaction.components[3].component
+    assert isinstance(email_address_choice, TextInputInteractionComponent)
+    email_address = email_address_choice.value.strip().lower()
 
     error_message: str | None = None
 
     if not STUDENT_ID_REGEX.match(student_id):
-        error_message = "Invalid student ID format. `student_id` must be an integer between 5 and 9 digits long and must not contain letters."
+        error_message = "Invalid student ID: must be an integer 5-9 digits long and not contain letters."
     elif not USERNAME_REGEX.match(desired_uid):
-        error_message = "Invalid username. Please ensure the desired username is 3-8 characters long and only contains letters, numbers, and underscores."
-    elif not COURSE_CODE_REGEX.match(mod_code):
-        error_message = "Invalid course code format. Please provide a valid code like `COMSCI1` or `ECE1`."
-    elif not MAIL_REGEX.match(mail):
+        error_message = (
+            "Invalid username: must be 3-8 characters long and only contains letters, numbers, and "
+            "underscores, and must not start or end with an underscore."
+        )
+    elif not COURSE_CODE_REGEX.match(course_code):
+        error_message = (
+            "Invalid course code: must be a valid code like `COMSCI1` or `ECE1`."
+        )
+    elif not EMAIL_REGEX.match(email_address):
         error_message = (
             "Invalid email format. Please make sure it's a DCU email address."
         )
-    elif Feature.ADMIN_API.enabled and not await is_uid_ldap_available(
-        aiohttp_client, desired_uid
-    ):
-        error_message = "This username is already taken. Please try another one."
+    elif not await is_uid_ldap_available(desired_uid):
+        error_message = (
+            f"The username `{desired_uid}` is already taken. Please try another one."
+        )
 
     if error_message is not None:
-        await ctx.respond(error_message, flags=hikari.MessageFlag.EPHEMERAL)
+        await interaction.create_initial_response(
+            hikari.ResponseType.MESSAGE_CREATE,
+            error_message,
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
         return
 
     message = f"""
-## {ctx.user.mention}, your registration details are:
+## {interaction.user.mention}, your registration details are:
 - Student ID: `{student_id}`
-- Desired Username: `{desired_uid}`
-- Course Code: `{mod_code}`
-- Email: `{mail}`
+- Desired Redbrick username: `{desired_uid}`
+- Course code: `{course_code}`
+- DCU Email: `{email_address}`
 
-**Please confirm these details are correct and press the button below to submit your registration.**
-"""
-
-    embed = hikari.Embed(
-        description=message,
+Please confirm these details are correct and press the button below to submit your registration.
+    """
+    embed = hikari.Embed(description=message)
+    row = se.MessageActionRowBuilder()
+    row.add_interactive_button(
+        hikari.ButtonStyle.SUCCESS,
+        "registration-create-new-user-confirm-button",
+        label="Confirm",
     )
-    view = RegisterView(ctx.user.id, student_id, desired_uid, mod_code, mail)
-    response = await ctx.respond(
+    row.add_interactive_button(
+        hikari.ButtonStyle.DANGER,
+        "registration-create-new-user-cancel-button",
+        label="Cancel Registration",
+    )
+
+    await interaction.create_initial_response(
+        hikari.ResponseType.MESSAGE_CREATE,
         embed=embed,
         flags=hikari.MessageFlag.EPHEMERAL,
-        user_mentions=True,
-        components=view,
+        components=[row],
     )
 
-    miru_client.start_view(view, bind_to=await response.retrieve_message())
+
+async def new_user_registration_confirmation_submit(
+    interaction: hikari.ComponentInteraction,
+) -> None:
+    pass
 
 
 @arc.loader

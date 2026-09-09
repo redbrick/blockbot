@@ -7,6 +7,7 @@ import aiohttp
 import arc
 import hikari
 
+from src.bot import client
 from src.config import (
     ADMIN_API_PASSWORD,
     ADMIN_API_URL,
@@ -40,7 +41,9 @@ def channel_mention(channel_id: hikari.Snowflake | int | str) -> str:
     return f"<#{channel_id}>"
 
 
-async def hedgedoc_login(aiohttp_client: aiohttp.ClientSession) -> None:
+# TODO: update all callers to no longer pass aiohttp_client
+@client.inject_dependencies
+async def hedgedoc_login(aiohttp_client: aiohttp.ClientSession = arc.inject()) -> None:
     data = {
         "username": LDAP_USERNAME,
         "password": LDAP_PASSWORD,
@@ -49,7 +52,10 @@ async def hedgedoc_login(aiohttp_client: aiohttp.ClientSession) -> None:
     await aiohttp_client.post("https://md.redbrick.dcu.ie/auth/ldap", data=data)
 
 
-async def get_md_content(url: str, aiohttp_client: aiohttp.ClientSession) -> str:
+@client.inject_dependencies
+async def get_md_content(
+    url: str, aiohttp_client: aiohttp.ClientSession = arc.inject()
+) -> str:
     """
     Get the content of a note at a HedgeDoc URL.
     """
@@ -68,8 +74,9 @@ async def get_md_content(url: str, aiohttp_client: aiohttp.ClientSession) -> str
         return await response.text()
 
 
+@client.inject_dependencies
 async def post_new_md_content(
-    content: str, aiohttp_client: aiohttp.ClientSession
+    content: str, aiohttp_client: aiohttp.ClientSession = arc.inject()
 ) -> str:
     post_url = "https://md.redbrick.dcu.ie/new"
     post_headers = {"Content-Type": "text/markdown"}
@@ -88,8 +95,9 @@ def utcnow() -> datetime.datetime:
     return datetime.datetime.now(datetime.timezone.utc)
 
 
+@client.inject_dependencies
 async def get_ldap_user_by_minecraft_name(
-    minecraft_name: str, aiohttp_client: aiohttp.ClientSession
+    minecraft_name: str, aiohttp_client: aiohttp.ClientSession = arc.inject()
 ) -> dict[str, typing.Any] | None:
     """
     Get the LDAP user associated with a Minecraft name.
@@ -107,8 +115,9 @@ async def get_ldap_user_by_minecraft_name(
         return await response.json()
 
 
+@client.inject_dependencies
 async def get_ldap_user_by_discord_id(
-    discord_id: int, aiohttp_client: aiohttp.ClientSession
+    discord_id: int, aiohttp_client: aiohttp.ClientSession = arc.inject()
 ) -> dict[str, typing.Any] | None:
     """
     Get the LDAP user associated with a Discord ID.
@@ -126,8 +135,9 @@ async def get_ldap_user_by_discord_id(
         return await response.json()
 
 
+@client.inject_dependencies
 async def get_ldap_user_by_uid(
-    uid: str, aiohttp_client: aiohttp.ClientSession
+    uid: str, aiohttp_client: aiohttp.ClientSession = arc.inject()
 ) -> dict[str, typing.Any] | None:
     """
     Get the LDAP user associated with a UID.
@@ -145,8 +155,10 @@ async def get_ldap_user_by_uid(
         return await response.json()
 
 
+@client.inject_dependencies
 async def is_uid_ldap_available(
-    aiohttp_client: aiohttp.ClientSession, uid: str
+    uid: str,
+    aiohttp_client: aiohttp.ClientSession = arc.inject(),
 ) -> bool:
     """
     Check if LDAP user exists with that username.
@@ -161,8 +173,9 @@ async def is_uid_ldap_available(
         return False
 
 
+@client.inject_dependencies
 async def update_user_ldap_attribute(
-    uid: str, key: str, value: str, aiohttp_client: aiohttp.ClientSession
+    uid: str, key: str, value: str, aiohttp_client: aiohttp.ClientSession = arc.inject()
 ) -> bool:
     """
     Update an LDAP user's attribute.
@@ -182,8 +195,9 @@ async def update_user_ldap_attribute(
         return True
 
 
+@client.inject_dependencies
 async def send_verification_email(
-    uid: str, code: str, aiohttp_client: aiohttp.ClientSession
+    uid: str, code: str, aiohttp_client: aiohttp.ClientSession = arc.inject()
 ) -> bool:
     """
     Send a verification email to the user.
@@ -203,13 +217,14 @@ async def send_verification_email(
         return True
 
 
+@client.inject_dependencies
 async def register_ldap_user(
     uid: str,
     student_id: str,
     mod_code: str,
     mail: str,
     discord_id: int,
-    aiohttp_client: aiohttp.ClientSession,
+    aiohttp_client: aiohttp.ClientSession = arc.inject(),
 ) -> bool:
     """
     Register a new LDAP user.
