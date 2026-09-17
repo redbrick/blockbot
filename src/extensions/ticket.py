@@ -128,7 +128,9 @@ async def modal_submit(interaction: hikari.ModalInteraction) -> None:
             hikari.PermissionOverwrite(
                 id=interaction.user.id,
                 type=hikari.PermissionOverwriteType.MEMBER,
-                allow=hikari.Permissions.VIEW_CHANNEL,
+                allow=(
+                    hikari.Permissions.VIEW_CHANNEL | hikari.Permissions.SEND_MESSAGES
+                ),
             ),
             hikari.PermissionOverwrite(
                 id=interaction.guild_id,
