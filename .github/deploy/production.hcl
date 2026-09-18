@@ -49,8 +49,7 @@ DB_PASSWORD={{ key "blockbot/db/password" }}
 DB_USER={{ key "blockbot/db/user" }}
 
 RCON_HOST=vanilla-mc-rcon.service.consul
-{{ range service "vanilla-mc-rcon" }}
-RCON_PORT=2{{ .Port }}{{ end }}
+RCON_PORT=25575
 RCON_PASSWORD={{ key "games/mc/vanilla-mc/rcon/password" }}
 
 MINIO_ENDPOINT={{ key "blockbot/minio/endpoint" }}
