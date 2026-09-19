@@ -22,7 +22,7 @@ from src.utils import (
 
 plugin = BlockbotPlugin(
     name="Redbrick Account Management Command Plugin",
-    required_features=[Feature.ADMIN_API, Feature.RCON],
+    required_features=[Feature.ADMIN_API],
 )
 
 
@@ -222,7 +222,7 @@ async def link_command(
     )
 
 
-@linking.include
+@plugin.include_subcommand(linking, required_features=[Feature.RCON])
 @arc.with_hook(restrict_to_roles(role_ids=[ROLE_IDS["brickie"]]))
 @arc.with_hook(restrict_to_ldap_users())
 @arc.slash_subcommand(

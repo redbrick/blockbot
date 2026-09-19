@@ -145,3 +145,29 @@ class BlockbotPlugin(arc.GatewayPluginBase[Blockbot]):
     def add_command(self, command: CallableCommandBase[Blockbot, BuilderT]) -> None:
         """Add a command to the plugin."""
         self.include(command)
+
+    def include_subcommand(
+        self,
+        parent: arc.SlashGroup[Blockbot] | arc.SlashSubGroup[Blockbot],
+        *,
+        required_features: typing.Sequence[Feature] | None = None,
+    ) -> typing.Callable[
+        [arc.SlashSubCommand[Blockbot]],
+        arc.SlashSubCommand[Blockbot],
+    ]:
+        """Include a subcommand only if its required features are enabled."""
+
+        def decorator(
+            command: arc.SlashSubCommand[Blockbot],
+        ) -> arc.SlashSubCommand[Blockbot]:
+            features = required_features or []
+
+            if all(feature.enabled for feature in features):
+                parent.include(command)
+                logger.debug(f"command '{command.name}' is enabled")
+            else:
+                logger.debug(f"command '{command.name}' is disabled")
+
+            return command
+
+        return decorator
