@@ -25,11 +25,9 @@ jobs:
         with:
           args: >-
             deploy
-            -var 
-            git_sha="${GITHUB_SHA}" \
-            -var 
-            environment_slug="${GITHUB_REF_NAME}" \
-            -address "http://nomad.service.consul:4646" \
+            -var=git_sha=${{ github.sha }}
+            -var=environment_slug=${{ github.ref_name }}
+            -address=http://nomad.service.consul:4646
             ./.github/deploy/review.hcl
 
   stop_review:
@@ -55,7 +53,6 @@ jobs:
         with:
           args: >-
             deploy
-            -var 
-            git_sha="${GITHUB_SHA}" \
-            -address "http://nomad.service.consul:4646" \
+            -var=git_sha=${{ github.sha }}
+            -address=http://nomad.service.consul:4646
             ./.github/deploy/production.hcl
