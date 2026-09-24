@@ -1,4 +1,5 @@
 job "blockbot-[[.environment_slug]]" {
+  namespace = "default"
   datacenters = ["aperture"]
   type        = "service"
 

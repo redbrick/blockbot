@@ -1,4 +1,5 @@
 job "blockbot" {
+  namespace = "default"
   datacenters = ["aperture"]
   type        = "service"
 
