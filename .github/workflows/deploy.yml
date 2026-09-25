@@ -16,19 +16,19 @@ jobs:
       - build
 
     runs-on: [self-hosted, deployment-runner]
-    container:
-      image: hashicorp/levant:0.3
-      options: --user root
     if: github.ref != 'refs/heads/main' && github.event_name == 'push'
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
-      - run: |
-          levant deploy \
-          -var git_sha="${GITHUB_SHA}" \
-          -var environment_slug="${GITHUB_REF_NAME}" \
-          -address "http://nomad.service.consul:4646" \
-          ./.github/deploy/review.hcl
+      - uses: actions/checkout@v7
+      - name: Deploy review
+        uses: docker://hashicorp/levant:0.3
+        with:
+          args: >-
+            deploy
+            -var=git_sha=${{ github.sha }}
+            -var=environment_slug=${{ github.ref_name }}
+            -address=http://nomad.service.consul:4646
+            ./.github/deploy/review.hcl
 
   stop_review:
     runs-on: [self-hosted, deployment-runner]
@@ -44,15 +44,15 @@ jobs:
     needs:
       - build
     runs-on: [self-hosted, deployment-runner]
-    container:
-      image: hashicorp/levant:0.3
-      options: --user root
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
-      - run: |
-          levant deploy \
-          -var git_sha="${GITHUB_SHA}" \
-          -address "http://nomad.service.consul:4646" \
-          ./.github/deploy/production.hcl
+      - uses: actions/checkout@v7
+      - name: Deploy production
+        uses: docker://hashicorp/levant:0.3
+        with:
+          args: >-
+            deploy
+            -var=git_sha=${{ github.sha }}
+            -address=http://nomad.service.consul:4646
+            ./.github/deploy/production.hcl
