@@ -33,6 +33,7 @@ job "blockbot-[[.environment_slug]]" {
         data        = <<EOF
 TOKEN={{ key "blockbot-dev/discord/token" }}
 DEBUG=true
+SHLINK_ENABLED=false
 
 LDAP_USERNAME={{ key "blockbot-dev/ldap/username" }}
 LDAP_PASSWORD={{ key "blockbot-dev/ldap/password" }}
