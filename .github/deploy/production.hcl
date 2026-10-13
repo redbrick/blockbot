@@ -59,7 +59,6 @@ MINIO_REGION={{ key "blockbot/minio/region" }}
 MINIO_ACCESS_KEY={{ key "blockbot/minio/access_key" }}
 MINIO_SECRET_KEY={{ key "blockbot/minio/secret_key" }}
 
-SHLINK_ENABLED=true
 SHLINK_API_URL=https://s.rb.dcu.ie/rest/v3/short-urls
 SHLINK_API_KEY={{ key "blockbot/shlink/key" }}
 EOF

@@ -33,7 +33,6 @@ job "blockbot-[[.environment_slug]]" {
         data        = <<EOF
 TOKEN={{ key "blockbot-dev/discord/token" }}
 DEBUG=true
-SHLINK_ENABLED=false
 
 LDAP_USERNAME={{ key "blockbot-dev/ldap/username" }}
 LDAP_PASSWORD={{ key "blockbot-dev/ldap/password" }}
@@ -53,6 +52,9 @@ MINIO_SECURE={{ key "blockbot/minio/secure" }}
 MINIO_REGION={{ key "blockbot/minio/region" }}
 MINIO_ACCESS_KEY={{ key "blockbot/minio/access_key" }}
 MINIO_SECRET_KEY={{ key "blockbot/minio/secret_key" }}
+
+SHLINK_API_URL=https://s.rb.dcu.ie/rest/v3/short-urls
+SHLINK_API_KEY={{ key "blockbot/shlink/key" }}
 EOF
       }
     }
