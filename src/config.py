@@ -21,6 +21,7 @@ class Feature(StrEnum):
     RCON = "RCON_ENABLED"
     MINIO = "MINIO_ENABLED"
     ADMIN_API = "ADMIN_API_ENABLED"
+    SHLINK = "SHLINK_ENABLED"
 
     @property
     def enabled(self) -> bool:
@@ -90,7 +91,7 @@ def get_env_var(
 
     if required_features:
         for feature in required_features:
-            if feature.enabled and env is None:
+            if feature.enabled and env is None and default is None:
                 # feature is enabled, but the env var is not set!
                 logger.error(
                     f"Disabling feature '{feature.name}' as environment variable '{name}' not set"
@@ -221,6 +222,13 @@ ADMIN_API_PASSWORD = get_env_var(
 )
 
 ADMIN_API_URL = get_env_var("ADMIN_API_URL", required_features=[Feature.ADMIN_API])
+
+SHLINK_API_URL = get_env_var(
+    "SHLINK_API_URL",
+    required_features=[Feature.SHLINK],
+    default="https://s.rb.dcu.ie/rest/v3/short-urls",
+)
+SHLINK_API_KEY = get_env_var("SHLINK_API_KEY", required_features=[Feature.SHLINK])
 
 AGENDA_TEMPLATE_URL = get_env_var(
     "AGENDA_TEMPLATE_URL", required_features=[Feature.LDAP]
