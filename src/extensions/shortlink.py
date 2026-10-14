@@ -43,15 +43,12 @@ def validate_long_url(value: str) -> str:
 async def create_short_url(
     url: str,
     session: aiohttp.ClientSession,
-    *,
-    api_url: str,
-    api_key: str,
 ) -> str:
     """Create a Shlink short URL and return its public URL."""
     async with session.post(
-        api_url,
+        f"{SHLINK_API_URL}",
         json={"longUrl": url},
-        headers={"X-Api-Key": api_key, "Accept": "application/json"},
+        headers={"X-Api-Key": SHLINK_API_KEY or "", "Accept": "application/json"},
         allow_redirects=False,
     ) as response:
         if response.status < 200 or response.status >= 300:
@@ -74,7 +71,7 @@ async def create_short_url(
 
 
 @plugin.include
-@arc.with_hook(restrict_to_roles(role_ids=[ROLE_IDS["brickie"]]))
+@arc.with_hook(restrict_to_roles(role_ids=[ROLE_IDS["committee"]]))
 @arc.slash_command(
     "shortlink",
     "Create a short link with Shlink.",
@@ -85,42 +82,42 @@ async def shortlink(
     url: arc.Option[str, arc.StrParams("The URL to shorten.")],
     aiohttp_client: aiohttp.ClientSession = arc.inject(),
 ) -> None:
-    """Create a Shlink short URL for Redbrick members."""
+    """Create a Shlink short URL."""
     try:
         long_url = validate_long_url(url)
     except ValueError as error:
         await ctx.respond(f"❌ {error}", flags=hikari.MessageFlag.EPHEMERAL)
         return
 
-    assert SHLINK_API_KEY is not None and SHLINK_API_URL is not None
+    short_url = await create_short_url(long_url, aiohttp_client)
 
-    try:
-        short_url = await create_short_url(
-            long_url,
-            aiohttp_client,
-            api_url=SHLINK_API_URL,
-            api_key=SHLINK_API_KEY,
-        )
-    except ShlinkAPIError as error:
+    await ctx.respond(
+        f"✅ Successfully Generated: {short_url}",
+        flags=hikari.MessageFlag.EPHEMERAL,
+    )
+
+
+@plugin.set_error_handler
+async def shlink_error_handler(ctx: BlockbotContext, error: Exception) -> None:
+    if isinstance(error, ShlinkAPIError):
         await ctx.respond(
             f"❌ Shlink could not create the shortlink (HTTP `{error.status}`).",
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return
-    except aiohttp.ClientError, TimeoutError:
+    if isinstance(error, (aiohttp.ClientError, TimeoutError)):
         await ctx.respond(
             "❌ Could not connect to Shlink. Please try again later.",
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return
-    except ValueError:
+    if isinstance(error, ValueError):
         await ctx.respond(
             "❌ Shlink returned an invalid response.",
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return
-
-    await ctx.respond(f"✅ {short_url}", flags=hikari.MessageFlag.EPHEMERAL)
+    raise error
 
 
 @arc.loader
