@@ -83,12 +83,7 @@ async def shortlink(
     aiohttp_client: aiohttp.ClientSession = arc.inject(),
 ) -> None:
     """Create a Shlink short URL."""
-    try:
-        long_url = validate_long_url(url)
-    except ValueError as error:
-        await ctx.respond(f"❌ {error}", flags=hikari.MessageFlag.EPHEMERAL)
-        return
-
+    long_url = validate_long_url(url)
     short_url = await create_short_url(long_url, aiohttp_client)
 
     await ctx.respond(
@@ -113,7 +108,7 @@ async def shlink_error_handler(ctx: BlockbotContext, error: Exception) -> None:
         return
     if isinstance(error, ValueError):
         await ctx.respond(
-            "❌ Shlink returned an invalid response.",
+            f"❌ {error}",
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return
