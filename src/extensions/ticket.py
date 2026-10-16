@@ -193,9 +193,27 @@ async def delete_channel(interaction: hikari.ComponentInteraction) -> None:
         f"{message.author.username}: {message.content}"
         for message in reversed(messages)
     )
+    closed_at = int(interaction.message.timestamp.timestamp())
+
+    reason = next(
+        (
+            embed.description
+            for message in messages
+            for embed in message.embeds
+            if embed.title == "Ticket" and embed.description
+        ),
+        "No reason provided",
+    )
+
     await plugin.client.rest.create_message(
         CHANNEL_IDS["ticket-archive"],
-        content=f"## :octagonal_sign: Ticket Closure at {interaction.message.timestamp} \nAuthor: <@{interaction.user.id}>\nTicket closed by <@{interaction.user.id}>.\n\nTranscript:\n",
+        content=(
+            f"## :octagonal_sign: Ticket Closure at <t:{closed_at}:F>\n"
+            f"Author: <@{interaction.user.id}>\n"
+            f"Ticket closed by <@{interaction.user.id}>.\n"
+            f"Reason: ```{reason}```\n\n"
+            "Transcript:\n"
+        ),
         user_mentions=True,
         attachment=hikari.Bytes(transcript.encode("utf-8"), "transcript.txt"),
     )
