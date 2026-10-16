@@ -8,7 +8,7 @@ from hikari.interactions.interaction_components import (
     TextSelectMenuInteractionComponent,
 )
 
-from src.config import CATEGORY_IDS, ROLE_IDS, UID_MAPS
+from src.config import CATEGORY_IDS, CHANNEL_IDS, ROLE_IDS, UID_MAPS
 from src.hooks import restrict_to_roles
 from src.models import Blockbot, BlockbotContext, BlockbotPlugin
 
@@ -187,6 +187,17 @@ async def delete_channel(interaction: hikari.ComponentInteraction) -> None:
         hikari.ResponseType.MESSAGE_CREATE,
         "Closing ticket...",
         flags=hikari.MessageFlag.EPHEMERAL,
+    )
+    messages = await plugin.client.rest.fetch_messages(interaction.channel_id)
+    transcript = "\n".join(
+        f"{message.author.username}: {message.content}"
+        for message in reversed(messages)
+    )
+    await plugin.client.rest.create_message(
+        CHANNEL_IDS["ticket-archive"],
+        content=f"## :octagonal_sign: Ticket Closure at {interaction.message.timestamp} \nAuthor: <@{interaction.user.id}>\nTicket closed by <@{interaction.user.id}>.\n\nTranscript:\n",
+        user_mentions=True,
+        attachment=hikari.Bytes(transcript.encode("utf-8"), "transcript.txt"),
     )
     await asyncio.sleep(3)
     await plugin.client.rest.delete_channel(interaction.channel_id)
