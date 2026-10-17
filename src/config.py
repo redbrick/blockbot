@@ -134,6 +134,7 @@ CHANNEL_IDS: dict[str, int] = {
     "rules": 578713759263096842,
     "waiting-room": 627548568613552138,
     "tickets": 1517611430126555298,
+    "ticket-archive": 1560799149488742440,
 }
 
 CATEGORY_IDS: dict[str, int] = {
