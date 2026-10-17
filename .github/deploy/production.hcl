@@ -58,6 +58,9 @@ MINIO_SECURE={{ key "blockbot/minio/secure" }}
 MINIO_REGION={{ key "blockbot/minio/region" }}
 MINIO_ACCESS_KEY={{ key "blockbot/minio/access_key" }}
 MINIO_SECRET_KEY={{ key "blockbot/minio/secret_key" }}
+
+SHLINK_API_URL={{ key "blockbot/shlink/url" }}
+SHLINK_API_KEY={{ key "blockbot/shlink/key" }}
 EOF
       }
     }
