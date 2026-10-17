@@ -29,6 +29,7 @@ plugin = BlockbotPlugin(
 group = plugin.include_slash_group(
     "account",
     "Redbrick Account Management Command",
+    autodefer=arc.AutodeferMode.EPHEMERAL,
 )
 
 linking = group.include_subgroup("link", "Link your Accounts to your Redbrick account")
