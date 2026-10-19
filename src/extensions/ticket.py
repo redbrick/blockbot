@@ -1,4 +1,5 @@
 import asyncio
+from collections.abc import Mapping
 
 import arc
 import hikari
@@ -195,21 +196,26 @@ async def delete_channel(interaction: hikari.ComponentInteraction) -> None:
     )
     closed_at = int(interaction.message.timestamp.timestamp())
 
+    ticket_message = messages[-1]
+
     reason = next(
         (
             embed.description
-            for message in messages
-            for embed in message.embeds
+            for embed in ticket_message.embeds
             if embed.title == "Ticket" and embed.description
         ),
         "No reason provided",
     )
 
+    author_id: hikari.Snowflake | None = None
+    if isinstance(ticket_message.user_mentions, Mapping):
+        author_id = next(iter(ticket_message.user_mentions), None)
+    author = f"<@{author_id}>" if author_id else "Unknown"
     await plugin.client.rest.create_message(
         CHANNEL_IDS["ticket-archive"],
         content=(
             f"## :octagonal_sign: Ticket Closure at <t:{closed_at}:F>\n"
-            f"Author: <@{interaction.user.id}>\n"
+            f"Author: {author}\n"
             f"Ticket closed by <@{interaction.user.id}>.\n"
             f"Reason: ```{reason}```\n\n"
             "Transcript:\n"
