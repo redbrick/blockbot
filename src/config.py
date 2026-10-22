@@ -21,6 +21,7 @@ class Feature(StrEnum):
     RCON = "RCON_ENABLED"
     MINIO = "MINIO_ENABLED"
     ADMIN_API = "ADMIN_API_ENABLED"
+    SHLINK = "SHLINK_ENABLED"
 
     @property
     def enabled(self) -> bool:
@@ -221,6 +222,9 @@ ADMIN_API_PASSWORD = get_env_var(
 )
 
 ADMIN_API_URL = get_env_var("ADMIN_API_URL", required_features=[Feature.ADMIN_API])
+
+SHLINK_API_URL = get_env_var("SHLINK_API_URL", required_features=[Feature.SHLINK])
+SHLINK_API_KEY = get_env_var("SHLINK_API_KEY", required_features=[Feature.SHLINK])
 
 AGENDA_TEMPLATE_URL = get_env_var(
     "AGENDA_TEMPLATE_URL", required_features=[Feature.LDAP]
