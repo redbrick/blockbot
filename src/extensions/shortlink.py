@@ -21,21 +21,19 @@ class ShlinkAPIError(Exception):
 
 
 def validate_long_url(value: str) -> str:
-    """Return a valid HTTP(S) URL or raise ValueError."""
+    """Return a valid HTTPS URL or raise ValueError."""
     url = value.strip()
     parsed = urlsplit(url)
 
     if (
         len(url) > 2048
         or any(character.isspace() for character in url)
-        or parsed.scheme.lower() not in {"http", "https"}
+        or parsed.scheme.lower() != "https"
         or not parsed.hostname
         or parsed.username is not None
         or parsed.password is not None
     ):
-        raise ValueError(
-            "Please provide a valid HTTP or HTTPS URL (up to 2048 characters)."
-        )
+        raise ValueError("Please provide a valid HTTPS URL (up to 2048 characters).")
 
     return url
 
@@ -96,7 +94,7 @@ async def shortlink(
 async def shlink_error_handler(ctx: BlockbotContext, error: Exception) -> None:
     if isinstance(error, ShlinkAPIError):
         await ctx.respond(
-            f"❌ Shlink could not create the shortlink (HTTP `{error.status}`).",
+            f"❌ Shlink could not create the shortlink (Error Code `{error.status}`).",
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return
@@ -108,7 +106,7 @@ async def shlink_error_handler(ctx: BlockbotContext, error: Exception) -> None:
         return
     if isinstance(error, ValueError):
         await ctx.respond(
-            f"❌ {error}",
+            "❌ Something went wrong while creating the shortlink. Please try again later.",
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return
