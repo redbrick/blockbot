@@ -20,15 +20,20 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v7
+      - name: Render review job
+        run: |
+          slug=$(echo "${{ github.ref_name }}" | sed 's/[^a-zA-Z0-9-]/-/g')
+          sed \
+            -e "s/\[\[\.environment_slug\]\]/${slug}/g" \
+            -e "s/\[\[\.git_sha\]\]/${{ github.sha }}/g" \
+            ./.github/deploy/review.hcl > ./.github/deploy/review.rendered.hcl
       - name: Deploy review
-        uses: docker://hashicorp/levant:0.3
+        uses: docker://hashicorp/nomad:1.10.4
         with:
           args: >-
-            deploy
-            -var=git_sha=${{ github.sha }}
-            -var=environment_slug=${{ github.ref_name }}
+            job run
             -address=http://nomad.service.consul:4646
-            ./.github/deploy/review.hcl
+            ./.github/deploy/review.rendered.hcl
 
   stop_review:
     runs-on: [self-hosted, deployment-runner]
@@ -49,10 +54,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Deploy production
-        uses: docker://hashicorp/levant:0.3
+        uses: docker://hashicorp/nomad:1.10.4
         with:
           args: >-
-            deploy
+            job run
             -var=git_sha=${{ github.sha }}
             -address=http://nomad.service.consul:4646
             ./.github/deploy/production.hcl
