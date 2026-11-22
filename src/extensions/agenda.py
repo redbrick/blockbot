@@ -1,4 +1,5 @@
 import datetime
+from zoneinfo import ZoneInfo
 
 import aiohttp
 import arc
@@ -16,6 +17,8 @@ from src.utils import (
 
 plugin = BlockbotPlugin(name="Agenda", required_features=[Feature.LDAP])
 
+MEETING_TIMEZONE = ZoneInfo("Europe/Dublin")
+
 agenda = plugin.include_slash_group("agenda", "Interact with the agenda.")
 
 
@@ -23,7 +26,7 @@ async def generate_date_choices(
     _: arc.AutocompleteData[arc.GatewayClient, str],
 ) -> list[str]:
     """Generate date options for the next 7 days."""
-    today = utcnow().today()
+    today = utcnow().astimezone(MEETING_TIMEZONE).date()
     return [
         (today + datetime.timedelta(days=i)).strftime("%A %d/%m/%Y") for i in range(7)
     ]
@@ -72,7 +75,7 @@ async def gen_agenda(
     time: arc.Option[
         str,
         arc.StrParams(
-            "Enter the time in HH:MM format.",
+            "Enter the time in HH:MM format (Europe/Dublin).",
             autocomplete_with=generate_time_autocomplete,
         ),
     ],
@@ -91,15 +94,22 @@ async def gen_agenda(
 ) -> None:
     """Generate a new agenda for committee meetings."""
 
-    parsed_date = (
-        datetime.datetime.strptime(date, "%A %d/%m/%Y")
-        .replace(tzinfo=datetime.timezone.utc)
-        .date()
-    )
+    try:
+        parsed_date = (
+            datetime.datetime.strptime(date, "%A %d/%m/%Y")
+            .replace(tzinfo=MEETING_TIMEZONE)
+            .date()
+        )
+    except ValueError:
+        await ctx.respond(
+            "❌ Invalid date format. Please select a date from the suggestions.",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
+        return
     try:
         parsed_time = (
             datetime.datetime.strptime(time, "%H:%M")
-            .replace(tzinfo=datetime.timezone.utc)
+            .replace(tzinfo=MEETING_TIMEZONE)
             .time()
         )
     except ValueError:
@@ -109,11 +119,13 @@ async def gen_agenda(
         )
         return
 
-    parsed_datetime = datetime.datetime.combine(parsed_date, parsed_time)
+    parsed_datetime = datetime.datetime.combine(
+        parsed_date, parsed_time, tzinfo=MEETING_TIMEZONE
+    )
 
     formatted_date = parsed_datetime.strftime("%Y-%m-%d")
     formatted_time = parsed_datetime.strftime("%H:%M")
-    formatted_datetime = parsed_datetime.strftime("%A, %Y-%m-%d %H:%M")
+    meeting_timestamp = int(parsed_datetime.timestamp())
 
     try:
         content = await get_md_content(url, aiohttp_client)
@@ -146,7 +158,7 @@ async def gen_agenda(
         return
 
     announce_text = f"""
-## 📣 Agenda for this week's meeting | {formatted_datetime} | {room} <:bigRed:634311607039819776>
+## 📣 Agenda for this week's meeting | <t:{meeting_timestamp}:F> | {room} <:bigRed:634311607039819776>
 
 
 [{formatted_date} Agenda](<{new_agenda_url}>)
