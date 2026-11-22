@@ -13,7 +13,7 @@ job "blockbot-[[.environment_slug]]" {
         to = 5432
       }
     }
-
+    consul { cluster = "default" }
     task "blockbot-review-[[.git_sha]]" {
       driver = "docker"
 

@@ -1,9 +1,13 @@
+variable "git_sha" {
+  type = string
+}
+
 job "blockbot" {
   datacenters = ["aperture"]
   type        = "service"
 
   meta {
-    git_sha = "[[.git_sha]]"
+    git_sha = var.git_sha
   }
 
   group "blockbot" {
@@ -13,7 +17,7 @@ job "blockbot" {
         to = 5432
       }
     }
-
+    consul { cluster = "default" }
     task "blockbot" {
       driver = "docker"
 
