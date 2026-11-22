@@ -1,17 +1,9 @@
-variable "git_sha" {
-  type = string
-}
-
-variable "environment_slug" {
-  type = string
-}
-
-job "blockbot-${var.environment_slug}" {
+job "blockbot-[[.environment_slug]]" {
   datacenters = ["aperture"]
   type        = "service"
 
   meta {
-    git_sha = var.git_sha
+    git_sha = "[[.git_sha]]"
   }
 
   group "blockbot" {
@@ -22,11 +14,11 @@ job "blockbot-${var.environment_slug}" {
       }
     }
     consul { cluster = "default" }
-    task "blockbot-review-${var.git_sha}" {
+    task "blockbot-review-[[.git_sha]]" {
       driver = "docker"
 
       config {
-        image = "ghcr.io/redbrick/blockbot:sha-${var.git_sha}"
+        image = "ghcr.io/redbrick/blockbot:sha-[[.git_sha]]"
       }
 
       resources {
