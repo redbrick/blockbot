@@ -21,13 +21,13 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Deploy review
-        uses: docker://hashicorp/levant:0.4
+        uses: docker://hashicorp/nomad:1.10.4
         with:
           args: >-
-            deploy
+            job run
+            -address=http://nomad.service.consul:4646
             -var=git_sha=${{ github.sha }}
             -var=environment_slug=${{ github.ref_name }}
-            -address=http://nomad.service.consul:4646
             ./.github/deploy/review.hcl
 
   stop_review:
@@ -49,10 +49,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Deploy production
-        uses: docker://hashicorp/levant:0.4
+        uses: docker://hashicorp/nomad:1.10.4
         with:
           args: >-
-            deploy
-            -var=git_sha=${{ github.sha }}
+            job run
             -address=http://nomad.service.consul:4646
+            -var=git_sha=${{ github.sha }}
             ./.github/deploy/production.hcl
