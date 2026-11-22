@@ -13,7 +13,7 @@ job "blockbot" {
         to = 5432
       }
     }
-
+    consul { cluster = "default" }
     task "blockbot" {
       driver = "docker"
 
